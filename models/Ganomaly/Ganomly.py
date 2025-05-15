@@ -1,6 +1,6 @@
 def main():
     from anomalib.data import Folder
-    from anomalib.models.image.efficient_ad import EfficientAd
+    from anomalib.models.image.ganomaly import Ganomaly
     from anomalib.engine import Engine
 
     dataset = Folder(
@@ -9,12 +9,12 @@ def main():
         normal_dir="train",
         abnormal_dir="test/Unripe",
         normal_test_dir="test/Ripe",
-        train_batch_size=1,
+        train_batch_size=32,
         eval_batch_size=64,
-        num_workers=16  # kannst du ggf. auf 0 setzen zum Testen
+        num_workers=8  # kannst du ggf. auf 0 setzen zum Testen
     )
 
-    model = EfficientAd()
+    model = Ganomaly()
 
     engine = Engine(
         default_root_dir="results/",
