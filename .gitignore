@@ -1,0 +1,16 @@
+# Diese Datei sagt Git, welche Dateien/Ordner ignoriert werden sollen
+
+# Ignoriere eine Datei
+geheim.txt
+
+# Ignoriere gesamtes Verzeichnis
+#/data/
+
+# Ignoriere alle Dateien mit <Dateiendung> in jedem Verzeichnis
+**/*.png
+**/*.jpg
+**/*.ckpt
+
+
+# Ausschlussregel (diese Datei NICHT ignorieren)
+!important.txt
