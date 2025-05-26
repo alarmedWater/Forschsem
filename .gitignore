@@ -12,5 +12,5 @@ geheim.txt
 **/*.ckpt
 
 
-# Ausschlussregel (diese Datei NICHT ignorieren)
-!important.txt
+# Ausschlussregel (diese Datei - trotz zuvor ausgeschlossenen Verzeichnissen NICHT ignorieren)
+#!important.txt
