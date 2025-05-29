@@ -177,7 +177,7 @@ if __name__ == "__main__":
          },
         
         {
-            "name": "strawberry_full",
+         "name": "strawberry_full",
          "root": str(base_data),
          "normal_dir": "train",
          "abnormal_dir": "test/Ripe",
