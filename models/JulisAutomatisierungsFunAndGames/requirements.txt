@@ -1,0 +1,13 @@
+# requirements.txt
+
+# PyTorch Lightning core framework
+pytorch-lightning>=2.0.0
+
+# Anomalib framework for anomaly detection
+anomalib>=0.7.0
+
+# Data handling
+pandas>=1.5.0
+
+# Für generate-parameter-library-py
+typeguard>=2.13.3
