@@ -8,67 +8,84 @@ from anomalib.models import ReverseDistillation
 from anomalib.engine import Engine
 from anomalib.post_processing import PostProcessor
 from anomalib.metrics import Evaluator
-from lightning.pytorch.callbacks import RichProgressBar, ModelCheckpoint
+from lightning.pytorch.callbacks import RichProgressBar, ModelCheckpoint, EarlyStopping, LearningRateMonitor
 from lightning.pytorch.loggers import TensorBoardLogger
 
 
 def setup_logger(log_file: Path) -> logging.Logger:
     """
-    Create and configure a logger writing to the specified file.
+    Create and configure a logger writing to the specified file and to console.
     """
     logger = logging.getLogger(str(log_file))
     logger.setLevel(logging.INFO)
     logger.handlers.clear()
 
+    # File handler
     fh = logging.FileHandler(log_file)
     fh.setLevel(logging.INFO)
-    formatter = logging.Formatter(
-        '%(asctime)s - %(levelname)s - %(message)s'
-    )
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     fh.setFormatter(formatter)
-
     logger.addHandler(fh)
+
+    # Console handler
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+
     return logger
 
 
 def train_dataset(spec: dict, results_base: Path) -> dict:
     """
     Train, test, post-process and evaluate the model on a single dataset.
-    If debug=True, runs a fast smoke test on CPU.
-    Returns a dict of metrics or error info.
+    If debug=True, runs a mini smoke test on CPU with reduced data and model size.
     """
     name = spec["name"]
     debug = spec.get("debug", False)
+
+    # Reproducibility
+    seed = spec.get("seed", 42)
+    import random, numpy as np
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+
+    # Default or debug-specific parameters
+    train_batch_size = spec.get("train_batch_size", 4 if debug else 32)
+    eval_batch_size  = spec.get("eval_batch_size",  4 if debug else 32)
+    num_workers      = spec.get("num_workers",      0 if debug else 8)
+    max_epochs       = spec.get("max_epochs",       2 if debug else 200)
+    backbone         = spec.get("backbone",        "resnet18")
 
     # Prepare directories
     dataset_dir = results_base / name
     dataset_dir.mkdir(parents=True, exist_ok=True)
 
-    log_file = dataset_dir / "run.log"
-    logger = setup_logger(log_file)
+    logger = setup_logger(dataset_dir / "run.log")
     logger.info(f"Starting dataset: {name} (debug={debug})")
 
     try:
-        # DataModule
+        # DataModule (keine Validierung)
         datamodule = Folder(
             name=name,
             root=spec["root"],
             normal_dir=spec["normal_dir"],
             abnormal_dir=spec["abnormal_dir"],
             normal_test_dir=spec["normal_test_dir"],
-            train_batch_size=spec.get("train_batch_size", 32),
-            eval_batch_size=spec.get("eval_batch_size", 32),
-            num_workers=spec.get("num_workers", 8),
+            train_batch_size=train_batch_size,
+            eval_batch_size=eval_batch_size,
+            num_workers=num_workers,
         )
 
         # Model
         model = ReverseDistillation(
-            backbone=spec.get("backbone", "resnet18"),
+            backbone=backbone,
             pre_trained=spec.get("pre_trained", False),
             layers=spec.get("layers", ["layer1", "layer2", "layer3"]),
         )
 
-        # Logger
+        # TensorBoard-Logger
         tb_logger = TensorBoardLogger(
             save_dir=str(dataset_dir / "logs"),
             name="rd_debug" if debug else "rd"
@@ -76,71 +93,58 @@ def train_dataset(spec: dict, results_base: Path) -> dict:
 
         # Callbacks
         progress_bar = RichProgressBar()
-        checkpoint_callback = ModelCheckpoint(
+        # EarlyStopping und Checkpointing auf train_loss_epoch
+        early_stop = EarlyStopping(
+            monitor="train_loss_epoch",
+            patience=5,
+            mode="min"
+        )
+        lr_monitor = LearningRateMonitor(logging_interval="epoch")
+        checkpoint = ModelCheckpoint(
             dirpath=dataset_dir / "checkpoints",
-            filename=f"{name}-{{epoch:02d}}-{{val_loss:.4f}}",
-            monitor="val_loss",
+            filename=f"{name}_epoch{{epoch:02d}}_trainLoss{{train_loss_epoch:.4f}}",
+            monitor="train_loss_epoch",
             mode="min",
-            save_top_k=3,
+            save_top_k=1 if debug else 3,
             save_last=True,
         )
 
-        # Trainer arguments
+        # Trainer-Argumente (keine Validation)
         trainer_args = {
             "default_root_dir": str(dataset_dir / "engine"),
-            "accelerator": "cpu" if debug else "gpu",
+            "accelerator": "cpu" if debug else ("gpu" if torch.cuda.is_available() else "cpu"),
             "devices": 1,
-            "max_epochs": 1 if debug else spec.get("max_epochs", 200),
-            "callbacks": [progress_bar, checkpoint_callback],
+            "max_epochs": max_epochs,
+            "limit_train_batches": spec.get("limit_train_batches", 0.1 if debug else 1.0),
+            "limit_val_batches": 0.0,   # keine Validierung
+            "limit_test_batches": spec.get("limit_test_batches", 0.1 if debug else 1.0),
+            "callbacks": [progress_bar, early_stop, lr_monitor, checkpoint],
             "logger": tb_logger,
         }
 
-        if debug:
-            # fast_dev_run: train+val+test with a single batch
-            trainer_args.update({
-                "fast_dev_run": True,
-                "limit_train_batches": 1,
-                "limit_val_batches": 1,
-                "limit_test_batches": 1,
-            })
-
-        # Create Engine (Trainer)
         engine = Engine(**trainer_args)
 
-        # Training
+        # Training (nur Training-Schritte)
         engine.fit(datamodule=datamodule, model=model)
 
-        # Testing (skip if fast_dev_run)
-        test_outputs = []
-        if not debug:
-            test_outputs = engine.test(model=model, datamodule=datamodule)
+        # Test (unabhängig vom Debug-Flag)
+        test_outputs = engine.test(model=model, datamodule=datamodule)
 
-        # Evaluation (full run only)
+        # Postprocessing & Evaluation (nur bei Full-Run)
         metrics = {"dataset": name}
         if not debug:
-            # Post-process
             post_processor = PostProcessor()
             pp_results = post_processor(
                 results=test_outputs,
                 dataloader=datamodule.test_dataloader(),
             )
-
-            # Compute metrics
             evaluator = Evaluator(metrics=[
-                "confusion_matrix",
-                "auroc",
-                "f1_score",
-                "precision",
-                "recall",
+                "confusion_matrix", "auroc", "f1_score", "precision", "recall"
             ])
             eval_metrics = evaluator.evaluate(pp_results)
             metrics.update(eval_metrics)
             logger.info(f"Completed {name} with metrics: {metrics}")
-
-            # Save detailed metrics
-            pd.DataFrame([metrics]).to_csv(
-                dataset_dir / "metrics.csv", index=False
-            )
+            pd.DataFrame([metrics]).to_csv(dataset_dir / "metrics.csv", index=False)
         else:
             logger.info(f"Debug run for {name} completed.")
 
@@ -152,56 +156,36 @@ def train_dataset(spec: dict, results_base: Path) -> dict:
 
 
 if __name__ == "__main__":
-    # CUDA optimizations
     torch.set_float32_matmul_precision('medium')
     torch.backends.cudnn.benchmark = True
 
     from multiprocessing import freeze_support
     freeze_support()
 
-    # Base results directory
     results_base = Path("results")
     results_base.mkdir(exist_ok=True)
-
-    # Dataset specifications, jetzt mit rein ASCII-Pfaden
 
     base_data = Path(__file__).parents[2] / "data" / "strawberry_riseholme"
     dataset_specs = [
         {
-            "name": "strawberry_riseholme0",
-            "root": str(base_data),            # …/data/strawberry_riseholme
-            "normal_dir": "train",             # Trainingsdaten
-            "abnormal_dir": "test/Ripe",       # defekte Früchte
-            "normal_test_dir": "test/Unripe",  # normale Früchte zum Testen
-            "debug": True,
-        },
-                {
-            "name": "strawberry_riseholme1",
-            "root": str(base_data),            # …/data/strawberry_riseholme
-            "normal_dir": "train",             # Trainingsdaten
-            "abnormal_dir": "test/Ripe",       # defekte Früchte
-            "normal_test_dir": "test/Unripe",  # normale Früchte zum Testen
-            "debug": True,
-        },
-                        {
-            "name": "strawberry_riseholme2",
-            "root": str(base_data),            # …/data/strawberry_riseholme
-            "normal_dir": "train",             # Trainingsdaten
-            "abnormal_dir": "test/Ripe",       # defekte Früchte
-            "normal_test_dir": "test/Unripe",  # normale Früchte zum Testen
-            "debug": True,
-        },
-    
-         
+            "name": "strawberry_debug", #name kann gesetzt werden wie man lustig ist
+         "root": str(base_data),
+         "normal_dir": "train",
+         "abnormal_dir": "test/Ripe",
+         "normal_test_dir": "test/Unripe",
+         "debug": True
+         },
+        
+        {
+            "name": "strawberry_full",
+         "root": str(base_data),
+         "normal_dir": "train",
+         "abnormal_dir": "test/Ripe",
+         "normal_test_dir": "test/Unripe",
+         "debug": False}
+        ,
     ]
 
-    # Execute training for each dataset
     summary = [train_dataset(spec, results_base) for spec in dataset_specs]
-
-    # Save summary
-    pd.DataFrame(summary).to_csv(
-        results_base / "summary_results.csv", index=False
-    )
-    print(
-        f"All runs completed. Summary saved to {results_base / 'summary_results.csv'}"
-    )
+    pd.DataFrame(summary).to_csv(results_base / "summary_results.csv", index=False)
+    print(f"All runs completed. Summary saved to {results_base / 'summary_results.csv'}")
