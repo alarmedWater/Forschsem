@@ -45,11 +45,11 @@ Benennung des Ordners erfolgt automatisch auf dem gewählten Mischverhältnis!
 '''
 
 def mix_image_datasets(
-    source_folder1: str,
-    source_folder2: str,
-    mix_percentage_from_dataset1: float,
+    base_dir_rh: str,
+    base_dir_hydro: str,
+    mix_percentage: float,
     subset_name: str,
-    base_dir: str = "mixed_datasets",
+    new_base_dir: str = "mixed_datasets",
     downsize_dataset_length: float = 0.0,
 ):
     """
@@ -58,7 +58,7 @@ def mix_image_datasets(
 
     """
 
-    if not (0 <= mix_percentage_from_dataset1 <= 1):
+    if not (0 <= mix_percentage <= 1):
         raise ValueError("Der Mischprozentsatz muss zwischen 0 und 1 liegen.")
 
     # Sammeln aller PNG-Dateien aus den Quellordnern
@@ -70,57 +70,85 @@ def mix_image_datasets(
                 image_files.append(os.path.join(folder_path, f))
         return image_files
     
-    images1 = get_image_files(source_folder1)
-    images2 = get_image_files(source_folder2)
+    target_dir_rh = os.path.join(base_dir_rh, subset_name)
+    target_dir_hydro = os.path.join(base_dir_hydro, subset_name)
 
-    if not images1:
-        print(f"Keine PNG-Bilder im Ordner '{source_folder1}' gefunden.")
+    images_rh = get_image_files(target_dir_rh)
+    images_hydro = get_image_files(target_dir_hydro)
+
+    if not images_rh:
+        print(f"Keine PNG-Bilder im Ordner '{base_dir_rh}' gefunden.")
         return
-    if not images2:
-        print(f"Keine PNG-Bilder im Ordner '{source_folder2}' gefunden.")
+    if not images_hydro:
+        print(f"Keine PNG-Bilder im Ordner '{base_dir_hydro}' gefunden.")
         return
     
-    random.shuffle(images1)
-    random.shuffle(images2)
+    random.shuffle(images_rh)
+    random.shuffle(images_hydro)
 
-    num_images1 = len(images1)
-    num_images2 = len(images2)
-    new_dataset_size = int(num_images1/mix_percentage_from_dataset1)  # Größe des neu erstellten Datensatzes
+    num_images_rh = len(images_rh)
+    num_images_hydro = len(images_hydro)
+    new_dataset_size = min(num_images_rh, num_images_hydro)  # Größe des neu erstellten Datensatzes wird gecappt auf die maximale Bildanzahl einer der beiden Datensätze
 
-    num_from_images2_needed = new_dataset_size-num_images1
+    num_images_from_rh_needed = int(new_dataset_size * mix_percentage)
+    num_images_from_hydro_needed = new_dataset_size - num_images_from_rh_needed 
 
-
-    print(f"RH-Datensatz hat {num_images1} Bilder.")
-    print(f"Hydro-Datensatz hat {num_images2} Bilder.")
+    print(f"RH-Datensatz hat {num_images_rh} Bilder.")
+    print(f"Davon werden {num_images_from_rh_needed} Bilder verwendet.")
+    print(f"\nHydro-Datensatz hat {num_images_hydro} Bilder.")
+    print(f"Davon werden {num_images_from_hydro_needed} Bilder verwendet.")
 
     # Prüfen, ob die Anzahl der Bilder in den Quellordnern ausreicht
-    if num_from_images2_needed > len(images2):
-        print(f"Warnung: nicht genügend Bilder im zweiten Quellordner '{source_folder2}' vorhanden um neuen Datensatz mit '{1-mix_percentage_from_dataset1}'% zu füllen.")
+    if num_images_from_hydro_needed > len(images_hydro):
+        print(f"Warnung: nicht genügend Bilder im zweiten Quellordner '{base_dir_hydro}' vorhanden um neuen Datensatz mit '{1-mix_percentage}'% zu füllen.")
 
         """ HIER MUSS NOCH DOWNSIZE LOGIK HINZUGEFÜGT WERDEN"""
 
 
     # Auswahl der Bilder basierend auf dem Mischprozentsatz
-    selected_images_ds1 = images1
-    selected_images_ds2 = images2[:num_from_images2_needed]
-
-    all_selected_images = selected_images_ds1 + selected_images_ds2
-
-    # Optional: Mischen der ausgewählten Bilder
-    # random.shuffle(all_selected_images) 
+    selected_images_rh = images_rh[:num_images_from_rh_needed]
+    selected_images_hydro = images_hydro[:num_images_from_hydro_needed]
 
     # Generieren des Ausgabepfadnamens
-    percentage1_str = f"{int(mix_percentage_from_dataset1 * 100)}"
-    percentage2_str = f"{int((1 - mix_percentage_from_dataset1) * 100)}"
-    
+    percentage_rh_str = f"{int(mix_percentage * 100)}"
+    percentage_hydro_str = f"{int((1 - mix_percentage) * 100)}"
+
     # Namensgebung neuer Ordner
-    new_dataset_folder_name = f"RH{percentage1_str}_Hydro{percentage2_str}"
-    output_path = os.path.join(base_dir, new_dataset_folder_name, "Data_master", subset_name)
+    new_dataset_folder_name = f"RH{percentage_rh_str}_Hydro{percentage_hydro_str}"
+    output_path_base_dir = os.path.join(new_base_dir, new_dataset_folder_name, "Data_master", subset_name)
+            
+    os.makedirs(output_path_base_dir, exist_ok=True)
+    print(f"Erstelle Ausgabeordner: {output_path_base_dir}")
 
-    # Erstellen des Ausgabeordners
-    os.makedirs(output_path, exist_ok=True)
-    print(f"Erstelle Ausgabeordner: {output_path}")
+    output_path_hydro = os.path.join(output_path_base_dir, "Hydro")
+    output_path_rh = os.path.join(output_path_base_dir, "RH")
 
+    os.makedirs(output_path_hydro, exist_ok=True)
+    print(f"Erstelle Ausgabeordner: {output_path_hydro}")
+    os.makedirs(output_path_rh, exist_ok=True)
+    print(f"Erstelle Ausgabeordner: {output_path_rh}")
+
+    def copy_images(selected_images, output_path, source_folder):
+        """
+        Kopiert die ausgewählten Bilder in den angegebenen Ausgabepfad.
+        """
+        copied_count = 0
+        for original_path in selected_images:
+            filename = os.path.basename(original_path)
+            destination_path = os.path.join(output_path, filename)
+            try:
+                shutil.copy2(original_path, destination_path)
+                copied_count += 1
+            except Exception as e:
+                print(f"Fehler beim Kopieren von '{original_path}' nach '{destination_path}': {e}")
+    
+        print(f"\nMischvorgang abgeschlossen. {copied_count} Bilder wurden in '{output_path}' kopiert.")
+        print(f"  Davon {len(selected_images)} aus '{source_folder}'.")
+
+    copy_images(selected_images_rh, output_path_rh, base_dir_rh)
+    copy_images(selected_images_hydro, output_path_hydro, base_dir_hydro)
+
+    '''
     # Kopieren der ausgewählten Bilder
     copied_count = 0
     for original_path in all_selected_images:
@@ -143,23 +171,24 @@ def mix_image_datasets(
 
     print(f"\nMischvorgang abgeschlossen. {copied_count} Bilder wurden in '{output_path}' kopiert.")
     print(f"  Davon {len(selected_images_ds1)} aus '{source_folder1}' und {len(selected_images_ds2)} aus '{source_folder2}'.")
+    '''
 
-    return os.path.join(base_dir, new_dataset_folder_name)
+    return os.path.join(new_base_dir, new_dataset_folder_name)
 
-def split_dataset(base_dir_mix_dataset: str, subset_type1: str, subset_type2: str, split_percentage: float = 0.8):
+def split_dataset(base_dir_mix_dataset: str, source_hydro: str, subset_type_normal: str, subset_type_anomalous: str, split_percentage: float = 0.8, test_size_each: int = 300):
     """
     Teilt 'Normal'-Bilder auf in Train/Test nach dem gegebenen Prozentsatz.
     Fügt zusätzlich eine gleiche Anzahl von 'Anomalous'-Bildern in den Test-Ordner hinzu.
+
+    Testdaten sind in dieser Logik nur Hydrodaten.
     
-    Args:
-        base_dir_mix_dataset (str): Basisordner des gemischten Datensatzes.
-        subset_type1 (str): Name des 'Normal'-Ordners.
-        subset_type2 (str): Name des 'Anomalous'-Ordners.
-        split_percentage (float): Anteil der 'Normal'-Bilder, die für das Training verwendet werden (zwischen 0 und 1).
     """
     # Quellpfade
-    source_folder_normal = os.path.join(base_dir_mix_dataset, "Data_master", subset_type1)
-    source_folder_anomalous = os.path.join(base_dir_mix_dataset, "Data_master", subset_type2)
+    source_folder__rh_normal = os.path.join(base_dir_mix_dataset, "Data_master", subset_type_normal, "RH")
+    source_folder_hydro_normal = os.path.join(base_dir_mix_dataset, "Data_master", subset_type_normal, "Hydro")
+
+    source_folder_hydro_anomalous_test = os.path.join(source_hydro, subset_type_anomalous)  # Hier ist path zu den Hydro-Daten für Anomalous Testdaten
+    source_folder_hydro_normal_test_data = os.path.join(source_hydro, subset_type_normal)    # Hier ist path zu den not-seen Hydro-Daten nur zum Testen notwendig
 
     # Zielpfade
     target_train_normal = os.path.join(base_dir_mix_dataset, "Data_train_test", "Train", "Normal")
@@ -170,51 +199,47 @@ def split_dataset(base_dir_mix_dataset: str, subset_type1: str, subset_type2: st
     os.makedirs(target_test_normal, exist_ok=True)
     os.makedirs(target_test_anomalous, exist_ok=True)
 
-    # Dateien in Normal-Verzeichnis
-    normal_files = [f for f in os.listdir(source_folder_normal) if os.path.isfile(os.path.join(source_folder_normal, f))]
-    random.shuffle(normal_files)
+    # Alle Dateien aus den beiden Normal-Verzeichnissen sammeln
+    normal_files_all_train = [
+    os.path.join(source_folder__rh_normal, f)
+    for f in os.listdir(source_folder__rh_normal)
+    if os.path.isfile(os.path.join(source_folder__rh_normal, f))
+    ]
 
-    split_index = int(len(normal_files) * split_percentage)
-    train_normal_files = normal_files[:split_index]
-    test_normal_files = normal_files[split_index:]
+    normal_files_all_train += [
+    os.path.join(source_folder_hydro_normal, f)
+    for f in os.listdir(source_folder_hydro_normal)
+    if os.path.isfile(os.path.join(source_folder_hydro_normal, f))
+    ]
+
+    random.shuffle(normal_files_all_train)  # Mischen der Dateien für zufällige Auswahl
+
+    # Testdaten festlegen 
+    normal_files_hydro_test = [f for f in os.listdir(source_folder_hydro_normal_test_data) if os.path.isfile(os.path.join(source_folder_hydro_normal_test_data, f))]
+    anomalous_files_hydro_test = [f for f in os.listdir(source_folder_hydro_anomalous_test) if os.path.isfile(os.path.join(source_folder_hydro_anomalous_test, f))]
 
     # Train/Normal kopieren
-    for f in train_normal_files:
-        shutil.copy2(os.path.join(source_folder_normal, f), os.path.join(target_train_normal, f))
+    for file_path in normal_files_all_train:
+        shutil.copy2(file_path, target_train_normal)
+    print(f"→ 'Normal': {len(normal_files_all_train)} Bilder in Train.")    
 
     # Test/Normal kopieren
-    for f in test_normal_files:
-        shutil.copy2(os.path.join(source_folder_normal, f), os.path.join(target_test_normal, f))
+    for file_path in normal_files_hydro_test:
+        shutil.copy2(file_path, target_test_normal)
+    print(f"→ 'Normal': {len(normal_files_hydro_test)} Bilder in Test.")
 
-    print(f"→ 'Normal': {len(train_normal_files)} Bilder in Train, {len(test_normal_files)} in Test.")
-
-    # Jetzt gleiche Anzahl an Anomalous-Bildern wie train_normal_files in Test/Anomalous kopieren
-    anomalous_files = [f for f in os.listdir(source_folder_anomalous) if os.path.isfile(os.path.join(source_folder_anomalous, f))]
-    random.shuffle(anomalous_files)
-
-    num_anomalous_needed = len(train_normal_files)
-    selected_anomalous_files = anomalous_files[:num_anomalous_needed]
-
-    for f in selected_anomalous_files:
-        shutil.copy2(os.path.join(source_folder_anomalous, f), os.path.join(target_test_anomalous, f))
-
-    print(f"→ 'Anomalous': {len(selected_anomalous_files)} Bilder in Test (entspricht Anzahl Train/Normal).")
-
-    print("\nSplit abgeschlossen.")
-    print(f"File: Train/Normal: {len(train_normal_files)}")
-    print(f"File: Test/Normal: {len(test_normal_files)}")
-    print(f"File: Test/Anomalous: {len(selected_anomalous_files)}")
+    # Test/Anomalous kopieren
+    for file_path in anomalous_files_hydro_test:
+        shutil.copy2(file_path, target_test_anomalous)
+    print(f"→ 'Anomalous': {len(anomalous_files_hydro_test)} Bilder in Test.")
 
 
 if __name__ == "__main__":
     # Pfade zu den Quellordnern
     # Alle Bilder für Normal bzw. Anomalous Daten müssen vorher in den angegebenen Ordnern liegen
     # Daten werden anschließend gesplitet in train und test 
-    RH_source_normal = "C:/Users/Lenovo/Documents/02_repos/Forschungsseminar/yolo11_riseholme/Riseholme-2021/Data/Normal/Ripe"
-    Hydro_source_normal = "C:/Users/Lenovo/Downloads/erdbeeren/erdbeeren/train"
-
-    RH_source_anomalous ="C:/Users/Lenovo/Documents/02_repos/Forschungsseminar/yolo11_riseholme/Riseholme-2021/Data/Anomalous"
-    Hydro_source_anomalous = "C:/Users/Lenovo/Downloads/erdbeeren/erdbeeren/test"
+    RH_source = "C:/Users/Lenovo/Documents/02_repos/Forschungsseminar/yolo11_riseholme/Riseholme-2021/Data/Normal/Ripe"
+    Hydro_source = "C:/Users/Lenovo/Downloads/erdbeeren/erdbeeren/train"
 
     # Angeben ob Normal oder Anomalous
     subset_type_normal = "Normal"
@@ -226,32 +251,12 @@ if __name__ == "__main__":
     # NOCH IN ARBEIT bzw. wird gemacht, sofern notwendig - Optional: Datasetsize downsizen 
     #downsize_dataset_length = 0.5 # z.B. 0.5 für 50% der Bilder aus dem ersten Ordner
 
-    ''' 
-    ### Hier wird der Mix der beiden Datensätze erstellt
-
-    Der Mix wird in einem neuen Ordner im aktuellen Verzeichnis gespeichert
-    Für den neuen Datenmix wird automatisch ein neuer Ordner mit entsprechendem Namen generiert
-
-    '''
     generated_dataset_normal_path = mix_image_datasets(
-        source_folder1=RH_source_normal,
-        source_folder2=Hydro_source_normal,
+        base_dir_rh=RH_source,
+        base_dir_hydro=Hydro_source,
         subset_name=subset_type_normal,
-        #downsize_dataset_length=downsize_dataset_length,
-        mix_percentage_from_dataset1=mix_percentage_from_dataset1,
+        mix_percentage=mix_percentage_from_dataset1,
+        #downsize_dataset_length=downsize_dataset_length,  # Optional
     )
 
-    generated_dataset_anomalous_path = mix_image_datasets(
-        source_folder1=RH_source_anomalous,
-        source_folder2=Hydro_source_anomalous,
-        subset_name=subset_type_anomalous,
-        #downsize_dataset_length=downsize_dataset_length,
-        mix_percentage_from_dataset1=mix_percentage_from_dataset1,
-    )
-    split_dataset(
-        base_dir_mix_dataset= generated_dataset_normal_path,
-        subset_type1=subset_type_normal,
-        subset_type2=subset_type_anomalous,
-        split_percentage=0.8
-    )
 
