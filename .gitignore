@@ -1,0 +1,136 @@
+# =========================
+# DATASETS (nicht committen)
+# =========================
+# Offizielles StrawDI-Layout (rohe Bilder + Instanzmasken)
+data/StrawDI_Db1/
+data/**/img/
+data/**/label/
+
+# (falls du zusätzlich andere Layouts nutzt)
+data/*/images/
+data/*/masks/
+data/raw/
+data/external/
+
+# =========================
+# KONVERTIERTE DATEN
+# =========================
+# YOLO-Export (Bilder+Labels sind groß und regenerierbar)
+converted/yolo/
+
+# COCO-Export: alles ignorieren, aber JSON-Annotationen behalten
+converted/coco/**
+!converted/coco/*.json
+!converted/coco/**/*.json
+# (Optional: zusätzliche Metadateien behalten)
+!converted/coco/*.md
+!converted/coco/**/.gitkeep
+
+# =========================
+# TRAININGS-OUTPUTS & MODELLE
+# =========================
+runs/
+models/
+checkpoints/
+logs/
+wandb/
+lightning_logs/
+tensorboard/
+events.out.tfevents.*
+
+# Gewichte / Artefakte
+*.pt
+*.pth
+*.pth.tar
+*.onnx
+*.engine
+*.plan
+*.ckpt
+*.log
+*.tb
+
+# =========================
+# PYTHON / BUILD ARTEFAKTE
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.dylib
+*.dll
+*.egg-info/
+.eggs/
+.build/
+build/
+dist/
+.cache/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.pylint.d/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# =========================
+# UMGEBUNGEN & SECRETS
+# =========================
+.venv/
+venv/
+env/
+.env
+.env.*
+*.env
+
+
+
+# zusätzlich für Projekt-Unterordner
+SegemtationTrainig_v1/data/StrawDI_Db1/
+SegemtationTrainig_v1/**/img/
+SegemtationTrainig_v1/**/label/
+SegemtationTrainig_v1/converted/yolo/
+SegemtationTrainig_v1/converted/coco/**
+!SegemtationTrainig_v1/converted/coco/*.json
+!SegemtationTrainig_v1/converted/coco/**/*.json
+
+# =========================
+# EDITOREN / IDEs
+# =========================
+.vscode/
+.idea/
+*.code-workspace
+
+# =========================
+# NOTEBOOKS
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# OS-JUNK
+# =========================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+*.swp
+*~
+.Trash-*
+
+# =========================
+# GROSSE CAPTURES / ARCHIVE (optional)
+# =========================
+bags/
+*.bag
+*.zip
+*.tar
+*.tar.gz
+*.7z
+*.rar
+
+# =========================
+# DVC
+# =========================
+# .dvc und *.dvc NICHT ignorieren (Metadaten sollen in Git bleiben)
+# DVC kümmert sich selbst um sein Cache-Ignore in .dvc/.gitignore
