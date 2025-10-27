@@ -134,3 +134,6 @@ bags/
 # =========================
 # .dvc und *.dvc NICHT ignorieren (Metadaten sollen in Git bleiben)
 # DVC kümmert sich selbst um sein Cache-Ignore in .dvc/.gitignore
+
+# Debug renders
+SegemtationTrainig_v1/debug_vis/
