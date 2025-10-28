@@ -7,14 +7,9 @@ data/**
 # (Optional: Metadateien erlauben)
 !data/README.md
 !data/**/README.md
+!data/yolo/.gitkeep
 
-# Falls du spezifische Layouts weiterhin explizit ignorieren willst (nicht nötig, aber ok):
-# data/**/img/
-# data/**/label/
-# data/*/images/
-# data/*/masks/
-# data/raw/
-# data/external/
+
 
 # =========================
 # KONVERTIERTE DATEN
