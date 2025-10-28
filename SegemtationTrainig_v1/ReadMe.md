@@ -33,3 +33,9 @@ RUn yolo
 start with python SegemtationTrainig_v1/models/train_yolo.py
 set USE_CUDA to true for compleete training with gpu
 run it with USE_CUDA false to run it with subset und cpu 
+
+USE_CUDA = True
+GPU_DEVICE = "0"   # falls mehrere GPUs, ggf. anpassen
+EPOCHS = 100       # oder mehr
+BATCH = 16         # je nach VRAM erhöhen
+WORKERS = 8        # >0 für schnellere IO auf GPU
