@@ -1,4 +1,5 @@
-path: converted/yolo
+# SegemtationTrainig_v1/configs/strawdi_yolo.yaml
+path: SegemtationTrainig_v1/converted/yolo
 train: train/images
 val:   val/images
 test:  test/images

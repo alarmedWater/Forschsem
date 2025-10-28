@@ -1,28 +1,33 @@
 # =========================
-# DATASETS (nicht committen)
+# DATA (Ordnerstruktur behalten, Inhalt ignorieren)
 # =========================
-# Offizielles StrawDI-Layout (rohe Bilder + Instanzmasken)
-data/StrawDI_Db1/
-data/**/img/
-data/**/label/
+data/**
+!data/.gitkeep
+!data/**/.gitkeep
+# (Optional: Metadateien erlauben)
+!data/README.md
+!data/**/README.md
 
-# (falls du zusätzlich andere Layouts nutzt)
-data/*/images/
-data/*/masks/
-data/raw/
-data/external/
+# Falls du spezifische Layouts weiterhin explizit ignorieren willst (nicht nötig, aber ok):
+# data/**/img/
+# data/**/label/
+# data/*/images/
+# data/*/masks/
+# data/raw/
+# data/external/
 
 # =========================
 # KONVERTIERTE DATEN
 # =========================
-# YOLO-Export (Bilder+Labels sind groß und regenerierbar)
-converted/yolo/
+# YOLO: alles ignorieren, Struktur behalten
+converted/yolo/**
+!converted/yolo/.gitkeep
+!converted/yolo/**/.gitkeep
 
-# COCO-Export: alles ignorieren, aber JSON-Annotationen behalten
+# COCO: alles ignorieren, aber JSON + Metadateien + .gitkeep behalten
 converted/coco/**
 !converted/coco/*.json
 !converted/coco/**/*.json
-# (Optional: zusätzliche Metadateien behalten)
 !converted/coco/*.md
 !converted/coco/**/.gitkeep
 
@@ -37,8 +42,6 @@ wandb/
 lightning_logs/
 tensorboard/
 events.out.tfevents.*
-
-# Gewichte / Artefakte
 *.pt
 *.pth
 *.pth.tar
@@ -84,16 +87,24 @@ env/
 .env.*
 *.env
 
+# =========================
+# PROJEKT-UNTERORDNER (gleiches Verhalten)
+# =========================
+SegemtationTrainig_v1/data/**
+!SegemtationTrainig_v1/data/.gitkeep
+!SegemtationTrainig_v1/data/**/.gitkeep
+!SegemtationTrainig_v1/data/README.md
+!SegemtationTrainig_v1/data/**/README.md
 
+SegemtationTrainig_v1/converted/yolo/**
+!SegemtationTrainig_v1/converted/yolo/.gitkeep
+!SegemtationTrainig_v1/converted/yolo/**/.gitkeep
 
-# zusätzlich für Projekt-Unterordner
-SegemtationTrainig_v1/data/StrawDI_Db1/
-SegemtationTrainig_v1/**/img/
-SegemtationTrainig_v1/**/label/
-SegemtationTrainig_v1/converted/yolo/
 SegemtationTrainig_v1/converted/coco/**
 !SegemtationTrainig_v1/converted/coco/*.json
 !SegemtationTrainig_v1/converted/coco/**/*.json
+!SegemtationTrainig_v1/converted/coco/*.md
+!SegemtationTrainig_v1/converted/coco/**/.gitkeep
 
 # =========================
 # EDITOREN / IDEs
@@ -128,12 +139,6 @@ bags/
 *.tar.gz
 *.7z
 *.rar
-
-# =========================
-# DVC
-# =========================
-# .dvc und *.dvc NICHT ignorieren (Metadaten sollen in Git bleiben)
-# DVC kümmert sich selbst um sein Cache-Ignore in .dvc/.gitignore
 
 # Debug renders
 SegemtationTrainig_v1/debug_vis/
