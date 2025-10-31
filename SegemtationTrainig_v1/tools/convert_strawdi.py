@@ -2,48 +2,37 @@
 """
 Convert StrawDI_Db1 layout to:
   1) COCO JSON for instance segmentation (Detectron2 / YOLACT++)
+     -> images at converted/coco/images/{train,val,test}/
+     -> file_name in JSON is "<split>/<filename>"
   2) YOLO-seg labels for Ultralytics YOLOv8-seg
+     -> images+labels at converted/yolo/{train,val,test}/{images,labels}
 
-Input layout (do NOT reshuffle):
+Input (do NOT reshuffle):
 StrawDI_Db1/
-  train/
-    img/*.png|jpg
-    label/*.png        # instance-ID masks: 0=bg, 1..N=one berry each
-  val/
-    img/*.png|jpg
-    label/*.png
-  test/
-    img/*.png|jpg
-    label/*.png
-
-Outputs:
-converted/
-  coco/
-    instances_train.json
-    instances_val.json
-    instances_test.json
-  yolo/
-    train/{images,labels}
-    val/{images,labels}
-    test/{images,labels}
+  train/{img/*.png|jpg, label/*.png}   # instance-ID masks: 0 bg, 1..N instance id
+  val/{img/*.png|jpg,   label/*.png}
+  test/{img/*.png|jpg,  label/*.png}
 """
+from __future__ import annotations
 
-import os, json, argparse
+import argparse
+import json
+import os
+import shutil
 from pathlib import Path
+
 import cv2
 import numpy as np
 from tqdm import tqdm
 
 IMG_EXTS = [".png", ".jpg", ".jpeg"]
-MASK_EXTS = [".png"]  
+MASK_EXTS = [".png"]  # instance-id masks
 
 def find_mask_for_image(mask_dir: Path, stem: str) -> Path | None:
-    # Try common mask extensions
     for ext in MASK_EXTS:
         p = mask_dir / f"{stem}{ext}"
         if p.exists():
             return p
-    # Fallback: any file starting with stem (rare)
     cands = list(mask_dir.glob(f"{stem}.*"))
     return cands[0] if cands else None
 
@@ -54,29 +43,24 @@ def iter_images(img_dir: Path):
     return files
 
 def contours_from_instance(bin_mask: np.ndarray):
-    # bin_mask: uint8 {0,1} for a single instance
     contours, _ = cv2.findContours(bin_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     segs = []
     for c in contours:
         if len(c) < 3:
             continue
-        c = c.squeeze(1)           # shape (N,2)
-        seg = c.flatten().astype(float).tolist()  # [x1,y1,x2,y2,...]
+        c = c.squeeze(1)  # (N,2)
+        seg = c.flatten().astype(float).tolist()
         if len(seg) >= 6:
             segs.append(seg)
     return segs
 
 def mask_to_coco_anns(mask: np.ndarray, image_id: int, start_ann_id: int, category_id: int = 1):
-    """
-    Converts an instance-ID mask to a list of COCO-style annotations (polygons+box) for one image.
-    Returns: (annotations, next_ann_id)
-    """
     anns, ann_id = [], start_ann_id
     ids = np.unique(mask)
     ids = ids[ids > 0]  # 0 = background
     for iid in ids:
         m = (mask == iid).astype(np.uint8)
-        if int(m.sum()) < 20:  # ignore tiny fragments
+        if int(m.sum()) < 20:
             continue
         segs = contours_from_instance(m)
         if not segs:
@@ -92,16 +76,13 @@ def mask_to_coco_anns(mask: np.ndarray, image_id: int, start_ann_id: int, catego
             "segmentation": segs,
             "bbox": [xmin, ymin, w, h],
             "iscrowd": 0,
-            "area": float(m.sum())
+            "area": float(m.sum()),
         })
         ann_id += 1
     return anns, ann_id
 
 def write_yolo_seg(txt_path: Path, mask: np.ndarray, class_id: int = 0):
-    """
-    Write a YOLO-seg .txt: one line per contour
-    Format: class x1 y1 x2 y2 ... (coords normalized to [0,1])
-    """
+    """YOLO-seg .txt: one line per contour: class x1 y1 x2 y2 ... (normalized [0,1])."""
     H, W = mask.shape
     ids = np.unique(mask); ids = ids[ids > 0]
     lines = []
@@ -119,10 +100,29 @@ def write_yolo_seg(txt_path: Path, mask: np.ndarray, class_id: int = 0):
                 lines.append(" ".join([str(class_id)] + [f"{v:.6f}" for v in coords]))
     if lines:
         txt_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(txt_path, "w") as f:
-            f.write("\n".join(lines))
+        txt_path.write_text("\n".join(lines), encoding="utf-8")
 
-def process_split(src_root: Path, split: str, out_coco_dir: Path, out_yolo_dir: Path):
+def _place_image(src: Path, dst: Path, mode: str = "hardlink"):
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    if mode == "hardlink":
+        try:
+            if dst.exists():
+                return
+            os.link(src, dst)  # saves disk space
+            return
+        except OSError:
+            pass  # fall back to copy
+    if mode == "symlink":
+        try:
+            if dst.exists():
+                return
+            os.symlink(src, dst)
+            return
+        except OSError:
+            pass  # fall back to copy
+    shutil.copy2(src, dst)  # default copy
+
+def process_split(src_root: Path, split: str, out_coco_dir: Path, out_yolo_dir: Path, link_mode: str):
     img_dir = src_root / split / "img"
     mask_dir = src_root / split / "label"
     if not img_dir.exists():
@@ -139,6 +139,10 @@ def process_split(src_root: Path, split: str, out_coco_dir: Path, out_yolo_dir: 
     y_lbl = out_yolo_dir / split / "labels"
     y_img.mkdir(parents=True, exist_ok=True)
     y_lbl.mkdir(parents=True, exist_ok=True)
+
+    # COCO images dir (one shared root with split subfolders)
+    coco_images_root = out_coco_dir / "images" / split
+    coco_images_root.mkdir(parents=True, exist_ok=True)
 
     img_paths = iter_images(img_dir)
     for img_path in tqdm(img_paths, desc=f"{split}: convert"):
@@ -157,41 +161,57 @@ def process_split(src_root: Path, split: str, out_coco_dir: Path, out_yolo_dir: 
             mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
 
         h, w = img.shape[:2]
+
+        # --- COCO bookkeeping ---
+        # file_name is "<split>/<filename>" and image_root will be converted/coco/images
         images.append({
             "id": image_id,
             "file_name": f"{split}/{img_path.name}",
-            "width": w, "height": h
+            "width": w,
+            "height": h,
         })
         anns, ann_id = mask_to_coco_anns(mask, image_id, ann_id)
         annotations.extend(anns)
 
-        # For YOLO training, copy image and write label txt
+        # --- Materialize image for COCO (copy/hardlink/symlink) ---
+        _place_image(img_path, coco_images_root / img_path.name, mode=link_mode)
+
+        # --- YOLO export (copy image + write polygon txt) ---
         cv2.imwrite(str(y_img / img_path.name), img)
         write_yolo_seg(y_lbl / f"{stem}.txt", mask, class_id=0)
 
         image_id += 1
 
     out_coco_dir.mkdir(parents=True, exist_ok=True)
-    with open(out_coco_dir / f"instances_{split}.json", "w") as f:
+    with open(out_coco_dir / f"instances_{split}.json", "w", encoding="utf-8") as f:
         json.dump(
-            {"images": images, "annotations": annotations, "categories": [{"id":1, "name":"strawberry"}]},
-            f
+            {
+                "images": images,
+                "annotations": annotations,
+                "categories": [{"id": 1, "name": "strawberry"}],
+            },
+            f,
         )
-    print(f"Wrote COCO {split}:", out_coco_dir / f"instances_{split}.json")
+    print(f"[COCO] Wrote {split} JSON -> {out_coco_dir / f'instances_{split}.json'}")
+    print(f"[COCO] Images @ {out_coco_dir / 'images' / split}")
+    print(f"[YOLO] Images @ {y_img}")
+    print(f"[YOLO] Labels @ {y_lbl}")
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--src", required=True, help="Path to StrawDI_Db1 root (has train/val/test with img/label)")
+    ap.add_argument("--src", required=True, help="Path to StrawDI_Db1 root (train/val/test with img/label)")
     ap.add_argument("--out_coco", default="converted/coco")
     ap.add_argument("--out_yolo", default="converted/yolo")
+    ap.add_argument("--link_mode", choices=["copy", "hardlink", "symlink"], default="hardlink",
+                    help="How to place images into converted/coco/images (saves space with hardlinks)")
     args = ap.parse_args()
 
-    src = Path(args.src)
-    out_coco = Path(args.out_coco)
-    out_yolo = Path(args.out_yolo)
+    src = Path(args.src).resolve()
+    out_coco = Path(args.out_coco).resolve()
+    out_yolo = Path(args.out_yolo).resolve()
 
     for split in ["train", "val", "test"]:
-        process_split(src, split, out_coco, out_yolo)
+        process_split(src, split, out_coco, out_yolo, link_mode=args.link_mode)
 
 if __name__ == "__main__":
     main()

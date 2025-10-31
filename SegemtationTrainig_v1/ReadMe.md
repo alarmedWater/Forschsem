@@ -1,3 +1,20 @@
+Set up: 
+
+run 
+# Alles (CPU):
+./setup_instseg_envs.sh --all
+
+# Nur YOLOv8 (CPU):
+./setup_instseg_envs.sh --target yolo8
+
+# CUDA-Variante (PyTorch CUDA 12.1), nur D2:
+./setup_instseg_envs.sh --target d2 --cuda
+
+# Envs neu aufsetzen (löschen + neu):
+./setup_instseg_envs.sh --all --force
+
+
+
 Datensatz StrawDI_Db1: https://datasetninja.com/strawdi
 Hier gesehen: https://www.sciencedirect.com/science/article/abs/pii/S0168169920300624
 
@@ -24,7 +41,11 @@ https://strawdi.github.io/
 https://drive.google.com/file/d/1elFB-q9dgPbfnleA7qIrTb96Qsli8PZl/view 
 
 -> Put it into data: StrawDI_Db1/test and so on 
--> run tools converter_strawdi.py to convert the labels for yolo anc coco
+-> run 
+python SegemtationTrainig_v1/tools/convert_strawdi.py   --src SegemtationTrainig_v1/data/StrawDI_Db1   --out_coco SegemtationTrainig_v1/converted/coco   --out_yolo SegemtationTrainig_v1/converted/yolo   --link_mode hardlink
+
+to convert the labels for yolo anc coco
+
 -> run view_yolo_seg.py to check if it works (check folder debug_vis)
 
 
@@ -39,3 +60,6 @@ GPU_DEVICE = "0"   # falls mehrere GPUs, ggf. anpassen
 EPOCHS = 100       # oder mehr
 BATCH = 16         # je nach VRAM erhöhen
 WORKERS = 8        # >0 für schnellere IO auf GPU
+
+
+
