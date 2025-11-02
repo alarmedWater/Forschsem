@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>strawberry_bringup</name>
+  <version>0.0.1</version>
+  <description>Launch files for the strawberry pipeline (camera + robot dummies).</description>
+
+  <maintainer email="julian.schrenk@stud.hs-hannover.de">Julian Schrenk</maintainer>
+  <license>MIT</license>
+
+  <!-- Launch deps -->
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+
+  <!-- Auf die beiden Pakete verweisen -->
+  <exec_depend>strawberry_camera</exec_depend>
+  <exec_depend>meca500_ros2</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

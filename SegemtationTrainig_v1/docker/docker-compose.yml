@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  # ==================== DETECTRON2 SERVICES ====================
+  detectron2-gpu:
+    build: ./detectron2
+    volumes:
+      - ..:/workspace              # Mount entire project
+    working_dir: /workspace
+    environment:
+      - DETECTRON2_USE_CUDA=1
+    command: python docker/detectron2/train_detectron2.py
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  detectron2-cpu:
+    build: ./detectron2
+    volumes:
+      - ..:/workspace              # Mount entire project
+    working_dir: /workspace
+    environment:
+      - DETECTRON2_USE_CUDA=0
+    command: python docker/detectron2/train_detectron2.py
+
+  # ==================== YOLACT SERVICES ====================
+  yolact-gpu:
+    build: ./yolact
+    volumes:
+      - ..:/workspace
+    working_dir: /workspace
+    environment:
+      - YOLACT_USE_CUDA=1
+    command: python docker/yolact/train_yolact.py
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  yolact-cpu:
+    build: ./yolact
+    volumes:
+      - ..:/workspace
+    working_dir: /workspace
+    environment:
+      - YOLACT_USE_CUDA=0
+    command: python docker/yolact/train_yolact.py
+
+  yolact-quicktest:
+    build: ./yolact
+    volumes:
+      - ..:/workspace
+    working_dir: /workspace
+    environment:
+      - YOLACT_USE_CUDA=0
+      - YOLACT_QUICK_TEST=1
+    command: python docker/yolact/train_yolact.py

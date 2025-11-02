@@ -1,65 +1,226 @@
-Set up: 
+# Strawberry Instance Segmentation - Docker Training Pipeline
 
-run 
-# Alles (CPU):
-./setup_instseg_envs.sh --all
+## 📋 Projektübersicht
 
-# Nur YOLOv8 (CPU):
-./setup_instseg_envs.sh --target yolo8
+Dieses Projekt trainiert drei verschiedene Instance Segmentation Modelle (Detectron2, YOLACT++, YOLOv8) auf dem StrawDI-Datensatz für Erdbeerernte. Die Modelle können sowohl auf CPU (Schnelltests) als auch GPU (volles Training) laufen.
 
-# CUDA-Variante (PyTorch CUDA 12.1), nur D2:
-./setup_instseg_envs.sh --target d2 --cuda
-
-# Envs neu aufsetzen (löschen + neu):
-./setup_instseg_envs.sh --all --force
-
-
-
-Datensatz StrawDI_Db1: https://datasetninja.com/strawdi
-Hier gesehen: https://www.sciencedirect.com/science/article/abs/pii/S0168169920300624
-
-quelle zu Dataset
-@article{PEREZBORRERO2020105736,
-title = "A fast and accurate deep learning method for strawberry instance segmentation",
-journal = "Computers and Electronics in Agriculture",
-volume = "178",
-pages = "105736",
-year = "2020",
-issn = "0168-1699",
-doi = "https://doi.org/10.1016/j.compag.2020.105736",
-url = "http://www.sciencedirect.com/science/article/pii/S0168169920300624",
-author = "Isaac Pérez-Borrero and Diego Marín-Santos and Manuel E. Gegúndez-Arias and Estefanía Cortés-Ancos"
-}
+## 🏗️ Projektstruktur
+SegemtationTrainig_v1/
+├── docker/
+│ ├── docker-compose.yml # Alle Docker Services
+│ ├── detectron2/
+│ │ ├── Dockerfile
+│ │ ├── train_detectron2.py
+│ │ └── run_detectron2_docker.sh
+│ └── yolact/
+│ ├── Dockerfile
+│ ├── train_yolact.py
+│ └── run_yolact_docker.sh
+├── models/
+│ └── train_yolo8s.py # Original YOLOv8
+├── tools/
+│ ├── convert_strawdi.py # Datenkonvertierung
+│ └── view_yolo_seg.py # Datenvisualisierung
+├── converted/ # Generierte Datensätze
+│ ├── coco/ # COCO-Format
+│ └── yolo/ # YOLO-Format
+└── runs/ # Trainingsergebnisse
 
 
+## 📊 Datensatzvorbereitung
+
+### 1. Datenstruktur vorbereiten
+
+Die Rohdaten müssen folgende Struktur haben:
+StrawDI_Db1/
+├── train/
+│ ├── img/.png|jpg
+│ └── label/.png
+├── val/
+│ ├── img/.png|jpg
+│ └── label/.png
+└── test/
+├── img/.png|jpg
+└── label/.png
 
 
+### 2. Daten konvertieren
 
-Setup: 
-Get the data from:
-https://strawdi.github.io/
-https://drive.google.com/file/d/1elFB-q9dgPbfnleA7qIrTb96Qsli8PZl/view 
+```bash
+cd SegemtationTrainig_v1
 
--> Put it into data: StrawDI_Db1/test and so on 
--> run 
-python SegemtationTrainig_v1/tools/convert_strawdi.py   --src SegemtationTrainig_v1/data/StrawDI_Db1   --out_coco SegemtationTrainig_v1/converted/coco   --out_yolo SegemtationTrainig_v1/converted/yolo   --link_mode hardlink
+# Daten in COCO und YOLO Format konvertieren
+python tools/convert_strawdi.py \
+    --src /pfad/zu/StrawDI_Db1 \
+    --out_coco converted/coco \
+    --out_yolo converted/yolo \
+    --link_mode hardlink
 
-to convert the labels for yolo anc coco
+Parameter:
 
--> run view_yolo_seg.py to check if it works (check folder debug_vis)
+    --src: Pfad zum StrawDI_Db1 Ordner
 
+    --link_mode: hardlink (platzsparend), symlink oder copy
 
+### 3. Datenqualität prüfen
 
-RUn yolo 
-start with python SegemtationTrainig_v1/models/train_yolo.py
-set USE_CUDA to true for compleete training with gpu
-run it with USE_CUDA false to run it with subset und cpu 
-
-USE_CUDA = True
-GPU_DEVICE = "0"   # falls mehrere GPUs, ggf. anpassen
-EPOCHS = 100       # oder mehr
-BATCH = 16         # je nach VRAM erhöhen
-WORKERS = 8        # >0 für schnellere IO auf GPU
+# YOLO-Segmentation Labels visualisieren
+python tools/view_yolo_seg.py
+siehe debug_vis/
 
 
+🐳 Docker Training
+Voraussetzungen
 
+    Docker und Docker Compose installiert
+
+    20+ GB freier Speicherplatz
+
+    Für GPU Training: NVIDIA Docker Support
+
+1. Detectron2 (Mask R-CNN)
+
+CPU Schnelltest (5-15 Minuten):
+bash
+
+cd SegemtationTrainig_v1/docker
+docker-compose up detectron2-cpu
+
+GPU Volltraining:
+bash
+
+docker-compose up detectron2-gpu
+
+Manuell mit Script:
+bash
+
+cd docker/detectron2
+./run_detectron2_docker.sh cpu    # oder gpu
+
+2. YOLACT++
+
+Extrem Schnelltest (1-2 Minuten):
+bash
+
+docker-compose up yolact-quicktest
+
+CPU Schnelltest (5-15 Minuten):
+bash
+
+docker-compose up yolact-cpu
+
+GPU Volltraining:
+bash
+
+docker-compose up yolact-gpu
+
+Manuell mit Script:
+bash
+
+cd docker/yolact
+./run_yolact_docker.sh test    # quicktest
+./run_yolact_docker.sh cpu     # sanity test  
+./run_yolact_docker.sh gpu     # full training
+
+3. YOLOv8 (ohne Docker)
+
+CPU Schnelltest:
+bash
+
+conda activate yolo8-seg
+python models/train_yolo8s.py  # USE_CUDA = False in Script
+
+GPU Training:
+bash
+
+conda activate yolo8-seg  
+python models/train_yolo8s.py  # USE_CUDA = True in Script
+
+⚙️ Konfiguration
+Environment Variablen
+
+Detectron2:
+
+    DETECTRON2_USE_CUDA=1 für GPU
+
+    DETECTRON2_USE_CUDA=0 für CPU
+
+YOLACT:
+
+    YOLACT_USE_CUDA=1 für GPU
+
+    YOLACT_USE_CUDA=0 für CPU
+
+    YOLACT_QUICK_TEST=1 für extrem schnellen Test
+
+Trainingsparameter
+Modus	Bilder	Iterationen	Geschätzte Zeit	Zweck
+Quick Test	10	100	1-2 min	Basics check
+CPU Sanity	50	500	5-15 min	Daten/Config validieren
+GPU Full	Alle	80,000	Mehrere Stunden	Finales Training
+📁 Output Verzeichnisse
+
+    Detectron2: runs/maskrcnn_r50fpn/
+
+    YOLACT: runs/yolactpp_r101/
+
+    YOLOv8: runs/detect/train_yolov8s/
+
+Enthalten:
+
+    Model Checkpoints
+
+    Trainingslogs
+
+    Evaluationsmetriken
+
+    Visualisierungen
+
+🔧 Troubleshooting
+Disk Space Issues
+bash
+
+# Docker Cache leeren
+docker system prune -a -f
+
+# Conda Cache leeren
+conda clean --all -y
+
+GPU Probleme
+bash
+
+# GPU Verfügbarkeit prüfen
+docker run --gpus all nvidia/cuda:11.8-base nvidia-smi
+
+# Fallback zu CPU
+docker-compose up detectron2-cpu
+
+Datenprobleme
+bash
+
+# Datenstruktur validieren
+python tools/view_yolo_seg.py
+
+# Konvertierung prüfen
+ls -la converted/coco/images/train/
+ls -la converted/yolo/train/labels/
+
+🚀 Empfohlener Workflow
+
+    Daten vorbereiten mit convert_strawdi.py
+
+    Quick Test mit yolact-quicktest (1-2 Minuten)
+
+    CPU Sanity mit beiden Modellen (15-30 Minuten)
+
+    GPU Training nach erfolgreichen Tests
+
+📝 Notizen
+
+    CPU Tests sind für schnelle Entwicklung und Fehlerbehebung
+
+    GPU Training für finale Modelle
+
+    Alle Outputs sind persistent in runs/ gespeichert
+
+    Docker Images werden automatisch gebaut beim ersten Start

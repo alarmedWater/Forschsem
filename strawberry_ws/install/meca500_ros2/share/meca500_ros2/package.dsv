@@ -1,0 +1,9 @@
+source;share/meca500_ros2/hook/pythonpath.ps1
+source;share/meca500_ros2/hook/pythonpath.dsv
+source;share/meca500_ros2/hook/pythonpath.sh
+source;share/meca500_ros2/hook/ament_prefix_path.ps1
+source;share/meca500_ros2/hook/ament_prefix_path.dsv
+source;share/meca500_ros2/hook/ament_prefix_path.sh
+source;../../build/meca500_ros2/share/meca500_ros2/hook/pythonpath_develop.ps1
+source;../../build/meca500_ros2/share/meca500_ros2/hook/pythonpath_develop.dsv
+source;../../build/meca500_ros2/share/meca500_ros2/hook/pythonpath_develop.sh
