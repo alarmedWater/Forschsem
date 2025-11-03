@@ -4,6 +4,8 @@
 
 Dieses Projekt trainiert drei verschiedene Instance Segmentation Modelle (Detectron2, YOLACT++, YOLOv8) auf dem StrawDI-Datensatz für Erdbeerernte. Die Modelle können sowohl auf CPU (Schnelltests) als auch GPU (volles Training) laufen.
 
+get the data: https://drive.google.com/file/d/1elFB-q9dgPbfnleA7qIrTb96Qsli8PZl/view
+
 ## 🏗️ Projektstruktur
 SegemtationTrainig_v1/
 ├── docker/
