@@ -1,6 +1,24 @@
+<#
+Setup YOLOv8 CUDA-Only Env mit Miniforge/Conda unter Windows.
+
+Erstellt/erneuert:
+  - Env: yolo8-seg
+  - Python 3.10
+  - PyTorch 2.1.2 + CUDA 12.1
+  - torchvision, torchaudio
+  - numpy < 2, pandas, opencv, pillow, requests, pyyaml
+  - ultralytics + ONNX-Stack + Albumentations + thop
+
+Aufruf (z.B. aus Miniforge Prompt / CMD):
+  powershell -NoProfile -ExecutionPolicy Bypass -File .\pipeline_yolo8_cuda.ps1 -force
+
+Parameter:
+  -force  -> existierende 'yolo8-seg' Umgebung vorher löschen
+  -help   -> Hilfe anzeigen
+#>
+
+[CmdletBinding()]
 param(
-    [switch]$cpu,
-    [switch]$cuda,
     [switch]$force,
     [switch]$help
 )
@@ -8,41 +26,34 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-# Defaults
-$PY310    = "3.10"
-$MODE     = "cpu"       # cpu | cuda
-$ENV_NAME = "yolo8-seg"
+$EnvName       = "yolo8-seg"
+$PythonVersion = "3.10"
 
 if ($help) {
-    Write-Host "Usage: .\pipeline_yolo8_setup.ps1 [-cpu|-cuda] [-force]"
+    Write-Host "Usage: .\pipeline_yolo8_cuda.ps1 [-force]"
+    Write-Host "Always creates CUDA-enabled YOLOv8 env in '$EnvName'."
     exit 0
 }
 
-# Argumente auswerten
-if ($cpu)  { $MODE = "cpu" }
-if ($cuda) { $MODE = "cuda" }
+Write-Host "[YOLOv8] CUDA-ONLY SETUP"
+Write-Host "[YOLOv8] ENV=$EnvName, PYTHON=$PythonVersion, FORCE=$($force.IsPresent)"
+Write-Host ""
 
-$forceFlag = $force.IsPresent
-Write-Host "[YOLOv8] MODE=$MODE, FORCE=$forceFlag"
-
-function Get-CondaEnvNames {
-    conda env list |
-        Where-Object { $_ -and ($_ -notmatch "^#") } |
-        ForEach-Object {
-            ($_ -split "\s+")[0]
-        }
+# --- Conda prüfen ---
+if (-not (Get-Command conda -ErrorAction SilentlyContinue)) {
+    Write-Error "[YOLOv8] ❌ 'conda' nicht gefunden. Bitte Miniforge/Anaconda Prompt (CMD oder PowerShell) nutzen oder 'conda init' ausführen."
+    exit 1
 }
 
-function Create-OrReuse {
+function New-Or-ReuseEnv {
     param(
         [string]$Name,
         [string]$PyVer,
         [bool]$Force
     )
 
-    $envExists = Get-CondaEnvNames | Where-Object { $_ -eq $Name }
-
-    if ($envExists) {
+    $exists = conda env list | Select-String "^\s*$Name\s"
+    if ($exists) {
         if ($Force) {
             Write-Host "[YOLOv8] Removing existing env '$Name' (force)..."
             conda env remove -n $Name -y | Out-Null
@@ -54,52 +65,46 @@ function Create-OrReuse {
     }
 
     Write-Host "[YOLOv8] Creating env '$Name' (Python $PyVer)..."
-    conda create -y -n $Name -c conda-forge "python=$PyVer" | Out-Null
+    conda create -n $Name -c conda-forge python=$PyVer -y | Out-Null
 }
 
-function Install-PytorchStack {
-    param(
-        [string]$Name,
-        [string]$Mode
-    )
-
-    if ($Mode -eq "cuda") {
-        Write-Host "[YOLOv8] Installing CUDA PyTorch stack into '$Name'..."
-        conda install -y -n $Name -c pytorch -c nvidia `
-            "pytorch=2.1.2" "torchvision=0.16.2" "torchaudio=2.1.2" "pytorch-cuda=12.1"
-    }
-    else {
-        Write-Host "[YOLOv8] Installing CPU PyTorch stack into '$Name'..."
-        conda install -y -n $Name -c pytorch `
-            "pytorch=2.1.2" "torchvision=0.16.2" "torchaudio=2.1.2" "cpuonly"
-    }
-}
-
-function Base-Science-Stack {
+function Install-PyTorchCudaStack {
     param([string]$Name)
 
-    Write-Host "[YOLOv8] Installing base science stack into '$Name'..."
-    conda install -y -n $Name -c conda-forge `
-        "numpy<2" "pandas" "pyyaml" "opencv" "pillow" "requests"
+    Write-Host "[YOLOv8] Installing PyTorch CUDA stack into '$Name'..."
+    conda install -n $Name -y -c pytorch -c nvidia `
+        pytorch=2.1.2 torchvision=0.16.2 torchaudio=2.1.2 pytorch-cuda=12.1 | Out-Null
 }
 
-# Pipeline
-Create-OrReuse -Name $ENV_NAME -PyVer $PY310 -Force:$forceFlag
-Install-PytorchStack -Name $ENV_NAME -Mode $MODE
-Base-Science-Stack -Name $ENV_NAME
+function Install-BaseStack {
+    param([string]$Name)
 
-Write-Host "[YOLOv8] Installing pip deps (Ultralytics & ONNX)..."
-conda run -n $ENV_NAME pip install --no-cache-dir -U `
+    Write-Host "[YOLOv8] Installing base scientific stack into '$Name'..."
+    conda install -n $Name -y -c conda-forge `
+        "numpy<2" pandas pyyaml opencv pillow requests | Out-Null
+}
+
+# --- Pipeline ---
+New-Or-ReuseEnv        -Name $EnvName -PyVer $PythonVersion -Force:$force
+Install-PyTorchCudaStack -Name $EnvName
+Install-BaseStack        -Name $EnvName
+
+Write-Host "[YOLOv8] Installing pip dependencies (Ultralytics & ONNX stack)..."
+conda run -n $EnvName python -m pip install --no-cache-dir -U `
     "ultralytics==8.3.223" `
     "pycocotools>=2.0.0,<3.0.0" `
     "onnx==1.19.1" `
     "onnxruntime==1.16.3" `
     "onnxslim==0.1.72" `
     "albumentations==1.4.24" `
-    "thop==0.1.1.post2209072238"
+    "thop==0.1.1.post2209072238" | Out-Null
 
 Write-Host ""
-Write-Host "[YOLOv8] ✅ Environment '$ENV_NAME' is ready."
-Write-Host "Use it with:"
-Write-Host "  conda activate $ENV_NAME"
-Write-Host "  python C:\Users\<deinUser>\Documents\JuliaFS\Forschsem\SegemtationTrainig_v1\models\train_yolo8s.py"
+Write-Host "[YOLOv8] ✅ CUDA Environment '$EnvName' bereit."
+Write-Host "Nutzen mit:"
+Write-Host "  conda activate $EnvName"
+Write-Host "  python C:\Users\fgerz1\Documents\JuliaFS\Forschsem\SegemtationTrainig_v1\models\train_yolo8s.py"
+Write-Host ""
+Write-Host "⚠️ Wichtig:"
+Write-Host "  - In dieses Env KEIN TensorFlow installieren (sonst numpy/ABI-Chaos)."
+Write-Host "  - Stelle sicher, dass NVIDIA-Treiber + CUDA Runtime zu pytorch-cuda=12.1 passen."

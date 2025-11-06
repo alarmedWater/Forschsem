@@ -29,7 +29,6 @@ converted/coco/**
 # =========================
 # TRAININGS-OUTPUTS & MODELLE
 # =========================
-runs/
 checkpoints/
 logs/
 wandb/
