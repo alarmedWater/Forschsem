@@ -9,27 +9,25 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 # Defaults
-$PY310   = "3.10"
-$MODE    = "cpu"       # cpu | cuda
-$FORCE   = "no"
+$PY310    = "3.10"
+$MODE     = "cpu"       # cpu | cuda
 $ENV_NAME = "yolo8-seg"
 
-# Hilfe
 if ($help) {
-    Write-Host "Usage: powershell -ExecutionPolicy Bypass -File .\pipeline_yolo8_setup.ps1 [-cpu|-cuda] [-force]"
+    Write-Host "Usage: .\pipeline_yolo8_setup.ps1 [-cpu|-cuda] [-force]"
     exit 0
 }
 
 # Argumente auswerten
 if ($cpu)  { $MODE = "cpu" }
 if ($cuda) { $MODE = "cuda" }
-if ($force) { $FORCE = "yes" }
 
-Write-Host "[YOLOv8] MODE=$MODE, FORCE=$FORCE"
+$forceFlag = $force.IsPresent
+Write-Host "[YOLOv8] MODE=$MODE, FORCE=$forceFlag"
 
 function Get-CondaEnvNames {
     conda env list |
-        Where-Object {$_ -and ($_ -notmatch "^#")} |
+        Where-Object { $_ -and ($_ -notmatch "^#") } |
         ForEach-Object {
             ($_ -split "\s+")[0]
         }
@@ -38,13 +36,14 @@ function Get-CondaEnvNames {
 function Create-OrReuse {
     param(
         [string]$Name,
-        [string]$PyVer
+        [string]$PyVer,
+        [bool]$Force
     )
 
     $envExists = Get-CondaEnvNames | Where-Object { $_ -eq $Name }
 
     if ($envExists) {
-        if ($FORCE -eq "yes") {
+        if ($Force) {
             Write-Host "[YOLOv8] Removing existing env '$Name' (force)..."
             conda env remove -n $Name -y | Out-Null
         }
@@ -59,9 +58,12 @@ function Create-OrReuse {
 }
 
 function Install-PytorchStack {
-    param([string]$Name)
+    param(
+        [string]$Name,
+        [string]$Mode
+    )
 
-    if ($MODE -eq "cuda") {
+    if ($Mode -eq "cuda") {
         Write-Host "[YOLOv8] Installing CUDA PyTorch stack into '$Name'..."
         conda install -y -n $Name -c pytorch -c nvidia `
             "pytorch=2.1.2" "torchvision=0.16.2" "torchaudio=2.1.2" "pytorch-cuda=12.1"
@@ -82,8 +84,8 @@ function Base-Science-Stack {
 }
 
 # Pipeline
-Create-OrReuse -Name $ENV_NAME -PyVer $PY310
-Install-PytorchStack -Name $ENV_NAME
+Create-OrReuse -Name $ENV_NAME -PyVer $PY310 -Force:$forceFlag
+Install-PytorchStack -Name $ENV_NAME -Mode $MODE
 Base-Science-Stack -Name $ENV_NAME
 
 Write-Host "[YOLOv8] Installing pip deps (Ultralytics & ONNX)..."
@@ -100,4 +102,4 @@ Write-Host ""
 Write-Host "[YOLOv8] ✅ Environment '$ENV_NAME' is ready."
 Write-Host "Use it with:"
 Write-Host "  conda activate $ENV_NAME"
-Write-Host "  python C:\Pfad\zu\deinem\Projekt\models\train_yolo8s.py"
+Write-Host "  python C:\Users\<deinUser>\Documents\JuliaFS\Forschsem\SegemtationTrainig_v1\models\train_yolo8s.py"
