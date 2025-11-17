@@ -98,6 +98,7 @@ SegemtationTrainig_v1/converted/coco/**
 !SegemtationTrainig_v1/converted/coco/**/*.json
 !SegemtationTrainig_v1/converted/coco/*.md
 !SegemtationTrainig_v1/converted/coco/**/.gitkeep
+strawberry_ws/data/test_images/**
 
 # =========================
 # EDITOREN / IDEs

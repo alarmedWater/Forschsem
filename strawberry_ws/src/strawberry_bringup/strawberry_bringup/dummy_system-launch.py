@@ -26,4 +26,15 @@ def generate_launch_description():
             }],
             output='screen'
         ),
+        Node(
+            package='strawberry_segmentation', executable='seg_onnx', name='seg_onnx',
+            parameters=[{
+                'model_path': '/ABS/PATH/to/best.onnx',
+                'imgsz': 1024, 'conf_thres': 0.25, 'iou_thres': 0.5,
+                'num_classes': 1, 'mask_dim': 32,
+                'providers': ['CPUExecutionProvider'],  # or ['CUDAExecutionProvider','CPUExecutionProvider']
+            }],
+            output='screen'
+        ),
+
     ])

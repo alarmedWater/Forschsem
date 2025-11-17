@@ -17,8 +17,10 @@ setup(
     description='Dummy D405 camera publishers',
     license='MIT',
     entry_points={
-        'console_scripts': [
-            'camera_dummy = strawberry_camera.camera_dummy_node:main',
+    'console_scripts': [
+        'camera_dummy = strawberry_camera.camera_dummy_node:main',
+        'camera_folder = strawberry_camera.camera_folder_node:main',  # <—
         ],
     },
+
 )
