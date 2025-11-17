@@ -1,107 +1,178 @@
 #!/usr/bin/env python3
-import rclpy, numpy as np, time
+# -*- coding: utf-8 -*-
+"""
+ROS 2 Dummy-Kameranode für eine Intel RealSense D405-ähnliche Publikation.
+Publiziert:
+  - /camera/color/image_raw                (sensor_msgs/Image,  rgb8)
+  - /camera/aligned_depth_to_color/image_raw (sensor_msgs/Image, 16UC1 in Millimetern)
+  - /camera/color/camera_info              (sensor_msgs/CameraInfo)
+Alle Header-Stamps sind identisch pro Frame; frame_id passt zur Color-Optical-Frame.
+Depth-Auflösung folgt standardmäßig der Color-Auflösung (aligned).
+"""
+
+import time
+import numpy as np
+import rclpy
 from rclpy.node import Node
-from sensor_msgs.msg import Image, CameraInfo
 from std_msgs.msg import Header
+from sensor_msgs.msg import Image, CameraInfo
 from cv_bridge import CvBridge
 
+
 class CameraDummy(Node):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__('camera_dummy')
 
-        # Params (anpassbar via Launch/YAML)
+        # -----------------------------
+        # Parameter (via Launch/YAML änderbar)
+        # -----------------------------
+        # Color-Auflösung
         self.declare_parameter('color_width', 1280)
         self.declare_parameter('color_height', 720)
-        self.declare_parameter('depth_width', 640)
-        self.declare_parameter('depth_height', 480)
+
+        # Depth-Auflösung (aligned: wenn None -> wie Color)
+        self.declare_parameter('depth_width', None)
+        self.declare_parameter('depth_height', None)
+
+        # FPS
         self.declare_parameter('fps', 30.0)
-        self.declare_parameter('fx', 600.0)   # Platzhalter
-        self.declare_parameter('fy', 600.0)
+
+        # Intrinsics (Platzhalter; bitte an eure reale Auflösung anpassen)
+        self.declare_parameter('fx', 900.0)
+        self.declare_parameter('fy', 900.0)
         self.declare_parameter('cx', 640.0)
         self.declare_parameter('cy', 360.0)
+
+        # Frames
         self.declare_parameter('frame_color', 'camera_color_optical_frame')
-        self.declare_parameter('frame_depth', 'camera_color_optical_frame')  # aligned to color!
+        # Depth ist auf Color registriert -> gleicher Optical-Frame
+        self.declare_parameter('frame_depth', 'camera_color_optical_frame')
+
+        # Verzeichnung
         self.declare_parameter('distortion_model', 'plumb_bob')
-        self.declare_parameter('D', [0.0, 0.0, 0.0, 0.0, 0.0])               # Dummy
+        self.declare_parameter('D', [0.0, 0.0, 0.0, 0.0, 0.0])  # k1, k2, t1, t2, k3
 
-        self.bridge = CvBridge()
-        self.pub_rgb   = self.create_publisher(Image, '/camera/color/image_raw', 10)
-        self.pub_depth = self.create_publisher(Image, '/camera/aligned_depth_to_color/image_raw', 10)
-        self.pub_info  = self.create_publisher(CameraInfo, '/camera/color/camera_info', 10)
+        # -----------------------------
+        # Publisher
+        # -----------------------------
+        self._bridge = CvBridge()
+        self._pub_rgb = self.create_publisher(Image, '/camera/color/image_raw', 10)
+        self._pub_depth = self.create_publisher(Image, '/camera/aligned_depth_to_color/image_raw', 10)
+        self._pub_info = self.create_publisher(CameraInfo, '/camera/color/camera_info', 10)
 
-        period = 1.0 / float(self.get_parameter('fps').get_parameter_value().double_value)
-        self.timer = self.create_timer(period, self.tick)
-        self.t0 = time.time()
-        self.i  = 0
+        # Timer
+        fps = float(self.get_parameter('fps').get_parameter_value().double_value)
+        period = max(1.0 / fps, 1e-3)
+        self._timer = self.create_timer(period, self._tick)
 
-    def make_cam_info(self, stamp):
-        w = self.get_parameter('color_width').value
-        h = self.get_parameter('color_height').value
-        fx = self.get_parameter('fx').value
-        fy = self.get_parameter('fy').value
-        cx = self.get_parameter('cx').value
-        cy = self.get_parameter('cy').value
-        frame = self.get_parameter('frame_color').value
+        self._frame_idx = 0
+        self.get_logger().info('camera_dummy started (RGB:rgb8, Depth:16UC1 mm, info:CameraInfo)')
+
+    # ---------------------------------------------------------
+    # Hilfsfunktionen
+    # ---------------------------------------------------------
+    def _p(self, name):
+        """Kurzform: Parameterwert holen (liefert .value direkt)."""
+        return self.get_parameter(name).get_parameter_value()._value
+
+    def _make_cam_info(self, stamp):
+        cw = int(self._p('color_width'))
+        ch = int(self._p('color_height'))
+
+        fx = float(self._p('fx'))
+        fy = float(self._p('fy'))
+        cx = float(self._p('cx'))
+        cy = float(self._p('cy'))
+        frame = str(self._p('frame_color'))
 
         info = CameraInfo()
         info.header = Header(stamp=stamp, frame_id=frame)
-        info.width, info.height = w, h
-        info.distortion_model = self.get_parameter('distortion_model').value
-        info.d = self.get_parameter('D').value
+        info.width = cw
+        info.height = ch
+        info.distortion_model = str(self._p('distortion_model'))
+        D_list = list(self._p('D'))
+        info.d = D_list
+
+        # Kameramatrix K
         info.k = [fx, 0.0, cx,
                   0.0, fy, cy,
                   0.0, 0.0, 1.0]
-        info.r = [1,0,0, 0,1,0, 0,0,1]
-        # Projektionsmatrix (mono)
+
+        # R (Identität) und P (Mono-Projektionsmatrix)
+        info.r = [1.0, 0.0, 0.0,
+                  0.0, 1.0, 0.0,
+                  0.0, 0.0, 1.0]
+
         info.p = [fx, 0.0, cx, 0.0,
                   0.0, fy, cy, 0.0,
                   0.0, 0.0, 1.0, 0.0]
         return info
 
-    def tick(self):
-        # Einheitlicher Zeitstempel für RGB/Depth/Info
-        now = self.get_clock().now().to_msg()
+    # ---------------------------------------------------------
+    # Haupt-Tick: einmal pro Frame alles mit identischem Timestamp publizieren
+    # ---------------------------------------------------------
+    def _tick(self):
+        stamp = self.get_clock().now().to_msg()
 
-        # Dummy RGB: horizontales Farbverlauf-Pattern
-        w = self.get_parameter('color_width').value
-        h = self.get_parameter('color_height').value
-        rgb = np.zeros((h, w, 3), dtype=np.uint8)
-        rgb[..., 0] = np.linspace(0, 255, w, dtype=np.uint8)
-        rgb[..., 1] = (self.i * 5) % 255
-        rgb_msg = self.bridge.cv2_to_imgmsg(rgb, encoding='rgb8')
-        rgb_msg.header.stamp = now
-        rgb_msg.header.frame_id = self.get_parameter('frame_color').value
+        # ---- Auflösungen (Depth folgt Color, wenn nicht explizit gesetzt)
+        cw = int(self._p('color_width'))
+        ch = int(self._p('color_height'))
+        dw = int(self._p('depth_width')) if self._p('depth_width') is not None else cw
+        dh = int(self._p('depth_height')) if self._p('depth_height') is not None else ch
 
-        # Dummy Depth (16UC1 mm): geneigte Ebene bei ~300–500 mm
-        wd = self.get_parameter('depth_width').value
-        hd = self.get_parameter('depth_height').value
-        xv = np.linspace(0, 1, wd, dtype=np.float32)
-        yv = np.linspace(0, 1, hd, dtype=np.float32)[:, None]
-        depth_mm = (300.0 + 200.0*(xv + yv))  # 300..700 mm
-        depth = depth_mm.astype(np.uint16)
+        # -----------------------------
+        # RGB dummy (rgb8)
+        # -----------------------------
+        rgb = np.zeros((ch, cw, 3), dtype=np.uint8)
+        # einfacher Farbverlauf + animierte zweite Kanalebene
+        rgb[..., 0] = np.linspace(0, 255, cw, dtype=np.uint8)
+        rgb[..., 1] = (self._frame_idx * 5) % 255
+        rgb_msg = self._bridge.cv2_to_imgmsg(rgb, encoding='rgb8')
+        rgb_msg.header.stamp = stamp
+        rgb_msg.header.frame_id = str(self._p('frame_color'))
+
+        # -----------------------------
+        # Depth dummy (16UC1, Millimeter), aligned zu Color
+        # -----------------------------
+        xv = np.linspace(0.0, 1.0, dw, dtype=np.float32)
+        yv = np.linspace(0.0, 1.0, dh, dtype=np.float32)[:, None]
+        depth_mm = 300.0 + 200.0 * (xv + yv)  # geneigte Ebene 300..700 mm
+        depth_np = depth_mm.astype(np.uint16)
+
         depth_msg = Image()
-        depth_msg.header.stamp = now
-        depth_msg.header.frame_id = self.get_parameter('frame_depth').value  # aligned to color
-        depth_msg.height = hd
-        depth_msg.width  = wd
-        depth_msg.encoding = '16UC1'
+        depth_msg.header.stamp = stamp
+        depth_msg.header.frame_id = str(self._p('frame_depth'))  # gleiches Optical-Frame wie Color
+        depth_msg.height = dh
+        depth_msg.width = dw
+        depth_msg.encoding = '16UC1'      # wichtig: Millimeter als unsigned short
         depth_msg.is_bigendian = 0
-        depth_msg.step = wd * 2
-        depth_msg.data = depth.tobytes()
+        depth_msg.step = dw * 2
+        depth_msg.data = depth_np.tobytes()
 
-        info = self.make_cam_info(now)
+        # -----------------------------
+        # CameraInfo (zu Color-Auflösung)
+        # -----------------------------
+        info_msg = self._make_cam_info(stamp)
 
-        self.pub_rgb.publish(rgb_msg)
-        self.pub_depth.publish(depth_msg)
-        self.pub_info.publish(info)
-        self.i += 1
+        # -----------------------------
+        # Publish
+        # -----------------------------
+        self._pub_rgb.publish(rgb_msg)
+        self._pub_depth.publish(depth_msg)
+        self._pub_info.publish(info_msg)
+
+        self._frame_idx += 1
+
 
 def main():
     rclpy.init()
     node = CameraDummy()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(node)
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()
