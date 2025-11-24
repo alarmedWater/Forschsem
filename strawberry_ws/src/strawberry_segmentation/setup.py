@@ -1,4 +1,5 @@
 from setuptools import setup
+from glob import glob
 
 package_name = 'strawberry_segmentation'
 
@@ -9,6 +10,9 @@ setup(
     data_files=[
         ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        # ⬇️ Modell mit installieren
+        ('share/' + package_name + '/models', 
+         ['strawberry_segmentation/models/best.onnx']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

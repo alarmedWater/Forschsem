@@ -14,13 +14,12 @@ setup(
     zip_safe=True,
     maintainer='you',
     maintainer_email='you@example.com',
-    description='Dummy D405 camera publishers',
+    description='Dummy / folder-based camera publishers (RGB, aligned depth, camera_info)',
     license='MIT',
     entry_points={
-    'console_scripts': [
-        'camera_dummy = strawberry_camera.camera_dummy_node:main',
-        'camera_folder = strawberry_camera.camera_folder_node:main',  # <—
+        'console_scripts': [
+            'camera_dummy = strawberry_camera.camera_dummy_node:main',
+            'camera_folder = strawberry_camera.camera_folder_node:main',  # <-- neuer Folder-Player
         ],
     },
-
 )
