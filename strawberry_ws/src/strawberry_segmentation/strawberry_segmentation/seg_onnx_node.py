@@ -4,25 +4,32 @@
 ROS2 node: YOLOv8-seg (ONNXRuntime) inference-only.
 
 Subscribes:
-  - /camera/color/image_raw (sensor_msgs/Image, rgb8)   [konfigurierbar: param 'topic_in']
-Publishes:
-  - /seg/label_image (sensor_msgs/Image, mono16)  instance-id map (0=bg, 1..N)
-  - /seg/overlay     (sensor_msgs/Image, rgb8)    farbiges Overlay (optional)
+  - /camera/color/image_raw  (sensor_msgs/Image, rgb8)   [param: 'topic_in']
 
-ONNX (Ultralytics YOLOv8-seg) Annahme:
+Publishes:
+  - /seg/label_image         (sensor_msgs/Image, mono16)  instance-id map (0=bg, 1..N)
+  - /seg/overlay             (sensor_msgs/Image, rgb8)    farbiges Overlay (optional)
+
+Ann.: Ultralytics YOLOv8-Seg Export (.onnx)
   - Output A: (1, N, 4+nc+nm)  -> boxes(xywh), cls-scores, mask-coeffs
   - Output B: (1, nm, Mh, Mw)  -> mask prototype
-Output-Namen/Reihenfolge können variieren – der Node erkennt sie automatisch.
+Die Output-Namen/Reihenfolge können variieren – der Node erkennt sie automatisch über Shapes.
 
-Parameter (wichtigste):
-  - model_path: Pfad zur .onnx (leer => auto aus Paket-Share/models/best.onnx)
-  - providers:  Liste, z.B. ['CUDAExecutionProvider','CPUExecutionProvider'] oder ['CPUExecutionProvider']
+Wichtige Parameter:
+  - model_path: Pfad zur .onnx  (leer => auto: <pkg share>/models/best.onnx)
+  - providers:  STRING_ARRAY, z.B. ['CPUExecutionProvider'] oder
+                ['CUDAExecutionProvider','CPUExecutionProvider']
                 leer/auto => wählt selbst je nach Verfügbarkeit
   - imgsz, conf_thres, iou_thres, mask_thresh, max_det, num_classes, mask_dim
   - topic_in: Eingangsbild-Topic (default '/camera/color/image_raw')
   - publish_overlay: bool (default True)
   - min_mask_area_px: int (default 20)
-  - profile: bool (default False) -> Loggt Laufzeiten
+  - profile: bool (default False) -> Laufzeiten loggen
+  
+  GPU call:  
+  ros2 run strawberry_segmentation seg_onnx --ros-args \
+  -p providers:="['CUDAExecutionProvider','CPUExecutionProvider']"
+
 """
 
 import os
@@ -35,14 +42,17 @@ import onnxruntime as ort
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
+from rcl_interfaces.msg import ParameterDescriptor
+from rcl_interfaces.msg import ParameterType as PT
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from std_msgs.msg import Header
 from ament_index_python.packages import get_package_share_directory
 
+
 # ----------------- helpers -----------------
 def letterbox(im, new_shape=(640, 640), color=(114, 114, 114), stride=32):
-    """Resize + pad to target shape, keeping aspect ratio."""
+    """Resize+pad to target shape, keeping aspect ratio (Ultralytics-like)."""
     shape = im.shape[:2]  # h, w
     if isinstance(new_shape, int):
         new_shape = (new_shape, new_shape)
@@ -55,11 +65,14 @@ def letterbox(im, new_shape=(640, 640), color=(114, 114, 114), stride=32):
         im = cv2.resize(im, new_unpad, interpolation=cv2.INTER_LINEAR)
     top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
     left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
-    im = cv2.copyMakeBorder(im, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)
+    im = cv2.copyMakeBorder(im, top, bottom, left, right,
+                            cv2.BORDER_CONSTANT, value=color)
     return im, r, (dw, dh)
+
 
 def sigmoid(x): 
     return 1.0 / (1.0 + np.exp(-x))
+
 
 def xywh2xyxy(x):
     y = np.copy(x)
@@ -68,6 +81,7 @@ def xywh2xyxy(x):
     y[..., 2] = x[..., 0] + x[..., 2] / 2  # x2
     y[..., 3] = x[..., 1] + x[..., 3] / 2  # y2
     return y
+
 
 def iou(box, boxes):
     # box: (4,), boxes: (M,4) [x1,y1,x2,y2]
@@ -82,6 +96,7 @@ def iou(box, boxes):
     b = (boxes[:,2]-boxes[:,0])*(boxes[:,3]-boxes[:,1])
     return inter / (a + b - inter + 1e-7)
 
+
 def nms_boxes(boxes, scores, iou_th=0.5, top_k=300):
     idxs = scores.argsort()[::-1]
     keep = []
@@ -94,9 +109,11 @@ def nms_boxes(boxes, scores, iou_th=0.5, top_k=300):
         idxs = idxs[1:][ious < iou_th]
     return np.array(keep, dtype=np.int32)
 
+
 def color_from_id(k: int):
     np.random.seed(k * 12345 + 7)
     return tuple(int(v) for v in np.random.randint(64, 255, size=3, dtype=np.uint8))
+
 
 def pick_outputs_by_shape(session, prefer_names=None):
     """
@@ -123,13 +140,14 @@ def pick_outputs_by_shape(session, prefer_names=None):
     # 3) Fallback: Erste zwei Outputs
     return names[0], names[1]
 
+
 # ----------------- node -----------------
 class YoloSegOnnxNode(Node):
     def __init__(self):
         super().__init__('strawberry_seg_onnx')
 
         # --------- Parameter deklarieren ---------
-        # Dateipfade / I/O
+        # I/O
         self.declare_parameter('model_path', '')  # leer => auto (Paket-Share)
         self.declare_parameter('topic_in', '/camera/color/image_raw')
         self.declare_parameter('publish_overlay', True)
@@ -146,10 +164,18 @@ class YoloSegOnnxNode(Node):
         self.declare_parameter('min_mask_area_px', 20)
         self.declare_parameter('profile', False)
 
-        # ONNXRuntime
-        self.declare_parameter('providers', [])  # [] => auto wählen
-        self.declare_parameter('out_boxes_name', '')  # '' => auto per Shape
-        self.declare_parameter('out_proto_name', '')  # '' => auto per Shape
+        # ONNXRuntime: providers als STRING_ARRAY deklarieren!
+        self.declare_parameter(
+            'providers',
+            ['CPUExecutionProvider'],  # sinnvoller Default für VM
+            ParameterDescriptor(
+                type=PT.PARAMETER_STRING_ARRAY,
+                description='ONNX Runtime providers, e.g. [CPUExecutionProvider] or [CUDAExecutionProvider, CPUExecutionProvider]'
+            )
+        )
+        # Optionale Outputnamen (falls Export anders heißt)
+        self.declare_parameter('out_boxes_name', '')
+        self.declare_parameter('out_proto_name', '')
 
         # --------- Parameter lesen ---------
         topic_in = self.get_parameter('topic_in').value
@@ -165,21 +191,28 @@ class YoloSegOnnxNode(Node):
                     model_path = default_model
                     self.get_logger().info(f"model_path leer -> nutze Paketmodell: {model_path}")
                 else:
-                    self.get_logger().error("Kein model_path gesetzt und kein Paketmodell gefunden "
-                                            "(share/strawberry_segmentation/models/best.onnx).")
+                    self.get_logger().error(
+                        "Kein model_path gesetzt und kein Paketmodell gefunden "
+                        "(share/strawberry_segmentation/models/best.onnx)."
+                    )
             except Exception as e:
                 self.get_logger().error(f"Konnte Paket-Share-Verzeichnis nicht ermitteln: {e}")
 
         if not model_path or not os.path.exists(model_path):
             raise FileNotFoundError(f"ONNX-Modell nicht gefunden: '{model_path}'")
 
-        # Provider bestimmen
-        user_prov = self.get_parameter('providers').value or []
+        # Provider bestimmen (robust gegen versehentliche String-Übergaben)
+        user_prov = self.get_parameter('providers').value
+        if isinstance(user_prov, str):
+            # z.B. "['CPUExecutionProvider']"
+            user_prov = [s.strip(" '\"\t") for s in user_prov.strip('[]').split(',') if s.strip()]
+        elif not isinstance(user_prov, (list, tuple)):
+            user_prov = []
+
         avail = ort.get_available_providers()
         if user_prov:
-            providers = user_prov
+            providers = list(user_prov)
         else:
-            # Auto: CUDA wenn verfügbar, sonst CPU
             providers = (['CUDAExecutionProvider', 'CPUExecutionProvider']
                          if 'CUDAExecutionProvider' in avail else ['CPUExecutionProvider'])
 
@@ -187,8 +220,11 @@ class YoloSegOnnxNode(Node):
 
         # CvBridge + QoS
         self.bridge = CvBridge()
-        qos = QoSProfile(reliability=QoSReliabilityPolicy.BEST_EFFORT,
-                         history=QoSHistoryPolicy.KEEP_LAST, depth=5)
+        qos = QoSProfile(
+            reliability=QoSReliabilityPolicy.BEST_EFFORT,
+            history=QoSHistoryPolicy.KEEP_LAST,
+            depth=5
+        )
 
         # I/O
         self.sub_rgb = self.create_subscription(Image, topic_in, self.on_image, qos)
@@ -198,6 +234,9 @@ class YoloSegOnnxNode(Node):
         # ONNX Session
         t0 = time.time()
         sess_opts = ort.SessionOptions()
+        # (Optional) leichte Optimierungen, aber konservativ halten:
+        sess_opts.intra_op_num_threads = 0  # auto
+        sess_opts.inter_op_num_threads = 0  # auto
         try:
             self.sess = ort.InferenceSession(model_path, providers=providers, sess_options=sess_opts)
         except Exception as e:
@@ -207,7 +246,7 @@ class YoloSegOnnxNode(Node):
         # Input/Output-Namen
         self.inp_name = self.sess.get_inputs()[0].name
 
-        # Outputnamen aus Param oder per Shape erkennen
+        # Outputnamen aus Param (falls gesetzt) oder per Shape erkennen
         pref_a = self.get_parameter('out_boxes_name').value or None
         pref_b = self.get_parameter('out_proto_name').value or None
         self.out_boxes_name, self.out_proto_name = pick_outputs_by_shape(
@@ -221,17 +260,24 @@ class YoloSegOnnxNode(Node):
             f"Input='{self.inp_name}'"
         )
 
-        # Cache param-Werte, die in der Schleife oft genutzt werden
-        self._imgsz = int(self.get_parameter('imgsz').value)
-        self._stride = int(self.get_parameter('stride').value)
-        self._conf_th = float(self.get_parameter('conf_thres').value)
-        self._iou_th  = float(self.get_parameter('iou_thres').value)
-        self._mask_th = float(self.get_parameter('mask_thresh').value)
-        self._max_det = int(self.get_parameter('max_det').value)
-        self._nm      = int(self.get_parameter('mask_dim').value)
-        self._nc      = int(self.get_parameter('num_classes').value)
-        self._min_area = int(self.get_parameter('min_mask_area_px').value)
-        self._profile = bool(self.get_parameter('profile').value)
+        # Cache param-Werte (Performance)
+        self._imgsz     = int(self.get_parameter('imgsz').value)
+        self._stride    = int(self.get_parameter('stride').value)
+        self._conf_th   = float(self.get_parameter('conf_thres').value)
+        self._iou_th    = float(self.get_parameter('iou_thres').value)
+        self._mask_th   = float(self.get_parameter('mask_thresh').value)
+        self._max_det   = int(self.get_parameter('max_det').value)
+        self._nm        = int(self.get_parameter('mask_dim').value)
+        self._nc        = int(self.get_parameter('num_classes').value)
+        self._min_area  = int(self.get_parameter('min_mask_area_px').value)
+        self._profile   = bool(self.get_parameter('profile').value)
+
+        # Optional: einmal „warmlaufen“, um JIT/Allocator zu triggern
+        try:
+            dummy = np.zeros((1, 3, self._imgsz, self._imgsz), dtype=np.float32)
+            _ = self.sess.run([self.out_boxes_name, self.out_proto_name], {self.inp_name: dummy})
+        except Exception:
+            pass
 
     # ----------------- callback -----------------
     def on_image(self, msg: Image):
@@ -243,12 +289,19 @@ class YoloSegOnnxNode(Node):
         # preprocess
         t0 = time.time()
         img_lb, r, (dw, dh) = letterbox(img_rgb, (self._imgsz, self._imgsz), stride=self._stride)
-        img_in = (img_lb.astype(np.float32) / 255.0).transpose(2, 0, 1)[None, ...].copy()  # 1x3xHxW
+        img_in = img_lb.astype(np.float32) / 255.0
+        img_in = np.transpose(img_in, (2, 0, 1))  # CHW
+        img_in = np.ascontiguousarray(img_in[None, ...])  # NCHW
         t_prep = time.time() - t0
 
         # inference
         t1 = time.time()
-        pred, proto = self.sess.run([self.out_boxes_name, self.out_proto_name], {self.inp_name: img_in})
+        try:
+            pred, proto = self.sess.run([self.out_boxes_name, self.out_proto_name],
+                                        {self.inp_name: img_in})
+        except Exception as e:
+            self.get_logger().error(f"Inferenz-Fehler: {e}")
+            return
         t_inf = time.time() - t1
 
         # shapes normalisieren
@@ -262,6 +315,10 @@ class YoloSegOnnxNode(Node):
             return
 
         # decode (xywh, cls confs, mask coeffs)
+        D = pred.shape[1]
+        expect = 4 + self._nc + self._nm
+        if D < expect:
+            self.get_logger().warn(f"Unerwartete Prädiktionslänge D={D} < {expect}. Prüfe Export/Param.")
         boxes_xywh = pred[:, :4]
         cls_scores = pred[:, 4:4+self._nc]
         mask_coeff = pred[:, 4+self._nc:4+self._nc+self._nm]
@@ -305,7 +362,17 @@ class YoloSegOnnxNode(Node):
 
         # proto -> masks
         t2 = time.time()
-        proto = np.squeeze(proto, axis=0)  # (nm, Mh, Mw)
+        proto = np.squeeze(proto, axis=0)  # (nm, Mh, Mw) erwartet
+        if proto.ndim == 4:
+            # Manche Exporte liefern (1, nm, Mh, Mw) -> squeeze vergessen
+            proto = np.squeeze(proto, axis=0)
+        if proto.shape[0] != self._nm:
+            # zur Not auf gemeinsame Mini-Dim schneiden
+            nm_eff = min(proto.shape[0], self._nm)
+            proto = proto[:nm_eff, ...]
+            mask_coeff = mask_coeff[:, :nm_eff]
+            self.get_logger().warn(f"mask_dim angepasst: proto_nm={proto.shape[0]} vs. param_nm={self._nm}")
+
         nm_, Mh, Mw = proto.shape
         proto_flat = proto.reshape(nm_, Mh * Mw)  # (nm, P)
         masks = sigmoid(np.matmul(mask_coeff, proto_flat))  # (n, P)
@@ -349,8 +416,11 @@ class YoloSegOnnxNode(Node):
             if draw_overlay:
                 col = np.array(color_from_id(k), dtype=np.uint8)
                 overlay[write] = (0.6 * overlay[write] + 0.4 * col).astype(np.uint8)
-                cnts, _ = cv2.findContours(m.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                cv2.drawContours(overlay, cnts, -1, (int(col[0]), int(col[1]), int(col[2])), 2)
+                cnts, _ = cv2.findContours(m.astype(np.uint8),
+                                           cv2.RETR_EXTERNAL,
+                                           cv2.CHAIN_APPROX_SIMPLE)
+                cv2.drawContours(overlay, cnts, -1,
+                                 (int(col[0]), int(col[1]), int(col[2])), 2)
 
         # Publish
         self.publish_outputs(msg, overlay if draw_overlay else img_rgb, label)

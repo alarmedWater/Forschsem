@@ -1,173 +1,132 @@
 #!/usr/bin/env python3
+"""
+Train YOLOv8-seg on the converted YOLO dataset produced by convert_strawdi.py.
+
+- Expects:
+    <yolo_root>/
+      ├─ train/images, train/labels
+      ├─ val/images,   val/labels
+      └─ test/images,  test/labels (optional)
+    and a data.yaml at <yolo_root>/data.yaml
+- Uses yolov8s-seg.pt (segmentation backbone)
+- Exports ONNX after training
+
+Example:
+  python train_yolov8_seg.py --yolo_root converted/yolo --epochs 100 --imgsz 640
+"""
 from __future__ import annotations
-import os
-import glob
-import shutil
+import argparse
 from pathlib import Path
-from typing import Iterable, Optional
+import sys
 
-import yaml
-import torch
 from ultralytics import YOLO
-
-# ================== GPU-ONLY SETTINGS ==================
-GPU_DEVICE = "0"          # Erste GPU
-FULL_EPOCHS  = 100
-FULL_IMGSZ   = 640
-FULL_BATCH   = 16
-FULL_WORKERS = 8
-
-SEED = 42
-PATIENCE = 50
-COS_LR = False
-CLASS_NAMES: Optional[list[str]] = ["strawberry"]
-# =======================================================
-
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DATA_ROOT = (PROJECT_ROOT / "converted" / "yolo").resolve()
-TRAIN_IMG = DATA_ROOT / "train" / "images"
-TRAIN_LBL = DATA_ROOT / "train" / "labels"
-VAL_IMG   = DATA_ROOT / "val" / "images"
-VAL_LBL   = DATA_ROOT / "val" / "labels"
-TEST_IMG  = DATA_ROOT / "test" / "images"
-TEST_LBL  = DATA_ROOT / "test" / "labels"
-DATA_YAML = DATA_ROOT / "data.yaml"
-
-MODEL_WEIGHTS = "yolov8s.pt"
-PROJECT = str(PROJECT_ROOT / "runs" / "detect")
-RUN_NAME = "train_yolov8s_gpu"
+import torch
+import yaml
 
 
-def _infer_names_from_labels(lbl_dir: Path) -> Optional[list[str]]:
-    if not lbl_dir.exists():
-        return None
-    label_files = glob.glob(str(lbl_dir / "**/*.txt"), recursive=True)
-    max_id = -1
-    for lf in label_files:
-        with open(lf, "r", encoding="utf-8") as f:
-            for line in f:
-                if not line.strip():
-                    continue
-                cid = int(line.split()[0])
-                max_id = max(max_id, cid)
-    return [f"class_{i}" for i in range(max_id + 1)] if max_id >= 0 else None
+def parse_args() -> argparse.Namespace:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--yolo_root", type=str, default="converted/yolo",
+                    help="Path to YOLO dataset root (contains data.yaml)")
+    ap.add_argument("--model", type=str, default="yolov8s-seg.pt",
+                    help="Ultralytics segmentation model (.pt)")
+    ap.add_argument("--epochs", type=int, default=100)
+    ap.add_argument("--imgsz", type=int, default=640)
+    ap.add_argument("--batch", type=int, default=16)
+    ap.add_argument("--workers", type=int, default=8)
+    ap.add_argument("--project", type=str, default="runs/segment")
+    ap.add_argument("--name", type=str, default="strawdi_y8s")
+    ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--patience", type=int, default=50)
+    ap.add_argument("--cos_lr", action="store_true")
+    ap.add_argument("--val", action="store_true", help="Run val() after training")
+    return ap.parse_args()
 
 
-def _count_files(paths: Iterable[Path], patterns=("*.jpg", "*.jpeg", "*.png", "*.bmp")) -> int:
-    return sum(sum(1 for _ in p.rglob(ext)) for p in paths for ext in patterns)
+def ensure_data_yaml(yolo_root: Path) -> Path:
+    data_yaml = yolo_root / "data.yaml"
+    if not data_yaml.exists():
+        # fallback minimal data.yaml
+        content = {
+            "path": str(yolo_root.resolve()),
+            "train": "train/images",
+            "val":   "val/images",
+            "test":  "test/images",
+            "names": ["strawberry"],
+        }
+        with open(data_yaml, "w", encoding="utf-8") as f:
+            yaml.safe_dump(content, f, sort_keys=False, allow_unicode=True)
+        print(f"[INFO] Wrote fallback data.yaml at {data_yaml}")
+    return data_yaml
 
 
-def _print_split_summary() -> None:
-    print("\n[DATASET] Summary")
-    print(f"  Train images: {_count_files([TRAIN_IMG])} @ {TRAIN_IMG}")
-    print(f"  Val images:   {_count_files([VAL_IMG])} @ {VAL_IMG}")
-    ti = _count_files([TEST_IMG]) if TEST_IMG.exists() else 0
-    print(f"  Test images:  {ti} @ {TEST_IMG if TEST_IMG.exists() else 'N/A'}\n")
-
-
-def _ensure_data_yaml(path_train: Path, path_val: Path, path_test: Optional[Path]) -> Path:
-    names = CLASS_NAMES or _infer_names_from_labels(TRAIN_LBL) or ["class_0"]
-    data = {
-        "path": str(DATA_ROOT),
-        "train": str(path_train),
-        "val": str(path_val),
-        "names": names,
-    }
-    if path_test is not None:
-        data["test"] = str(path_test)
-
-    DATA_ROOT.mkdir(parents=True, exist_ok=True)
-    with open(DATA_YAML, "w", encoding="utf-8") as f:
-        yaml.safe_dump(data, f, sort_keys=False, allow_unicode=True)
-
-    print(f"[INFO] Wrote data.yaml -> {DATA_YAML}")
-    return DATA_YAML
+def pick_device() -> str:
+    if torch.cuda.is_available():
+        print(f"[INFO] CUDA available ✓  Using GPU: {torch.cuda.get_device_name(0)}")
+        return "0"  # first GPU
+    print("[INFO] CUDA not available -> using CPU")
+    return "cpu"
 
 
 def main() -> None:
-    # --- Sicherstellen, dass CUDA verfügbar ist (GPU-ONLY) ---
-    if not torch.cuda.is_available():
-        raise SystemExit(
-            "[FATAL] CUDA ist nicht verfügbar, aber dieses Skript ist GPU-only.\n"
-            "Bitte stelle sicher, dass du im 'yolo8-seg' Env bist und eine NVIDIA-GPU mit passenden Treibern hast."
-        )
+    args = parse_args()
+    yolo_root = Path(args.yolo_root).resolve()
 
-    print(f"[INFO] CUDA available: {torch.cuda.is_available()}")
-    print(f"[INFO] Using GPU device: {GPU_DEVICE}")
-    print(f"[INFO] PyTorch version: {torch.__version__}")
-    print(f"[INFO] GPU name: {torch.cuda.get_device_name(0)}")
+    # basic checks
+    for sub in ["train/images", "train/labels", "val/images", "val/labels"]:
+        if not (yolo_root / sub).exists():
+            print(f"[FATAL] Missing folder: {yolo_root/sub}")
+            sys.exit(1)
 
-    # --- Daten prüfen ---
-    for p in [TRAIN_IMG, TRAIN_LBL, VAL_IMG, VAL_LBL]:
-        assert p.exists(), f"Missing: {p}"
+    data_yaml = ensure_data_yaml(yolo_root)
+    device = pick_device()
 
-    _print_split_summary()
+    # Load segmentation model
+    model = YOLO(args.model)  # e.g. yolov8s-seg.pt
 
-    # Volles Dataset für GPU-Training
-    tr, va = TRAIN_IMG, VAL_IMG
-    te = TEST_IMG if TEST_IMG.exists() and TEST_LBL.exists() else None
-
-    workers = FULL_WORKERS
-    epochs  = FULL_EPOCHS
-    batch   = FULL_BATCH
-    imgsz   = FULL_IMGSZ
-    device  = GPU_DEVICE   # "0" = erste GPU
-    do_val  = True
-
-    data_yaml = _ensure_data_yaml(tr, va, te)
-
-    # --- Modell laden ---
-    model = YOLO(MODEL_WEIGHTS)
-
-    # --- Training ---
-    print("[INFO] Starting GPU training on full dataset…")
+    # Train
+    print("[INFO] Starting segmentation training…")
     model.train(
         data=str(data_yaml),
-        epochs=epochs,
-        imgsz=imgsz,
-        batch=batch,
+        epochs=args.epochs,
+        imgsz=args.imgsz,
+        batch=args.batch,
         device=device,
-        workers=workers,
-        project=PROJECT,
-        name=RUN_NAME,
-        seed=SEED,
-        patience=PATIENCE,
-        cos_lr=COS_LR,
+        workers=args.workers,
+        project=args.project,
+        name=args.name,
+        seed=args.seed,
+        patience=args.patience,
+        cos_lr=args.cos_lr,
         pretrained=True,
         verbose=False,
         plots=False,
-        val=do_val,
+        val=True,  # keep validation during training
     )
 
-    # --- Validierung ---
-    if do_val:
-        print("[INFO] Validating on val split…")
-        best = Path(PROJECT) / RUN_NAME / "weights" / "best.pt"
-        model_eval = YOLO(str(best)) if best.exists() else model
-        val_metrics = model_eval.val(
+    # Optional explicit val with best weights
+    if args.val:
+        best = Path(args.project) / args.name / "weights" / "best.pt"
+        m_eval = YOLO(str(best)) if best.exists() else model
+        print("[INFO] Running .val() on validation split…")
+        m_eval.val(
             data=str(data_yaml),
-            imgsz=imgsz,
+            imgsz=args.imgsz,
             device=device,
-            workers=workers,
+            workers=args.workers,
             verbose=False,
             plots=False,
         )
-        try:
-            from pprint import pprint
-            pprint(val_metrics.results_dict)
-        except Exception:
-            pass
 
-    # --- ONNX Export ---
+    # Export ONNX (will end up next to best.pt by default)
     print("[INFO] Exporting ONNX…")
     try:
-        model.export(format="onnx", verbose=False)
+        (Path(args.project) / args.name).mkdir(parents=True, exist_ok=True)
+        model.export(format="onnx", imgsz=args.imgsz, dynamic=False, verbose=False)
+        print("[INFO] ONNX export done. Look in the run's weights/ folder.")
     except Exception as e:
-        print(f"[WARN] Export failed: {e}")
-
-    print("[DONE] GPU training pipeline finished.")
+        print(f"[WARN] ONNX export failed: {e}")
 
 
 if __name__ == "__main__":
-    os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":16:8")
     main()
