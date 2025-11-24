@@ -12,7 +12,7 @@ Train YOLOv8-seg on the converted YOLO dataset produced by convert_strawdi.py.
 - Exports ONNX after training
 
 Example:
-  python train_yolov8_seg.py --yolo_root converted/yolo --epochs 100 --imgsz 640
+  python train_yolov8.py --yolo_root converted/yolo --epochs 100 --imgsz 640
 """
 from __future__ import annotations
 import argparse

@@ -26,24 +26,7 @@ converted/coco/**
 !converted/coco/*.md
 !converted/coco/**/.gitkeep
 
-# =========================
-# TRAININGS-OUTPUTS & MODELLE
-# =========================
-checkpoints/
-logs/
-wandb/
-lightning_logs/
-tensorboard/
-events.out.tfevents.*
-*.pt
-*.pth
-*.pth.tar
-*.onnx
-*.engine
-*.plan
-*.ckpt
-*.log
-*.tb
+
 
 # =========================
 # PYTHON / BUILD ARTEFAKTE
