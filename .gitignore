@@ -119,3 +119,24 @@ bags/
 
 # Debug renders
 SegemtationTrainig_v1/debug_vis/
+
+ =========================
+# YOLO/Segmentation Results (keep images)
+# =========================
+# Ignore everything inside runs by default
+SegemtationTrainig_v1/runs/**
+
+# Keep folder structure
+!SegemtationTrainig_v1/runs/
+!SegemtationTrainig_v1/runs/**/
+!SegemtationTrainig_v1/runs/.gitkeep
+
+# Keep result images (png, jpg, jpeg)
+!SegemtationTrainig_v1/runs/**/*.png
+!SegemtationTrainig_v1/runs/**/*.jpg
+!SegemtationTrainig_v1/runs/**/*.jpeg
+
+# Optionally also keep metadata (e.g., labels, txts, yaml configs)
+!SegemtationTrainig_v1/runs/**/*.yaml
+!SegemtationTrainig_v1/runs/**/*.txt
+!SegemtationTrainig_v1/runs/**/*.json
