@@ -10,31 +10,29 @@ Publishes:
   - /seg/label_image         (sensor_msgs/Image, mono16)  instance-id map (0=bg, 1..N)
   - /seg/overlay             (sensor_msgs/Image, rgb8)    farbiges Overlay (optional)
 
-Ann.: Ultralytics YOLOv8-Seg Export (.onnx)
-  - Output A: (1, N, 4+nc+nm)  -> boxes(xywh), cls-scores, mask-coeffs
-  - Output B: (1, nm, Mh, Mw)  -> mask prototype
-Die Output-Namen/Reihenfolge können variieren – der Node erkennt sie automatisch über Shapes.
+Ultralytics YOLOv8-Seg Export (.onnx):
+  - Output A: (1, N, 4 + nc + nm)  -> boxes(xywh), cls-scores, mask-coeffs
+  - Output B: (1, nm, Mh, Mw)      -> mask prototype
+Reihenfolge/Bezeichner können variieren – Erkennung per Shape.
 
 Wichtige Parameter:
-  - model_path: Pfad zur .onnx  (leer => auto: <pkg share>/models/best.onnx)
-  - providers:  STRING_ARRAY, z.B. ['CPUExecutionProvider'] oder
-                ['CUDAExecutionProvider','CPUExecutionProvider']
-                leer/auto => wählt selbst je nach Verfügbarkeit
+  - model_path          : Pfad zur .onnx  (leer => <pkg share>/models/best.onnx)
+  - providers           : STRING_ARRAY, z.B. ['CPUExecutionProvider'] oder
+                          ['CUDAExecutionProvider','CPUExecutionProvider']
   - imgsz, conf_thres, iou_thres, mask_thresh, max_det, num_classes, mask_dim
-  - topic_in: Eingangsbild-Topic (default '/camera/color/image_raw')
-  - publish_overlay: bool (default True)
-  - min_mask_area_px: int (default 20)
-  - profile: bool (default False) -> Laufzeiten loggen
-  
-  GPU call:  
-  ros2 run strawberry_segmentation seg_onnx --ros-args \
-  -p providers:="['CUDAExecutionProvider','CPUExecutionProvider']"
+  - topic_in            : Eingangsbild-Topic (default '/camera/color/image_raw')
+  - publish_overlay     : bool (default True)
+  - min_mask_area_px    : int (default 20)
+  - clean_masks         : bool (default True)  -> kleiner Open-Filter gg. Spratzer
+  - profile             : bool (default False)
 
+GPU-Beispiel:
+  ros2 run strawberry_segmentation seg_onnx --ros-args \
+    -p providers:="['CUDAExecutionProvider','CPUExecutionProvider']"
 """
 
 import os
 import time
-import math
 import numpy as np
 import cv2
 import onnxruntime as ort
@@ -52,25 +50,26 @@ from ament_index_python.packages import get_package_share_directory
 
 # ----------------- helpers -----------------
 def letterbox(im, new_shape=(640, 640), color=(114, 114, 114), stride=32):
-    """Resize+pad to target shape, keeping aspect ratio (Ultralytics-like)."""
-    shape = im.shape[:2]  # h, w
+    """Resize + pad to target shape, keeping aspect ratio (Ultralytics-like)."""
+    h, w = im.shape[:2]
     if isinstance(new_shape, int):
         new_shape = (new_shape, new_shape)
-    r = min(new_shape[0] / shape[0], new_shape[1] / shape[1])
-    new_unpad = (int(round(shape[1] * r)), int(round(shape[0] * r)))  # w, h
+    r = min(new_shape[0] / h, new_shape[1] / w)
+    new_unpad = (int(round(w * r)), int(round(h * r)))  # (w, h)
     dw, dh = new_shape[1] - new_unpad[0], new_shape[0] - new_unpad[1]
-    dw /= 2
-    dh /= 2
-    if shape[::-1] != new_unpad:
+    dw *= 0.5
+    dh *= 0.5
+    if (w, h) != new_unpad:
         im = cv2.resize(im, new_unpad, interpolation=cv2.INTER_LINEAR)
     top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
     left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
-    im = cv2.copyMakeBorder(im, top, bottom, left, right,
-                            cv2.BORDER_CONSTANT, value=color)
+    im = cv2.copyMakeBorder(im, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)
     return im, r, (dw, dh)
 
 
-def sigmoid(x): 
+def sigmoid(x):
+    # Stabilisiert exp() numerisch und verhindert "alles-1"-Masken
+    x = np.clip(x, -50, 50)
     return 1.0 / (1.0 + np.exp(-x))
 
 
@@ -84,7 +83,6 @@ def xywh2xyxy(x):
 
 
 def iou(box, boxes):
-    # box: (4,), boxes: (M,4) [x1,y1,x2,y2]
     xx1 = np.maximum(box[0], boxes[:, 0])
     yy1 = np.maximum(box[1], boxes[:, 1])
     xx2 = np.minimum(box[2], boxes[:, 2])
@@ -116,29 +114,27 @@ def color_from_id(k: int):
 
 
 def pick_outputs_by_shape(session, prefer_names=None):
-    """
-    Versucht, YOLOv8-Seg-Outputs robust zu erkennen:
-    - boxes/masks coeff: rank==3  (1, N, D)
-    - proto:            rank==4  (1, nm, Mh, Mw)
-    """
+    """Erkennt YOLOv8-Seg-Outputs robust per Rank (A: (1,N,D); B: (1,nm,Mh,Mw))."""
     outs = session.get_outputs()
     names = [o.name for o in outs]
     shapes = [tuple(o.shape) for o in outs]
 
-    # 1) Falls Namen vorgegeben & vorhanden:
+    # 1) falls explizite Namen stimmen
     if prefer_names:
         a, b = prefer_names
         if a in names and b in names:
             return a, b
 
-    # 2) Nach Rank suchen:
-    idx_rank3 = [i for i, s in enumerate(shapes) if len([d for d in s if d is not None]) == 3]
-    idx_rank4 = [i for i, s in enumerate(shapes) if len([d for d in s if d is not None]) == 4]
+    # 2) Rank-Logik
+    idx_rank3 = [i for i, s in enumerate(shapes) if sum(d is not None for d in s) == 3]
+    idx_rank4 = [i for i, s in enumerate(shapes) if sum(d is not None for d in s) == 4]
     if idx_rank3 and idx_rank4:
         return names[idx_rank3[0]], names[idx_rank4[0]]
 
-    # 3) Fallback: Erste zwei Outputs
-    return names[0], names[1]
+    # 3) Fallback
+    if len(names) >= 2:
+        return names[0], names[1]
+    raise RuntimeError("ONNX model must expose at least 2 outputs.")
 
 
 # ----------------- node -----------------
@@ -147,33 +143,31 @@ class YoloSegOnnxNode(Node):
         super().__init__('strawberry_seg_onnx')
 
         # --------- Parameter deklarieren ---------
-        # I/O
-        self.declare_parameter('model_path', '')  # leer => auto (Paket-Share)
+        self.declare_parameter('model_path', '')
         self.declare_parameter('topic_in', '/camera/color/image_raw')
         self.declare_parameter('publish_overlay', True)
 
-        # Inferenz-Settings
-        self.declare_parameter('imgsz', 1024)
+        self.declare_parameter('imgsz', 640)
         self.declare_parameter('conf_thres', 0.25)
         self.declare_parameter('iou_thres', 0.50)
-        self.declare_parameter('mask_thresh', 0.50)
+        self.declare_parameter('mask_thresh', 0.60)
         self.declare_parameter('max_det', 300)
-        self.declare_parameter('num_classes', 1)   # strawberries only
-        self.declare_parameter('mask_dim', 32)     # YOLOv8 default
+        self.declare_parameter('num_classes', 1)
+        self.declare_parameter('mask_dim', 32)
         self.declare_parameter('stride', 32)
         self.declare_parameter('min_mask_area_px', 20)
+        self.declare_parameter('clean_masks', True)
         self.declare_parameter('profile', False)
 
-        # ONNXRuntime: providers als STRING_ARRAY deklarieren!
+        # Providers als STRING_ARRAY deklarieren
         self.declare_parameter(
             'providers',
-            ['CPUExecutionProvider'],  # sinnvoller Default für VM
+            ['CPUExecutionProvider'],
             ParameterDescriptor(
                 type=PT.PARAMETER_STRING_ARRAY,
-                description='ONNX Runtime providers, e.g. [CPUExecutionProvider] or [CUDAExecutionProvider, CPUExecutionProvider]'
+                description="ONNX Runtime providers, e.g. ['CPUExecutionProvider'] or ['CUDAExecutionProvider','CPUExecutionProvider']"
             )
         )
-        # Optionale Outputnamen (falls Export anders heißt)
         self.declare_parameter('out_boxes_name', '')
         self.declare_parameter('out_proto_name', '')
 
@@ -181,7 +175,7 @@ class YoloSegOnnxNode(Node):
         topic_in = self.get_parameter('topic_in').value
         publish_overlay = bool(self.get_parameter('publish_overlay').value)
 
-        # Modellpfad bestimmen
+        # Modellpfad
         model_path = self.get_parameter('model_path').value
         if not model_path:
             try:
@@ -191,31 +185,25 @@ class YoloSegOnnxNode(Node):
                     model_path = default_model
                     self.get_logger().info(f"model_path leer -> nutze Paketmodell: {model_path}")
                 else:
-                    self.get_logger().error(
-                        "Kein model_path gesetzt und kein Paketmodell gefunden "
-                        "(share/strawberry_segmentation/models/best.onnx)."
-                    )
+                    self.get_logger().error("Kein model_path gesetzt und kein Paketmodell gefunden (share/.../models/best.onnx).")
             except Exception as e:
                 self.get_logger().error(f"Konnte Paket-Share-Verzeichnis nicht ermitteln: {e}")
 
         if not model_path or not os.path.exists(model_path):
             raise FileNotFoundError(f"ONNX-Modell nicht gefunden: '{model_path}'")
 
-        # Provider bestimmen (robust gegen versehentliche String-Übergaben)
+        # Providers robust auslesen (erlaubt z.B. "['CPUExecutionProvider']" als String)
         user_prov = self.get_parameter('providers').value
         if isinstance(user_prov, str):
-            # z.B. "['CPUExecutionProvider']"
             user_prov = [s.strip(" '\"\t") for s in user_prov.strip('[]').split(',') if s.strip()]
         elif not isinstance(user_prov, (list, tuple)):
             user_prov = []
-
         avail = ort.get_available_providers()
         if user_prov:
             providers = list(user_prov)
         else:
             providers = (['CUDAExecutionProvider', 'CPUExecutionProvider']
                          if 'CUDAExecutionProvider' in avail else ['CPUExecutionProvider'])
-
         self.get_logger().info(f"ONNX providers (gewählt): {providers}; verfügbar: {avail}")
 
         # CvBridge + QoS
@@ -234,19 +222,14 @@ class YoloSegOnnxNode(Node):
         # ONNX Session
         t0 = time.time()
         sess_opts = ort.SessionOptions()
-        # (Optional) leichte Optimierungen, aber konservativ halten:
-        sess_opts.intra_op_num_threads = 0  # auto
-        sess_opts.inter_op_num_threads = 0  # auto
         try:
             self.sess = ort.InferenceSession(model_path, providers=providers, sess_options=sess_opts)
         except Exception as e:
             self.get_logger().error(f"ONNX Session konnte nicht erstellt werden: {e}")
             raise
 
-        # Input/Output-Namen
+        # IO-Namen bestimmen
         self.inp_name = self.sess.get_inputs()[0].name
-
-        # Outputnamen aus Param (falls gesetzt) oder per Shape erkennen
         pref_a = self.get_parameter('out_boxes_name').value or None
         pref_b = self.get_parameter('out_proto_name').value or None
         self.out_boxes_name, self.out_proto_name = pick_outputs_by_shape(
@@ -260,19 +243,20 @@ class YoloSegOnnxNode(Node):
             f"Input='{self.inp_name}'"
         )
 
-        # Cache param-Werte (Performance)
-        self._imgsz     = int(self.get_parameter('imgsz').value)
-        self._stride    = int(self.get_parameter('stride').value)
-        self._conf_th   = float(self.get_parameter('conf_thres').value)
-        self._iou_th    = float(self.get_parameter('iou_thres').value)
-        self._mask_th   = float(self.get_parameter('mask_thresh').value)
-        self._max_det   = int(self.get_parameter('max_det').value)
-        self._nm        = int(self.get_parameter('mask_dim').value)
-        self._nc        = int(self.get_parameter('num_classes').value)
-        self._min_area  = int(self.get_parameter('min_mask_area_px').value)
-        self._profile   = bool(self.get_parameter('profile').value)
+        # Cache
+        self._imgsz    = int(self.get_parameter('imgsz').value)
+        self._stride   = int(self.get_parameter('stride').value)
+        self._conf_th  = float(self.get_parameter('conf_thres').value)
+        self._iou_th   = float(self.get_parameter('iou_thres').value)
+        self._mask_th  = float(self.get_parameter('mask_thresh').value)
+        self._max_det  = int(self.get_parameter('max_det').value)
+        self._nm       = int(self.get_parameter('mask_dim').value)
+        self._nc       = int(self.get_parameter('num_classes').value)
+        self._min_area = int(self.get_parameter('min_mask_area_px').value)
+        self._clean    = bool(self.get_parameter('clean_masks').value)
+        self._profile  = bool(self.get_parameter('profile').value)
 
-        # Optional: einmal „warmlaufen“, um JIT/Allocator zu triggern
+        # kleiner Warmup
         try:
             dummy = np.zeros((1, 3, self._imgsz, self._imgsz), dtype=np.float32)
             _ = self.sess.run([self.out_boxes_name, self.out_proto_name], {self.inp_name: dummy})
@@ -282,30 +266,26 @@ class YoloSegOnnxNode(Node):
     # ----------------- callback -----------------
     def on_image(self, msg: Image):
         t_all0 = time.time()
-        # ROS -> RGB (np)
         img_rgb = self.bridge.imgmsg_to_cv2(msg, desired_encoding='rgb8')
         h0, w0 = img_rgb.shape[:2]
 
         # preprocess
         t0 = time.time()
         img_lb, r, (dw, dh) = letterbox(img_rgb, (self._imgsz, self._imgsz), stride=self._stride)
-        img_in = img_lb.astype(np.float32) / 255.0
-        img_in = np.transpose(img_in, (2, 0, 1))  # CHW
-        img_in = np.ascontiguousarray(img_in[None, ...])  # NCHW
+        img_in = (img_lb.astype(np.float32) / 255.0).transpose(2, 0, 1)[None, ...].copy()  # 1x3xHxW
         t_prep = time.time() - t0
 
         # inference
         t1 = time.time()
         try:
-            pred, proto = self.sess.run([self.out_boxes_name, self.out_proto_name],
-                                        {self.inp_name: img_in})
+            pred, proto = self.sess.run([self.out_boxes_name, self.out_proto_name], {self.inp_name: img_in})
         except Exception as e:
             self.get_logger().error(f"Inferenz-Fehler: {e}")
             return
         t_inf = time.time() - t1
 
         # shapes normalisieren
-        pred = np.squeeze(pred, axis=0)  # (N, D) erwartet
+        pred = np.squeeze(pred, axis=0)  # (N, D)
         if pred.ndim != 2:
             pred = pred.reshape(-1, pred.shape[-1])
         if pred.size == 0:
@@ -314,14 +294,22 @@ class YoloSegOnnxNode(Node):
                 self.get_logger().info(f"prep {t_prep*1000:.1f} ms | inf {t_inf*1000:.1f} ms | post ~0 ms")
             return
 
-        # decode (xywh, cls confs, mask coeffs)
+        # -------- decode robust --------
         D = pred.shape[1]
-        expect = 4 + self._nc + self._nm
-        if D < expect:
-            self.get_logger().warn(f"Unerwartete Prädiktionslänge D={D} < {expect}. Prüfe Export/Param.")
-        boxes_xywh = pred[:, :4]
-        cls_scores = pred[:, 4:4+self._nc]
-        mask_coeff = pred[:, 4+self._nc:4+self._nc+self._nm]
+        nm = self._nm
+        if D <= nm + 4:
+            self.get_logger().warn(f"Prädiktionslänge D={D} scheint zu klein für nm={nm}.")
+        # Masken-Koeffizienten IMMER vom Ende nehmen (robust gg. nc-Fehldeutung):
+        mask_coeff = pred[:, D - nm:D].astype(np.float32)
+        # Klassen-Logits sind alles zwischen Box (4) und Coeff-Ende:
+        cls_block = pred[:, 4:D - nm]
+        if cls_block.size == 0:
+            # Fallback: wenn Export keine Klassenlogits hat
+            cls_scores = np.ones((pred.shape[0], 1), dtype=np.float32)
+        else:
+            cls_scores = cls_block.astype(np.float32)
+
+        boxes_xywh = pred[:, :4].astype(np.float32)
 
         # Klassenkonfidenz/-ID
         cls_conf = cls_scores.max(axis=1)
@@ -329,17 +317,18 @@ class YoloSegOnnxNode(Node):
 
         # Filter nach conf
         keep0 = cls_conf >= self._conf_th
-        boxes_xywh = boxes_xywh[keep0]
-        cls_conf   = cls_conf[keep0]
-        cls_ids    = cls_ids[keep0]
-        mask_coeff = mask_coeff[keep0]
-        if boxes_xywh.shape[0] == 0:
+        if keep0.sum() == 0:
             self.publish_outputs(msg, img_rgb, np.zeros((h0, w0), dtype=np.uint16))
             if self._profile:
                 self.get_logger().info(f"prep {t_prep*1000:.1f} ms | inf {t_inf*1000:.1f} ms | post ~0 ms")
             return
 
-        # Boxen zurück auf Originalbild
+        boxes_xywh = boxes_xywh[keep0]
+        cls_conf   = cls_conf[keep0]
+        cls_ids    = cls_ids[keep0]
+        mask_coeff = mask_coeff[keep0]
+
+        # Boxen zurück aufs Original
         boxes_xyxy = xywh2xyxy(boxes_xywh)
         boxes_xyxy[:, [0, 2]] -= dw
         boxes_xyxy[:, [1, 3]] -= dh
@@ -349,33 +338,33 @@ class YoloSegOnnxNode(Node):
 
         # NMS
         keep = nms_boxes(boxes_xyxy, cls_conf, iou_th=self._iou_th, top_k=self._max_det)
-        boxes_xyxy = boxes_xyxy[keep]
-        cls_conf   = cls_conf[keep]
-        cls_ids    = cls_ids[keep]
-        mask_coeff = mask_coeff[keep]
-        n = boxes_xyxy.shape[0]
-        if n == 0:
+        if keep.size == 0:
             self.publish_outputs(msg, img_rgb, np.zeros((h0, w0), dtype=np.uint16))
             if self._profile:
                 self.get_logger().info(f"prep {t_prep*1000:.1f} ms | inf {t_inf*1000:.1f} ms | post ~0 ms")
             return
 
-        # proto -> masks
+        boxes_xyxy = boxes_xyxy[keep]
+        cls_conf   = cls_conf[keep]
+        cls_ids    = cls_ids[keep]
+        mask_coeff = mask_coeff[keep]
+        n = boxes_xyxy.shape[0]
+
+        # -------- proto -> masks --------
         t2 = time.time()
-        proto = np.squeeze(proto, axis=0)  # (nm, Mh, Mw) erwartet
+        proto = np.squeeze(proto, axis=0)  # (nm, Mh, Mw)
         if proto.ndim == 4:
-            # Manche Exporte liefern (1, nm, Mh, Mw) -> squeeze vergessen
             proto = np.squeeze(proto, axis=0)
-        if proto.shape[0] != self._nm:
-            # zur Not auf gemeinsame Mini-Dim schneiden
-            nm_eff = min(proto.shape[0], self._nm)
+        if proto.shape[0] != nm:
+            nm_eff = min(proto.shape[0], nm)
+            self.get_logger().warn(f"mask_dim angepasst: proto_nm={proto.shape[0]} vs param_nm={nm}; nutze {nm_eff}")
             proto = proto[:nm_eff, ...]
             mask_coeff = mask_coeff[:, :nm_eff]
-            self.get_logger().warn(f"mask_dim angepasst: proto_nm={proto.shape[0]} vs. param_nm={self._nm}")
+            nm = nm_eff
 
         nm_, Mh, Mw = proto.shape
         proto_flat = proto.reshape(nm_, Mh * Mw)  # (nm, P)
-        masks = sigmoid(np.matmul(mask_coeff, proto_flat))  # (n, P)
+        masks = sigmoid(mask_coeff @ proto_flat)   # (n, P)
         masks = masks.reshape(n, Mh, Mw)
 
         # auf imgsz hoch, Padding weg, aufs Original skaliert
@@ -388,20 +377,27 @@ class YoloSegOnnxNode(Node):
         masks_up = masks_up[:, y0:y1, x0:x1]
 
         final_masks = np.zeros((n, h0, w0), dtype=np.uint8)
+        kernel = np.ones((3, 3), np.uint8)
         for i in range(n):
             m = cv2.resize(masks_up[i], (w0, h0), interpolation=cv2.INTER_LINEAR)
             m = (m > self._mask_th).astype(np.uint8)
-            # Masken auf Box beschränken (sauberere Kanten)
-            x1i, y1i, x2i, y2i = boxes_xyxy[i].astype(int)
+            if self._clean:
+                m = cv2.morphologyEx(m, cv2.MORPH_OPEN, kernel, iterations=1)
+
+            # Maske auf Box beschränken (sauberere Kanten)
+            x1i, y1i, x2i, y2i = np.round(boxes_xyxy[i]).astype(int)
+            x1i = max(0, min(x1i, w0 - 1)); x2i = max(0, min(x2i, w0 - 1))
+            y1i = max(0, min(y1i, h0 - 1)); y2i = max(0, min(y2i, h0 - 1))
             if x2i > x1i and y2i > y1i:
-                crop = np.zeros_like(m)
-                crop[y1i:y2i+1, x1i:x2i+1] = 1
-                m = m * crop
+                crop = np.zeros_like(m, dtype=np.uint8)
+                crop[y1i:y2i + 1, x1i:x2i + 1] = 1
+                m = m & crop
+
             final_masks[i] = m
         t_post = time.time() - t2
 
-        # Instanz-Labelbild + Overlay
-        order = np.argsort(cls_conf)[::-1]  # z-order nach Konfidenz
+        # -------- Overlay + Labels --------
+        order = np.argsort(cls_conf)[::-1]
         label = np.zeros((h0, w0), dtype=np.uint16)
         overlay = img_rgb.copy()
         draw_overlay = self.pub_overlay is not None and self.pub_overlay.get_subscription_count() > 0
@@ -416,11 +412,8 @@ class YoloSegOnnxNode(Node):
             if draw_overlay:
                 col = np.array(color_from_id(k), dtype=np.uint8)
                 overlay[write] = (0.6 * overlay[write] + 0.4 * col).astype(np.uint8)
-                cnts, _ = cv2.findContours(m.astype(np.uint8),
-                                           cv2.RETR_EXTERNAL,
-                                           cv2.CHAIN_APPROX_SIMPLE)
-                cv2.drawContours(overlay, cnts, -1,
-                                 (int(col[0]), int(col[1]), int(col[2])), 2)
+                cnts, _ = cv2.findContours(m, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                cv2.drawContours(overlay, cnts, -1, (int(col[0]), int(col[1]), int(col[2])), 2)
 
         # Publish
         self.publish_outputs(msg, overlay if draw_overlay else img_rgb, label)
@@ -433,13 +426,11 @@ class YoloSegOnnxNode(Node):
 
     # ----------------- publish -----------------
     def publish_outputs(self, src_msg: Image, overlay_rgb: np.ndarray, label_u16: np.ndarray):
-        # overlay (optional)
         if self.pub_overlay is not None and self.pub_overlay.get_subscription_count() > 0:
             overlay_msg = self.bridge.cv2_to_imgmsg(overlay_rgb, encoding='rgb8')
             overlay_msg.header = Header(stamp=src_msg.header.stamp, frame_id=src_msg.header.frame_id)
             self.pub_overlay.publish(overlay_msg)
 
-        # label image (mono16)
         H, W = label_u16.shape
         label_msg = Image()
         label_msg.header = Header(stamp=src_msg.header.stamp, frame_id=src_msg.header.frame_id)

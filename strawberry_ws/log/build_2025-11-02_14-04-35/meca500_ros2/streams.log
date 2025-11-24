@@ -1,0 +1,23 @@
+[2.120s] Invoking command in '/home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2': PYTHONPATH=/home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2/build --no-deps symlink_data
+[2.457s] running develop
+[2.689s] running egg_info
+[2.689s] creating meca500_ros2.egg-info
+[2.690s] writing meca500_ros2.egg-info/PKG-INFO
+[2.692s] writing dependency_links to meca500_ros2.egg-info/dependency_links.txt
+[2.693s] writing entry points to meca500_ros2.egg-info/entry_points.txt
+[2.694s] writing requirements to meca500_ros2.egg-info/requires.txt
+[2.695s] writing top-level names to meca500_ros2.egg-info/top_level.txt
+[2.695s] writing manifest file 'meca500_ros2.egg-info/SOURCES.txt'
+[2.701s] reading manifest file 'meca500_ros2.egg-info/SOURCES.txt'
+[2.703s] writing manifest file 'meca500_ros2.egg-info/SOURCES.txt'
+[2.705s] running build_ext
+[2.706s] Creating /home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/lib/python3.10/site-packages/meca500-ros2.egg-link (link to .)
+[2.709s] 
+[2.709s] Installed /home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2
+[2.709s] running symlink_data
+[2.709s] creating /home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/share/ament_index
+[2.710s] creating /home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/share/ament_index/resource_index
+[2.711s] creating /home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/share/ament_index/resource_index/packages
+[2.715s] symbolically linking /home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2/resource/meca500_ros2 -> /home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/share/ament_index/resource_index/packages
+[2.716s] symbolically linking /home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2/package.xml -> /home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/share/meca500_ros2
+[2.782s] Invoked command in '/home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2' returned '0': PYTHONPATH=/home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2/build --no-deps symlink_data
