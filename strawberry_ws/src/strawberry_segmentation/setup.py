@@ -40,8 +40,10 @@ setup(
         'console_scripts': [
             # ONNX-Variante
             'seg_onnx  = strawberry_segmentation.seg_onnx_node:main',
-            # Ultralytics-.pt-Variante (wie yolo predict)
+            # Ultralytics-.pt-Variante
             'seg_ultra = strawberry_segmentation.seg_ultra_node:main',
+            #von rbg auf tiefenbild
+            'depth_mask = strawberry_segmentation.depth_mask_node:main',
         ],
     },
 )
