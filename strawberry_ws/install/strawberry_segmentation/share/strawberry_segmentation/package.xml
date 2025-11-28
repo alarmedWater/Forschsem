@@ -3,7 +3,7 @@
 <package format="3">
   <name>strawberry_segmentation</name>
   <version>0.0.1</version>
-  <description>ONNXRuntime-based YOLOv8 segmentation for strawberries (inference only).</description>
+  <description>Ultralytics Runtime-based YOLOv8 segmentation for strawberries (inference only).</description>
 
   <maintainer email="julian.schrenk@stud.hs-hannover.de">Julian Schrenk</maintainer>
   <license>MIT</license>
