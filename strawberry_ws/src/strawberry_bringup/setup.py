@@ -11,7 +11,7 @@ setup(
          ['resource/' + package_name]),
         ('share/' + package_name,
          ['package.xml']),
-        # ✅ KORRIGIERTER PFAD:
+        # Launch-Dateien installieren
         ('share/' + package_name + '/launch', [
             'strawberry_bringup/launch/dummy_system.launch.py'
         ]),
@@ -24,7 +24,7 @@ setup(
     license='MIT',
     entry_points={
         'console_scripts': [
-            # optional: eigene Nodes
+            # hier könntest du später eigene Python-Nodes eintragen
         ],
     },
 )

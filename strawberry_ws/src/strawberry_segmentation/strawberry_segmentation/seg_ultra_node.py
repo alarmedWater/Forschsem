@@ -7,8 +7,9 @@ Subscribes:
   /camera/color/image_raw  (sensor_msgs/Image, rgb8)  [param: topic_in]
 
 Publishes:
-  /seg/label_image   (sensor_msgs/Image, mono16)  -> Instanz-IDs (0=BG, 1..N)
-  /seg/overlay       (sensor_msgs/Image, rgb8)    -> Overlay aus Ultralytics .plot()
+  /seg/label_image       (sensor_msgs/Image, mono16)  -> Instanz-IDs (0=BG, 1..N)
+  /seg/label_image_vis   (sensor_msgs/Image, mono8)   -> Debug-Visualisierung (0=BG, 255=Instanz)
+  /seg/overlay           (sensor_msgs/Image, rgb8)    -> Overlay aus Ultralytics .plot()
 
 Parameter (wichtigste):
   model_path: Pfad zu best.pt (leer -> <pkg share>/models/best.pt)
@@ -104,11 +105,13 @@ class YoloSegUltralyticsNode(Node):
 
         # ---------------- ROS I/O ----------------
         self.bridge = CvBridge()
-        qos = QoSProfile(reliability=QoSReliabilityPolicy.BEST_EFFORT,
-                         history=QoSHistoryPolicy.KEEP_LAST, depth=5)
 
-        self.sub_rgb = self.create_subscription(Image, topic_in, self.on_image, qos)
+        # Subscriber: Default-QoS (wie camera_folder)
+        self.sub_rgb = self.create_subscription(Image, topic_in, self.on_image, 10)
+
+        # Publisher
         self.pub_label = self.create_publisher(Image, '/seg/label_image', 10)
+        self.pub_label_vis = self.create_publisher(Image, '/seg/label_image_vis', 10)
         self.pub_overlay = self.create_publisher(Image, '/seg/overlay', 10) if publish_overlay else None
 
         # ---------------- YOLO laden ----------------
@@ -199,7 +202,7 @@ class YoloSegUltralyticsNode(Node):
             ov_msg.header = Header(stamp=src_msg.header.stamp, frame_id=src_msg.header.frame_id)
             self.pub_overlay.publish(ov_msg)
 
-        # mono16 Label
+        # mono16 Label (für weitere Verarbeitung, Depth-Mask, etc.)
         H, W = label_u16.shape
         lbl = Image()
         lbl.header = Header(stamp=src_msg.header.stamp, frame_id=src_msg.header.frame_id)
@@ -210,6 +213,17 @@ class YoloSegUltralyticsNode(Node):
         lbl.step = W * 2
         lbl.data = label_u16.tobytes()
         self.pub_label.publish(lbl)
+
+        # Debug-Visualisierung: mono8 (0 = Hintergrund, 255 = alle Instanzen)
+        # -> perfekt für rqt_image_view
+        if self.pub_label_vis.get_subscription_count() > 0:
+            if np.any(label_u16 > 0):
+                label_vis = (label_u16 > 0).astype(np.uint8) * 255
+            else:
+                label_vis = np.zeros_like(label_u16, dtype=np.uint8)
+            lbl_vis_msg = self.bridge.cv2_to_imgmsg(label_vis, encoding='mono8')
+            lbl_vis_msg.header = lbl.header
+            self.pub_label_vis.publish(lbl_vis_msg)
 
 
 def main():
