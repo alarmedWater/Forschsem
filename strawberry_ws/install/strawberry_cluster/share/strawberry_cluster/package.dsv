@@ -1,0 +1,6 @@
+source;share/strawberry_cluster/hook/pythonpath.ps1
+source;share/strawberry_cluster/hook/pythonpath.dsv
+source;share/strawberry_cluster/hook/pythonpath.sh
+source;share/strawberry_cluster/hook/ament_prefix_path.ps1
+source;share/strawberry_cluster/hook/ament_prefix_path.dsv
+source;share/strawberry_cluster/hook/ament_prefix_path.sh

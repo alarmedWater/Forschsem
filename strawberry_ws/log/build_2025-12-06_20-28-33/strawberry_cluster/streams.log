@@ -1,0 +1,37 @@
+[2.338s] Invoking command in '/home/parallels/Forschsemrep/strawberry_ws/strawberry_cluster': PYTHONPATH=/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../build/strawberry_cluster build --build-base /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/build install --record /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/install.log --single-version-externally-managed install_data
+[2.965s] running egg_info
+[2.965s] creating ../build/strawberry_cluster/strawberry_cluster.egg-info
+[2.965s] writing ../build/strawberry_cluster/strawberry_cluster.egg-info/PKG-INFO
+[2.967s] writing dependency_links to ../build/strawberry_cluster/strawberry_cluster.egg-info/dependency_links.txt
+[2.968s] writing entry points to ../build/strawberry_cluster/strawberry_cluster.egg-info/entry_points.txt
+[2.969s] writing requirements to ../build/strawberry_cluster/strawberry_cluster.egg-info/requires.txt
+[2.970s] writing top-level names to ../build/strawberry_cluster/strawberry_cluster.egg-info/top_level.txt
+[2.973s] writing manifest file '../build/strawberry_cluster/strawberry_cluster.egg-info/SOURCES.txt'
+[2.974s] reading manifest file '../build/strawberry_cluster/strawberry_cluster.egg-info/SOURCES.txt'
+[2.975s] writing manifest file '../build/strawberry_cluster/strawberry_cluster.egg-info/SOURCES.txt'
+[2.978s] running build
+[2.979s] running build_py
+[2.981s] creating /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/build
+[2.982s] creating /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/build/lib
+[2.982s] creating /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/build/lib/strawberry_cluster
+[2.983s] copying strawberry_cluster/strawberry_cluster_node.py -> /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/build/lib/strawberry_cluster
+[2.984s] copying strawberry_cluster/__init__.py -> /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/build/lib/strawberry_cluster
+[2.984s] running install
+[2.986s] running install_lib
+[2.987s] creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/lib/python3.10/site-packages/strawberry_cluster
+[2.991s] copying /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/build/lib/strawberry_cluster/strawberry_cluster_node.py -> /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/lib/python3.10/site-packages/strawberry_cluster
+[2.991s] copying /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/build/lib/strawberry_cluster/__init__.py -> /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/lib/python3.10/site-packages/strawberry_cluster
+[2.992s] byte-compiling /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/lib/python3.10/site-packages/strawberry_cluster/strawberry_cluster_node.py to strawberry_cluster_node.cpython-310.pyc
+[2.997s] byte-compiling /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/lib/python3.10/site-packages/strawberry_cluster/__init__.py to __init__.cpython-310.pyc
+[2.998s] running install_data
+[3.000s] creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/share/ament_index
+[3.001s] creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/share/ament_index/resource_index
+[3.002s] creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/share/ament_index/resource_index/packages
+[3.004s] copying resource/strawberry_cluster -> /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/share/ament_index/resource_index/packages
+[3.004s] copying package.xml -> /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/share/strawberry_cluster
+[3.006s] running install_egg_info
+[3.007s] Copying ../build/strawberry_cluster/strawberry_cluster.egg-info to /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/lib/python3.10/site-packages/strawberry_cluster-0.0.1-py3.10.egg-info
+[3.010s] running install_scripts
+[3.040s] Installing strawberry_cluster script to /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/lib/strawberry_cluster
+[3.043s] writing list of installed files to '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/install.log'
+[3.080s] Invoked command in '/home/parallels/Forschsemrep/strawberry_ws/strawberry_cluster' returned '0': PYTHONPATH=/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../build/strawberry_cluster build --build-base /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/build install --record /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/install.log --single-version-externally-managed install_data
