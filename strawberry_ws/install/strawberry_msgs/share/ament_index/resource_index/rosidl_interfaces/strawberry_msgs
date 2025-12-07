@@ -1,0 +1,4 @@
+srv/CaptureSnapshot.idl
+srv/CaptureSnapshot.srv
+srv/CaptureSnapshot_Request.msg
+srv/CaptureSnapshot_Response.msg

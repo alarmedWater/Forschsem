@@ -1,0 +1,19 @@
+running egg_info
+writing ../build/strawberry_cluster/strawberry_cluster.egg-info/PKG-INFO
+writing dependency_links to ../build/strawberry_cluster/strawberry_cluster.egg-info/dependency_links.txt
+writing entry points to ../build/strawberry_cluster/strawberry_cluster.egg-info/entry_points.txt
+writing requirements to ../build/strawberry_cluster/strawberry_cluster.egg-info/requires.txt
+writing top-level names to ../build/strawberry_cluster/strawberry_cluster.egg-info/top_level.txt
+reading manifest file '../build/strawberry_cluster/strawberry_cluster.egg-info/SOURCES.txt'
+writing manifest file '../build/strawberry_cluster/strawberry_cluster.egg-info/SOURCES.txt'
+running build
+running build_py
+running install
+running install_lib
+running install_data
+running install_egg_info
+removing '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/lib/python3.10/site-packages/strawberry_cluster-0.0.1-py3.10.egg-info' (and everything under it)
+Copying ../build/strawberry_cluster/strawberry_cluster.egg-info to /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/lib/python3.10/site-packages/strawberry_cluster-0.0.1-py3.10.egg-info
+running install_scripts
+Installing strawberry_cluster script to /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/lib/strawberry_cluster
+writing list of installed files to '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/install.log'

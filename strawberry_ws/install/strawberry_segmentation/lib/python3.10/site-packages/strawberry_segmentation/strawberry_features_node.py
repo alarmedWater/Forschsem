@@ -28,16 +28,21 @@ This node:
 
 from __future__ import annotations
 
+import time
+from typing import Dict
+
 import numpy as np
-
 import rclpy
-from rclpy.node import Node
-from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
-
-from sensor_msgs.msg import Image, CameraInfo, PointCloud2
-from std_msgs.msg import Header
 from cv_bridge import CvBridge
+from rclpy.node import Node
+from rclpy.qos import (
+    QoSHistoryPolicy,
+    QoSProfile,
+    QoSReliabilityPolicy,
+)
+from sensor_msgs.msg import CameraInfo, Image, PointCloud2
 from sensor_msgs_py import point_cloud2
+from std_msgs.msg import Header
 
 import message_filters
 
@@ -58,15 +63,17 @@ class StrawberryFeaturesNode(Node):
         self.declare_parameter("frame_id", "")         # empty -> use from CameraInfo
         self.declare_parameter("profile", False)
 
+        # Experiment metadata
+        self.declare_parameter("plant_id", 0)
+        self.declare_parameter("view_id", 0)
+
         # One selected instance for RViz, etc.
         self.declare_parameter("selected_instance_id", 1)
         self.declare_parameter("publish_selected_cloud", True)
 
         # Optional: publish all strawberries in one cloud
         self.declare_parameter("publish_all_cloud", True)
-        self.declare_parameter(
-            "cloud_topic_all", "/seg/strawberry_cloud"
-        )
+        self.declare_parameter("cloud_topic_all", "/seg/strawberry_cloud")
         self.declare_parameter(
             "cloud_topic_selected", "/seg/strawberry_cloud_selected"
         )
@@ -122,7 +129,7 @@ class StrawberryFeaturesNode(Node):
 
         # Last per-instance point clouds (for possible later use)
         # Dict: inst_id -> np.ndarray of shape (N, 3)
-        self._last_clouds: dict[int, np.ndarray] = {}
+        self._last_clouds: Dict[int, np.ndarray] = {}
 
         # QoS for depth/label
         qos_depth_label = QoSProfile(
@@ -180,9 +187,11 @@ class StrawberryFeaturesNode(Node):
     # --------------------------------------------------------------------- #
     def sync_cb(self, depth_msg: Image, label_msg: Image) -> None:
         """Process one synchronized depth + label pair."""
-        import time
-
         t0 = time.time()
+
+        # Experiment metadata (can be changed at runtime via ros2 param set)
+        plant_id = int(self.get_parameter("plant_id").value)
+        view_id = int(self.get_parameter("view_id").value)
 
         # Wait until intrinsics are available.
         if (
@@ -252,13 +261,14 @@ class StrawberryFeaturesNode(Node):
         cy = float(self._cy)
 
         # Current per-instance clouds
-        current_clouds: dict[int, np.ndarray] = {}
+        current_clouds: Dict[int, np.ndarray] = {}
 
         # ------------------------------------------------------------------ #
         # 1) Build per-instance clouds and features
         # ------------------------------------------------------------------ #
         log_lines: list[str] = [
-            f"  Instances in this frame: {unique_ids.tolist()}"
+            f"Plant {plant_id}, view {view_id} – "
+            f"instances: {unique_ids.tolist()}"
         ]
 
         for inst_id in unique_ids:
@@ -273,9 +283,10 @@ class StrawberryFeaturesNode(Node):
             # Back-project into camera frame (pinhole model)
             x_i = (u_i - cx) * z_i / fx
             y_i = (v_i - cy) * z_i / fy
-            z_i = z_i
 
-            points_i = np.stack((x_i, y_i, z_i), axis=-1).astype(np.float32)
+            points_i = np.stack(
+                (x_i, y_i, z_i), axis=-1
+            ).astype(np.float32)
             n_points = points_i.shape[0]
 
             if n_points < self._min_points:
@@ -318,7 +329,8 @@ class StrawberryFeaturesNode(Node):
 
         # Compact per-frame log
         self.get_logger().info(
-            "Strawberry features for current frame:\n" + "\n".join(log_lines)
+            "Strawberry features for current frame:\n"
+            + "\n".join(log_lines)
         )
 
         # Common header for point clouds
@@ -331,7 +343,10 @@ class StrawberryFeaturesNode(Node):
         # ------------------------------------------------------------------ #
         # 2) Publish all strawberries in one cloud (optional)
         # ------------------------------------------------------------------ #
-        if self._publish_all_cloud and self.pub_cloud_all.get_subscription_count() > 0:
+        if (
+            self._publish_all_cloud
+            and self.pub_cloud_all.get_subscription_count() > 0
+        ):
             all_points_list = []
             for pts in current_clouds.values():
                 if pts.size == 0:
@@ -346,7 +361,10 @@ class StrawberryFeaturesNode(Node):
         # ------------------------------------------------------------------ #
         # 3) Publish selected instance as its own cloud (optional)
         # ------------------------------------------------------------------ #
-        if self._publish_selected_cloud and self.pub_cloud_selected.get_subscription_count() > 0:
+        if (
+            self._publish_selected_cloud
+            and self.pub_cloud_selected.get_subscription_count() > 0
+        ):
             # Read parameter at runtime so you can change it with ros2 param set.
             self._selected_instance_id = int(
                 self.get_parameter("selected_instance_id").value
