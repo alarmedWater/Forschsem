@@ -22,6 +22,7 @@ Clusters are stored in memory:
   self._clusters = [
       {
           "id": int,
+          "plant_id": int,
           "centroid_world": np.ndarray shape (3,),
           "num_points": int,
       },
@@ -32,7 +33,7 @@ Currently, the node:
   - prints a short summary to the log for each frame
   - maintains cluster centroids over time
 
-You can later extend it to:
+To do 
   - publish fused per-cluster point clouds
   - dump clusters to disk
 """
@@ -40,33 +41,35 @@ You can later extend it to:
 from __future__ import annotations
 
 import math
-from typing import List, Dict, Any
+import time
+from typing import Any, Dict, List
 
 import numpy as np
-
 import rclpy
+from cv_bridge import CvBridge
+from geometry_msgs.msg import PoseStamped
 from rclpy.node import Node
 from rclpy.qos import (
+    QoSHistoryPolicy,
     QoSProfile,
     QoSReliabilityPolicy,
-    QoSHistoryPolicy,
 )
+from sensor_msgs.msg import CameraInfo, Image
 
-from sensor_msgs.msg import Image, CameraInfo
-from geometry_msgs.msg import PoseStamped
-from std_msgs.msg import Header
-from cv_bridge import CvBridge
 
 import message_filters
 
 
-def quaternion_to_rotation_matrix(qx: float, qy: float, qz: float,
-                                  qw: float) -> np.ndarray:
+def quaternion_to_rotation_matrix(
+    qx: float,
+    qy: float,
+    qz: float,
+    qw: float,
+) -> np.ndarray:
     """Convert a unit quaternion into a 3x3 rotation matrix.
 
     The quaternion is assumed to be in the form (x, y, z, w).
     """
-    # Normalize to be safe
     norm = math.sqrt(qx * qx + qy * qy + qz * qz + qw * qw)
     if norm == 0.0:
         # Degenerate quaternion → identity
@@ -116,6 +119,10 @@ class StrawberryClusterNode(Node):
         self.declare_parameter("max_clusters", 50)
         self.declare_parameter("profile", False)
 
+        # Experiment metadata (set per plant / view)
+        self.declare_parameter("plant_id", 0)
+        self.declare_parameter("view_id", 0)
+
         depth_topic = self.get_parameter("depth_topic").value
         label_topic = self.get_parameter("label_topic").value
         cam_info_topic = self.get_parameter("camera_info_topic").value
@@ -157,7 +164,11 @@ class StrawberryClusterNode(Node):
         self._t_world_cam: np.ndarray | None = None  # (3,)
 
         # Simple in-memory cluster structure
-        # each cluster: {"id": int, "centroid_world": np.ndarray (3,), "num_points": int}
+        # each cluster:
+        #   {"id": int,
+        #    "plant_id": int,
+        #    "centroid_world": np.ndarray (3,),
+        #    "num_points": int}
         self._clusters: List[Dict[str, Any]] = []
         self._next_cluster_id: int = 1
 
@@ -214,23 +225,29 @@ class StrawberryClusterNode(Node):
         pos = msg.pose.position
         ori = msg.pose.orientation
 
-        R = quaternion_to_rotation_matrix(
+        rot = quaternion_to_rotation_matrix(
             ori.x, ori.y, ori.z, ori.w
         )
-        t = np.array([pos.x, pos.y, pos.z], dtype=np.float32)
+        trans = np.array([pos.x, pos.y, pos.z], dtype=np.float32)
 
-        self._R_world_cam = R
-        self._t_world_cam = t
+        self._R_world_cam = rot
+        self._t_world_cam = trans
 
     def sync_cb(self, depth_msg: Image, label_msg: Image) -> None:
         """Depth + label callback: compute instance centroids and cluster."""
-        import time
-
         t0 = time.time()
 
+        # Experiment metadata
+        plant_id = int(self.get_parameter("plant_id").value)
+        view_id = int(self.get_parameter("view_id").value)
+
         # Need intrinsics
-        if (self._fx is None or self._fy is None or
-                self._cx is None or self._cy is None):
+        if (
+            self._fx is None
+            or self._fy is None
+            or self._cx is None
+            or self._cy is None
+        ):
             if not self._warned_no_intrinsics:
                 self.get_logger().warn(
                     "No CameraInfo received yet – cannot compute 3D points."
@@ -297,16 +314,16 @@ class StrawberryClusterNode(Node):
         cx = float(self._cx)
         cy = float(self._cy)
 
-        R_wc = self._R_world_cam  # 3x3
-        t_wc = self._t_world_cam  # (3,)
+        rot_wc = self._R_world_cam  # 3x3
+        trans_wc = self._t_world_cam  # (3,)
 
         # For logging
-        frame_assignments = []
+        frame_assignments: list[tuple[int, int, int, int, int]] = []
 
-        # ------------------------------------------------------------------
+        # ------------------------------------------------------------------ #
         # Per instance: compute 3D points (camera frame) and centroid,
         # then transform centroid to world and assign to cluster.
-        # ------------------------------------------------------------------
+        # ------------------------------------------------------------------ #
         for inst_id in unique_ids:
             mask_inst = valid_depth & (lbl_sub == inst_id)
             if not np.any(mask_inst):
@@ -316,12 +333,11 @@ class StrawberryClusterNode(Node):
             v_i = v_grid[mask_inst].astype(np.float32)
             u_i = u_grid[mask_inst].astype(np.float32)
 
-            X_i = (u_i - cx) * z_i / fx
-            Y_i = (v_i - cy) * z_i / fy
-            Z_i = z_i
+            x_i = (u_i - cx) * z_i / fx
+            y_i = (v_i - cy) * z_i / fy
 
             points_cam = np.stack(
-                (X_i, Y_i, Z_i), axis=-1
+                (x_i, y_i, z_i), axis=-1
             ).astype(np.float32)
             num_pts = points_cam.shape[0]
 
@@ -331,31 +347,36 @@ class StrawberryClusterNode(Node):
             centroid_cam = points_cam.mean(axis=0)  # (3,)
 
             # Transform centroid into world frame
-            centroid_world = R_wc @ centroid_cam + t_wc  # (3,)
+            centroid_world = rot_wc @ centroid_cam + trans_wc  # (3,)
 
             cluster_id = self._assign_to_cluster(
-                centroid_world, num_pts
+                centroid_world, num_pts, plant_id
             )
             frame_assignments.append(
-                (int(inst_id), cluster_id, num_pts)
+                (plant_id, view_id, int(inst_id), cluster_id, num_pts)
             )
 
         if frame_assignments:
-            lines = [
-                "Cluster assignments this frame:"
-            ]
-            for inst_id, cid, n_pts in frame_assignments:
+            lines = ["Cluster assignments this frame:"]
+            for (
+                p_id,
+                v_id,
+                inst_id,
+                cid,
+                n_pts,
+            ) in frame_assignments:
                 lines.append(
-                    f"  instance {inst_id} -> cluster {cid} "
-                    f"(N={n_pts})"
+                    f"  plant {p_id}, view {v_id}, instance {inst_id} "
+                    f"-> cluster {cid} (N={n_pts})"
                 )
             self.get_logger().info("\n".join(lines))
 
         if self._profile:
             dt = (time.time() - t0) * 1000.0
             self.get_logger().info(
-                f"Cluster callback time: {dt:.2f} ms, "
-                f"clusters={len(self._clusters)}"
+                "Cluster callback time: %.2f ms, clusters=%d",
+                dt,
+                len(self._clusters),
             )
 
     # ------------------------------------------------------------------ #
@@ -366,28 +387,37 @@ class StrawberryClusterNode(Node):
         self,
         centroid_world: np.ndarray,
         num_points: int,
+        plant_id: int,
     ) -> int:
         """Assign an instance to an existing cluster or create a new one.
+
+        Clustering is restricted to clusters with the same plant_id.
 
         Returns:
             cluster_id (int): ID of the chosen or created cluster.
         """
-        if not self._clusters:
-            cid = self._create_cluster(centroid_world, num_points)
-            return cid
+        # Consider only clusters of the same plant
+        same_plant_clusters = [
+            c for c in self._clusters if c["plant_id"] == plant_id
+        ]
 
-        # Find nearest cluster in Euclidean distance
+        if not same_plant_clusters:
+            return self._create_cluster(
+                centroid_world, num_points, plant_id
+            )
+
+        # Find nearest cluster in Euclidean distance (same plant only)
         dists = [
             np.linalg.norm(
                 centroid_world - c["centroid_world"]
             )
-            for c in self._clusters
+            for c in same_plant_clusters
         ]
         min_idx = int(np.argmin(dists))
         min_dist = dists[min_idx]
+        cluster = same_plant_clusters[min_idx]
 
         if min_dist < self._dist_thresh:
-            cluster = self._clusters[min_idx]
             # Update centroid with weighted average
             total_points = cluster["num_points"] + num_points
             w_old = cluster["num_points"] / total_points
@@ -402,19 +432,20 @@ class StrawberryClusterNode(Node):
             cluster["num_points"] = total_points
             return cluster["id"]
 
-        # No close cluster found -> create new if allowed
+        # No close cluster found -> create new if allowed (global limit)
         if len(self._clusters) < self._max_clusters:
-            cid = self._create_cluster(centroid_world, num_points)
-            return cid
+            return self._create_cluster(
+                centroid_world, num_points, plant_id
+            )
 
-        # Otherwise: assign to the nearest anyway (to avoid unbounded growth)
-        cluster = self._clusters[min_idx]
+        # Otherwise: assign to the nearest same-plant cluster anyway
         return cluster["id"]
 
     def _create_cluster(
         self,
         centroid_world: np.ndarray,
         num_points: int,
+        plant_id: int,
     ) -> int:
         """Create a new cluster and return its ID."""
         cid = self._next_cluster_id
@@ -423,16 +454,20 @@ class StrawberryClusterNode(Node):
         self._clusters.append(
             {
                 "id": cid,
+                "plant_id": plant_id,
                 "centroid_world": centroid_world.copy(),
                 "num_points": int(num_points),
             }
         )
 
         self.get_logger().info(
-            f"Created new cluster {cid} at "
-            f"({centroid_world[0]:.3f}, "
-            f"{centroid_world[1]:.3f}, "
-            f"{centroid_world[2]:.3f}) m"
+            "Created new cluster %d for plant %d at "
+            "(%.3f, %.3f, %.3f) m",
+            cid,
+            plant_id,
+            centroid_world[0],
+            centroid_world[1],
+            centroid_world[2],
         )
         return cid
 

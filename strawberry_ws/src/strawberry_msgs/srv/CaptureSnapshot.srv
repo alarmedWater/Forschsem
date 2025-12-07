@@ -1,0 +1,9 @@
+# Request: which plant + which view should this snapshot belong to?
+int32 plant_id
+int32 view_id
+---
+# Response:
+bool success
+string message
+string rgb_path
+string depth_path
