@@ -1,0 +1,58 @@
+==============================
+
+Position: mitte
+[ROBOT] Fahre zu Position 'mitte' ...
+[ROBOT] Position 'mitte' erreicht.
+
+==============================
+      KAMERA / TCP POSE
+==============================
+Kamera Position (WORLD):
+   x=112.567 mm
+   y=0.000 mm
+   z=283.585 mm
+
+Kamera Orientierung (WORLD-ACHSEN):
+   X-Achse: [ 6.123234e-17  0.000000e+00 -1.000000e+00]
+   Y-Achse: [ 7.07114186e-01 -7.07099376e-01  4.32982562e-17]
+   Z-Achse: [-7.07099376e-01 -7.07114186e-01 -4.32973494e-17]
+
+==============================
+
+Position: links
+[ROBOT] Fahre zu Position 'links' ...
+[ROBOT] Position 'links' erreicht.
+
+==============================
+      KAMERA / TCP POSE
+==============================
+Kamera Position (WORLD):
+   x=158.514 mm
+   y=76.569 mm
+   z=239.850 mm
+
+Kamera Orientierung (WORLD-ACHSEN):
+   X-Achse: [ 0.07540488  0.56045421 -0.82474553]
+   Y-Achse: [-0.34729051  0.79007612  0.50514258]
+   Z-Achse: [0.93472103 0.24833608 0.25421603]
+
+==============================
+
+Position: rechts
+[ROBOT] Fahre zu Position 'rechts' ...
+[ROBOT] Position 'rechts' erreicht.
+
+==============================
+      KAMERA / TCP POSE
+==============================
+Kamera Position (WORLD):
+   x=167.500 mm
+   y=-56.461 mm
+   z=236.505 mm
+
+Kamera Orientierung (WORLD-ACHSEN):
+   X-Achse: [-0.55041738 -0.32512835 -0.76898132]
+   Y-Achse: [ 0.79085937  0.0921187  -0.60502529]
+   Z-Achse: [ 0.26754843 -0.94117251  0.20642707]
+
+==============================
