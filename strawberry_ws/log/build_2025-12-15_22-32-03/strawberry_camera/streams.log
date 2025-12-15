@@ -1,0 +1,20 @@
+[1.820s] Invoking command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera': PYTHONPATH=/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera/build --no-deps symlink_data
+[2.372s] running develop
+[2.638s] running egg_info
+[2.638s] writing strawberry_camera.egg-info/PKG-INFO
+[2.638s] writing dependency_links to strawberry_camera.egg-info/dependency_links.txt
+[2.638s] writing entry points to strawberry_camera.egg-info/entry_points.txt
+[2.638s] writing requirements to strawberry_camera.egg-info/requires.txt
+[2.638s] writing top-level names to strawberry_camera.egg-info/top_level.txt
+[2.639s] reading manifest file 'strawberry_camera.egg-info/SOURCES.txt'
+[2.640s] writing manifest file 'strawberry_camera.egg-info/SOURCES.txt'
+[2.642s] running build_ext
+[2.642s] Creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/lib/python3.10/site-packages/strawberry-camera.egg-link (link to .)
+[2.646s] Installing camera_dummy script to /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/lib/strawberry_camera
+[2.646s] Installing camera_folder script to /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/lib/strawberry_camera
+[2.647s] 
+[2.647s] Installed /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera
+[2.647s] running symlink_data
+[2.648s] creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/share/strawberry_camera/resource
+[2.653s] error: can't copy '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera/resource/realsense_d405_640x480_30fps.yml': doesn't exist or not a regular file
+[2.706s] Invoked command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera' returned '1': PYTHONPATH=/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera/build --no-deps symlink_data

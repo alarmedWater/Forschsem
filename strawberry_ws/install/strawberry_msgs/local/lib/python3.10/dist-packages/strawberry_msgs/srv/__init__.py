@@ -1,1 +1,1 @@
-from strawberry_msgs.srv._capture_snapshot import CaptureSnapshot  # noqa: F401
+/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs/rosidl_generator_py/strawberry_msgs/srv/__init__.py

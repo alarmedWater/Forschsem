@@ -1,0 +1,69 @@
+timestamp_utc: "2025-12-15T10:41:50.161413+00:00"
+
+device:
+  name: "Intel RealSense D405"
+  serial_number: "218622270259"
+  firmware_version: "5.16.0.1"
+  product_line: "D400"
+
+stream_mode:
+  width: 640
+  height: 480
+  fps: 30
+
+# IMPORTANT: your saved PNG depth is rs.format.z16 (raw units), not mm.
+# Convert to meters using: z_m = depth_u16 * depth_scale_m_per_unit
+depth_scale_m_per_unit: 9.999999747378752e-05
+
+intrinsics:
+  depth:
+    width: 640
+    height: 480
+    fx: 384.897705078125
+    fy: 384.897705078125
+    cx: 326.5549621582031
+    cy: 241.88543701171875
+    distortion_model: "brown_conrady"
+    distortion_coeffs:
+      - 0.0
+      - 0.0
+      - 0.0
+      - 0.0
+      - 0.0
+
+  color:
+    width: 640
+    height: 480
+    fx: 392.2776184082031
+    fy: 391.3633728027344
+    cx: 323.5524597167969
+    cy: 242.03379821777344
+    distortion_model: "inverse_brown_conrady"
+    distortion_coeffs:
+      - -0.05286535993218422
+      - 0.05753187835216522
+      - -0.0003681946254801005
+      - 0.000499460962601006
+      - -0.01893887110054493
+
+extrinsics:
+  depth_to_color:
+    rotation_row_major_3x3:
+      - 0.9999829530715942
+      - 0.0009599336190149188
+      - -0.005763840861618519
+      - -0.0009559188620187342
+      - 0.9999992847442627
+      - 0.0006992650451138616
+      - 0.005764508154243231
+      - -0.0006937433499842882
+      - 0.9999831318855286
+    translation_m:
+      - 9.210062125930563e-05
+      - 7.057415700728598e-07
+      - 0.00013046100502833724
+
+notes:
+  - "Intrinsics are constant for a given stream configuration."
+  - "If you resize/crop images later, update fx/fy/cx/cy accordingly."
+  - "Aligned depth-to-color images typically use the color intrinsics."

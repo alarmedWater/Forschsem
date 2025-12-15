@@ -1,6 +1,1 @@
-
-# Response:
-bool success
-string message
-string rgb_path
-string depth_path
+/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs/rosidl_cmake/srv/CaptureSnapshot_Response.msg

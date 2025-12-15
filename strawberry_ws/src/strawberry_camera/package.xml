@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd"
+            schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>strawberry_camera</name>
   <version>0.0.1</version>
@@ -8,11 +9,21 @@
   <maintainer email="julian.schrenk@stud.hs-hannover.de">Julian Schrenk</maintainer>
   <license>MIT</license>
 
-  <!-- Runtime deps -->
+  <!-- Python runtime -->
   <exec_depend>rclpy</exec_depend>
+
+  <!-- ROS message types -->
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>std_msgs</exec_depend>
+
+  <!-- Image conversion (your code uses OpenCV directly, but keep if used elsewhere) -->
   <exec_depend>cv_bridge</exec_depend>
+
+  <!-- To locate share directory at runtime (get_package_share_directory) -->
+  <exec_depend>ament_index_python</exec_depend>
+
+  <!-- YAML loader for calibration files -->
+  <exec_depend>python3-yaml</exec_depend>
 
   <export>
     <build_type>ament_python</build_type>

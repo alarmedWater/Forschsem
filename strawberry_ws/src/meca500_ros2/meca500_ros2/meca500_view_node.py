@@ -1,3 +1,4 @@
+#strawberry_ws/src/meca500_ros2/meca500_ros2/meca500_view_node.py
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 

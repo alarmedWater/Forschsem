@@ -4,3 +4,6 @@ source;share/strawberry_bringup/hook/pythonpath.sh
 source;share/strawberry_bringup/hook/ament_prefix_path.ps1
 source;share/strawberry_bringup/hook/ament_prefix_path.dsv
 source;share/strawberry_bringup/hook/ament_prefix_path.sh
+source;../../build/strawberry_bringup/share/strawberry_bringup/hook/pythonpath_develop.ps1
+source;../../build/strawberry_bringup/share/strawberry_bringup/hook/pythonpath_develop.dsv
+source;../../build/strawberry_bringup/share/strawberry_bringup/hook/pythonpath_develop.sh
