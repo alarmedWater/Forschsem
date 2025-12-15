@@ -61,13 +61,31 @@ HOME_JOINTS = (0, 0, 0, 0, 0, 0)
 #######################
 # Robotervorbereitung #
 #######################
-def ensure_robot_ready(robot):
-    try: robot.ResetError()
-    except: pass
-    try: robot.ClearMotion()
-    except: pass
+# def ensure_robot_ready(robot):
+#     try: robot.ResetError()
+#     except: pass
+#     try: robot.ClearMotion()
+#     except: pass
+#     robot.ActivateAndHome()
+#     robot.WaitHomed()
+
+
+def ensure_robot_ready(robot) -> None:
+    try:
+        robot.ResetError()
+    except Exception as exc:  
+        print(f"[ensure_robot_ready] ResetError() failed: {exc!r}")
+
+    try:
+        robot.ClearMotion()
+    except Exception as exc: 
+        print(f"[ensure_robot_ready] ClearMotion() failed: {exc!r}")
+
     robot.ActivateAndHome()
     robot.WaitHomed()
+
+
+#das mit except: pass hat mich zu sehr gestört sorry :D -beste grüße juli
 
 #################
 # HAUPTPROGRAMM #
