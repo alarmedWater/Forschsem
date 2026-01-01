@@ -1,0 +1,1 @@
+/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs/rosidl_typesupport_introspection_c/strawberry_msgs/msg/detail/frame_info__rosidl_typesupport_introspection_c.h

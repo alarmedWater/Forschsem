@@ -1,78 +1,62 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+Cluster strawberries across multiple views using 3D centroids in world frame.
 
-"""Cluster strawberries across multiple views using 3D centroids in world frame.
+Synchronized inputs:
+  - masked depth image (/seg/depth_masked)
+  - instance label image (/seg/label_image)
+  - camera pose in world (/camera_pose_world) [geometry_msgs/PoseStamped]
+  - frame info (FrameInfo) aligned to depth masked stamp (recommended)
 
-This node does **not** change your existing pipeline. It simply listens to:
+For each instance:
+  - compute centroid in camera frame (from depth + intrinsics)
+  - transform centroid to world frame using PoseStamped
+  - assign/update a cluster in world frame (per plant_id)
 
-  - depth_topic        (masked depth image, e.g. /seg/depth_masked)
-  - label_topic        (instance label image, mono16, e.g. /seg/label_image)
-  - camera_info_topic  (intrinsics, e.g. /camera/color/camera_info)
-  - camera_pose_topic  (PoseStamped, camera pose in world frame)
-
-For each synchronized depth+label frame and a valid camera pose:
-
-  - compute per-instance 3D points in camera frame
-  - compute per-instance 3D centroids in camera frame
-  - transform centroids into world frame using the latest camera pose
-  - assign instances to clusters in world frame based on a distance threshold
-
-Clusters are stored in memory:
-
-  self._clusters = [
-      {
-          "id": int,
-          "plant_id": int,
-          "centroid_world": np.ndarray shape (3,),
-          "num_points": int,
-      },
-      ...
-  ]
-
-Currently, the node:
-  - prints a short summary to the log for each frame
-  - maintains cluster centroids over time
-
-To do 
-  - publish fused per-cluster point clouds
-  - dump clusters to disk
+Assumes "3 views per plant":
+  view_id: 0=links, 1=mitte, 2=rechts
 """
 
 from __future__ import annotations
 
 import math
 import time
-from typing import Any, Dict, List
+from dataclasses import dataclass, field
+from typing import Any, List, Optional, Tuple
 
+import message_filters
 import numpy as np
 import rclpy
 from cv_bridge import CvBridge
 from geometry_msgs.msg import PoseStamped
 from rclpy.node import Node
-from rclpy.qos import (
-    QoSHistoryPolicy,
-    QoSProfile,
-    QoSReliabilityPolicy,
-)
+from rclpy.qos import QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicy
 from sensor_msgs.msg import CameraInfo, Image
 
+from strawberry_msgs.msg import FrameInfo
 
-import message_filters
+
+@dataclass
+class Cluster:
+    """Simple per-plant cluster representation in world coordinates."""
+
+    cluster_id: int
+    centroid_world: np.ndarray  # shape (3,)
+    num_points: int
+    views_seen: set[int] = field(default_factory=set)
+    last_frame_index: int = -1
 
 
-def quaternion_to_rotation_matrix(
-    qx: float,
-    qy: float,
-    qz: float,
-    qw: float,
-) -> np.ndarray:
-    """Convert a unit quaternion into a 3x3 rotation matrix.
+def quaternion_to_rotation_matrix(qx: float, qy: float, qz: float, qw: float) -> np.ndarray:
+    """
+    Convert quaternion (x,y,z,w) to 3x3 rotation matrix.
 
-    The quaternion is assumed to be in the form (x, y, z, w).
+    For PoseStamped: quaternion encodes rotation of child frame w.r.t. parent frame.
+    If pose is "camera in world", this gives R_world_cam.
     """
     norm = math.sqrt(qx * qx + qy * qy + qz * qz + qw * qw)
-    if norm == 0.0:
-        # Degenerate quaternion → identity
+    if norm <= 0.0:
         return np.eye(3, dtype=np.float32)
 
     qx /= norm
@@ -90,7 +74,7 @@ def quaternion_to_rotation_matrix(
     wy = qw * qy
     wz = qw * qz
 
-    rot = np.array(
+    return np.array(
         [
             [1.0 - 2.0 * (yy + zz), 2.0 * (xy - wz), 2.0 * (xz + wy)],
             [2.0 * (xy + wz), 1.0 - 2.0 * (xx + zz), 2.0 * (yz - wx)],
@@ -98,7 +82,6 @@ def quaternion_to_rotation_matrix(
         ],
         dtype=np.float32,
     )
-    return rot
 
 
 class StrawberryClusterNode(Node):
@@ -107,205 +90,251 @@ class StrawberryClusterNode(Node):
     def __init__(self) -> None:
         super().__init__("strawberry_cluster")
 
-        # ----- Parameters -----
+        # ---------------- Parameters ----------------
         self.declare_parameter("depth_topic", "/seg/depth_masked")
         self.declare_parameter("label_topic", "/seg/label_image")
-        self.declare_parameter("camera_info_topic", "/camera/color/camera_info")
         self.declare_parameter("camera_pose_topic", "/camera_pose_world")
+
+        # IMPORTANT: aligned passthrough from depth_mask is best here
+        self.declare_parameter("frame_info_topic", "/seg/frame_info_depth_masked")
+
+        self.declare_parameter("camera_info_topic", "/camera/color/camera_info")
 
         self.declare_parameter("downsample_step", 1)
         self.declare_parameter("min_points", 50)
-        self.declare_parameter("distance_threshold", 0.02)  # [m], ~2 cm
+        self.declare_parameter("distance_threshold", 0.02)  # meters
         self.declare_parameter("max_clusters", 50)
         self.declare_parameter("profile", False)
 
-        # Experiment metadata (set per plant / view)
-        self.declare_parameter("plant_id", 0)
-        self.declare_parameter("view_id", 0)
+        # Sync tuning
+        self.declare_parameter("sync_queue_size", 200)
+        self.declare_parameter("sync_slop", 0.2)
 
-        depth_topic = self.get_parameter("depth_topic").value
-        label_topic = self.get_parameter("label_topic").value
-        cam_info_topic = self.get_parameter("camera_info_topic").value
-        cam_pose_topic = self.get_parameter("camera_pose_topic").value
+        # Depth scaling
+        self.declare_parameter("depth_unit", "mm")  # "mm" or "realsense_units"
+        self.declare_parameter("depth_scale_m_per_unit", 9.999999747378752e-05)
 
-        self._step = int(self.get_parameter("downsample_step").value)
-        self._min_points = int(self.get_parameter("min_points").value)
-        self._dist_thresh = float(
-            self.get_parameter("distance_threshold").value
-        )
-        self._max_clusters = int(self.get_parameter("max_clusters").value)
-        self._profile = bool(self.get_parameter("profile").value)
+        # Practical: reset clusters when plant_id changes
+        self.declare_parameter("reset_on_new_plant", True)
 
-        if self._step < 1:
-            self._step = 1
+        # Logging control
+        self.declare_parameter("log_assignments", True)
+
+        depth_topic = self._param_str("depth_topic", "/seg/depth_masked")
+        label_topic = self._param_str("label_topic", "/seg/label_image")
+        pose_topic = self._param_str("camera_pose_topic", "/camera_pose_world")
+        frame_info_topic = self._param_str("frame_info_topic", "/seg/frame_info_depth_masked")
+        cam_info_topic = self._param_str("camera_info_topic", "/camera/color/camera_info")
+
+        self._step = max(1, self._param_int("downsample_step", 1))
+        self._min_points = max(0, self._param_int("min_points", 50))
+        self._dist_thresh = float(self._param_float("distance_threshold", 0.02))
+        self._max_clusters = max(1, self._param_int("max_clusters", 50))
+        self._profile = self._param_bool("profile", False)
+
+        self._sync_queue_size = max(1, self._param_int("sync_queue_size", 200))
+        self._sync_slop = float(self._param_float("sync_slop", 0.2))
+        if self._sync_slop <= 0.0:
+            self._sync_slop = 0.05
+
+        self._depth_unit = self._param_str("depth_unit", "mm").strip().lower()
+        self._depth_scale = float(self._param_float("depth_scale_m_per_unit", 9.999999747378752e-05))
+
+        self._reset_on_new_plant = self._param_bool("reset_on_new_plant", True)
+        self._log_assignments = self._param_bool("log_assignments", True)
 
         self.get_logger().info(
-            "StrawberryClusterNode started:\n"
+            "StrawberryClusterNode starting:\n"
             f"  depth_topic        = {depth_topic}\n"
             f"  label_topic        = {label_topic}\n"
+            f"  camera_pose_topic  = {pose_topic}\n"
+            f"  frame_info_topic   = {frame_info_topic}\n"
             f"  camera_info_topic  = {cam_info_topic}\n"
-            f"  camera_pose_topic  = {cam_pose_topic}\n"
             f"  downsample_step    = {self._step}\n"
             f"  min_points         = {self._min_points}\n"
             f"  distance_threshold = {self._dist_thresh:.3f} m\n"
-            f"  max_clusters       = {self._max_clusters}"
+            f"  max_clusters       = {self._max_clusters}\n"
+            f"  depth_unit         = {self._depth_unit}\n"
+            f"  depth_scale        = {self._depth_scale:.3e} m/unit\n"
+            f"  sync_queue_size    = {self._sync_queue_size}\n"
+            f"  sync_slop          = {self._sync_slop}\n"
+            f"  reset_on_new_plant = {self._reset_on_new_plant}\n"
+            f"  log_assignments    = {self._log_assignments}\n"
+            f"  profile            = {self._profile}"
         )
 
-        self.bridge = CvBridge()
+        self._bridge = CvBridge()
 
-        # Intrinsics
-        self._fx: float | None = None
-        self._fy: float | None = None
-        self._cx: float | None = None
-        self._cy: float | None = None
+        # ---------------- Intrinsics ----------------
+        self._fx: Optional[float] = None
+        self._fy: Optional[float] = None
+        self._cx: Optional[float] = None
+        self._cy: Optional[float] = None
 
-        # Latest camera pose in world
-        self._R_world_cam: np.ndarray | None = None  # 3x3
-        self._t_world_cam: np.ndarray | None = None  # (3,)
+        self._warned_no_intrinsics = False
+        self._warned_bad_depth_unit = False
 
-        # Simple in-memory cluster structure
-        # each cluster:
-        #   {"id": int,
-        #    "plant_id": int,
-        #    "centroid_world": np.ndarray (3,),
-        #    "num_points": int}
-        self._clusters: List[Dict[str, Any]] = []
+        self.create_subscription(CameraInfo, cam_info_topic, self._camera_info_cb, 10)
+
+        # ---------------- Clusters (per current plant) ----------------
+        self._active_plant_id: Optional[int] = None
+        self._clusters: List[Cluster] = []
         self._next_cluster_id: int = 1
 
-        # Flags / warnings
-        self._warned_no_intrinsics = False
-        self._warned_no_pose = False
-
-        # QoS
-        qos_depth_label = QoSProfile(
+        # ---------------- QoS + Subscribers + Synchronizer ----------------
+        qos = QoSProfile(
             reliability=QoSReliabilityPolicy.BEST_EFFORT,
             history=QoSHistoryPolicy.KEEP_LAST,
-            depth=5,
+            depth=10,
         )
 
-        # ----- Subscribers -----
-        # Depth + label synchronized
-        self.sub_depth = message_filters.Subscriber(
-            self, Image, depth_topic, qos_profile=qos_depth_label
-        )
-        self.sub_label = message_filters.Subscriber(
-            self, Image, label_topic, qos_profile=qos_depth_label
+        self._sub_depth = message_filters.Subscriber(self, Image, depth_topic, qos_profile=qos)
+        self._sub_label = message_filters.Subscriber(self, Image, label_topic, qos_profile=qos)
+        self._sub_pose = message_filters.Subscriber(self, PoseStamped, pose_topic, qos_profile=qos)
+        self._sub_frame_info = message_filters.Subscriber(
+            self, FrameInfo, frame_info_topic, qos_profile=qos
         )
 
-        self.ts = message_filters.ApproximateTimeSynchronizer(
-            [self.sub_depth, self.sub_label],
-            queue_size=10,
-            slop=0.05,
+        self._ts = message_filters.ApproximateTimeSynchronizer(
+            [self._sub_depth, self._sub_label, self._sub_pose, self._sub_frame_info],
+            queue_size=self._sync_queue_size,
+            slop=self._sync_slop,
         )
-        self.ts.registerCallback(self.sync_cb)
+        self._ts.registerCallback(self._sync_cb)
 
-        # CameraInfo
-        self.sub_info = self.create_subscription(
-            CameraInfo, cam_info_topic, self.camera_info_cb, 10
-        )
+    # ------------------------------------------------------------------ #
+    # Param helpers
+    # ------------------------------------------------------------------ #
 
-        # Camera pose (PoseStamped in world frame)
-        self.sub_pose = self.create_subscription(
-            PoseStamped, cam_pose_topic, self.camera_pose_cb, 10
-        )
+    def _param_str(self, name: str, default: str) -> str:
+        val: Any = self.get_parameter(name).value
+        if val is None:
+            return default
+        s = str(val).strip()
+        return s if s else default
 
-    # --------------------------------------------------------------------- #
-    # Subscribers                                                           #
-    # --------------------------------------------------------------------- #
+    def _param_bool(self, name: str, default: bool) -> bool:
+        val: Any = self.get_parameter(name).value
+        if isinstance(val, bool):
+            return val
+        if val is None:
+            return default
+        if isinstance(val, (int, float)):
+            return bool(val)
+        if isinstance(val, str):
+            return val.strip().lower() in ("1", "true", "yes", "y", "on")
+        return default
 
-    def camera_info_cb(self, msg: CameraInfo) -> None:
-        """Store camera intrinsics from CameraInfo."""
-        self._fx = msg.k[0]
-        self._fy = msg.k[4]
-        self._cx = msg.k[2]
-        self._cy = msg.k[5]
+    def _param_int(self, name: str, default: int) -> int:
+        val: Any = self.get_parameter(name).value
+        if val is None:
+            return default
+        try:
+            return int(val)
+        except Exception:  # noqa: BLE001
+            return default
 
-    def camera_pose_cb(self, msg: PoseStamped) -> None:
-        """Store latest camera pose (world <- camera) from PoseStamped."""
-        pos = msg.pose.position
-        ori = msg.pose.orientation
+    def _param_float(self, name: str, default: float) -> float:
+        val: Any = self.get_parameter(name).value
+        if val is None:
+            return default
+        try:
+            return float(val)
+        except Exception:  # noqa: BLE001
+            return default
 
-        rot = quaternion_to_rotation_matrix(
-            ori.x, ori.y, ori.z, ori.w
-        )
-        trans = np.array([pos.x, pos.y, pos.z], dtype=np.float32)
+    # ------------------------------------------------------------------ #
+    # Callbacks
+    # ------------------------------------------------------------------ #
 
-        self._R_world_cam = rot
-        self._t_world_cam = trans
+    def _camera_info_cb(self, msg: CameraInfo) -> None:
+        self._fx = float(msg.k[0])
+        self._fy = float(msg.k[4])
+        self._cx = float(msg.k[2])
+        self._cy = float(msg.k[5])
 
-    def sync_cb(self, depth_msg: Image, label_msg: Image) -> None:
-        """Depth + label callback: compute instance centroids and cluster."""
+    # ------------------------------------------------------------------ #
+    # Core
+    # ------------------------------------------------------------------ #
+
+    def _depth_to_meters(self, depth: np.ndarray) -> np.ndarray:
+        if depth.dtype == np.uint16:
+            if self._depth_unit == "mm":
+                return depth.astype(np.float32) / 1000.0
+            if self._depth_unit == "realsense_units":
+                return depth.astype(np.float32) * float(self._depth_scale)
+
+            if not self._warned_bad_depth_unit:
+                self.get_logger().warning(
+                    f"Unknown depth_unit='{self._depth_unit}'. "
+                    f"Falling back to realsense_units with scale={self._depth_scale:.3e}."
+                )
+                self._warned_bad_depth_unit = True
+            return depth.astype(np.float32) * float(self._depth_scale)
+
+        return depth.astype(np.float32)
+
+    def _sync_cb(
+        self,
+        depth_msg: Image,
+        label_msg: Image,
+        pose_msg: PoseStamped,
+        frame_info_msg: FrameInfo,
+    ) -> None:
         t0 = time.time()
 
-        # Experiment metadata
-        plant_id = int(self.get_parameter("plant_id").value)
-        view_id = int(self.get_parameter("view_id").value)
-
-        # Need intrinsics
-        if (
-            self._fx is None
-            or self._fy is None
-            or self._cx is None
-            or self._cy is None
-        ):
+        if self._fx is None or self._fy is None or self._cx is None or self._cy is None:
             if not self._warned_no_intrinsics:
-                self.get_logger().warn(
-                    "No CameraInfo received yet – cannot compute 3D points."
-                )
+                self.get_logger().warning("No CameraInfo received yet – cannot compute 3D points.")
                 self._warned_no_intrinsics = True
             return
 
-        # Need camera pose in world
-        if self._R_world_cam is None or self._t_world_cam is None:
-            if not self._warned_no_pose:
-                self.get_logger().warn(
-                    "No camera pose received yet on camera_pose_topic – "
-                    "cannot cluster in world frame."
+        plant_id = int(frame_info_msg.plant_id)
+        view_id = int(frame_info_msg.view_id)
+        frame_index = int(frame_info_msg.frame_index)
+
+        # Reset clusters when plant changes (prevents mixing plants)
+        if self._reset_on_new_plant:
+            if self._active_plant_id is None:
+                self._active_plant_id = plant_id
+            elif plant_id != self._active_plant_id:
+                self.get_logger().info(
+                    f"Plant changed {self._active_plant_id} -> {plant_id}. Resetting clusters."
                 )
-                self._warned_no_pose = True
-            return
+                self._active_plant_id = plant_id
+                self._clusters = []
+                self._next_cluster_id = 1
+        elif self._active_plant_id is None:
+            self._active_plant_id = plant_id
 
-        depth = self.bridge.imgmsg_to_cv2(
-            depth_msg, desired_encoding="passthrough"
-        )
-        label = self.bridge.imgmsg_to_cv2(
-            label_msg, desired_encoding="mono16"
-        )
+        depth_raw = self._bridge.imgmsg_to_cv2(depth_msg, desired_encoding="passthrough")
+        label = self._bridge.imgmsg_to_cv2(label_msg, desired_encoding="mono16")
 
-        if depth.shape[:2] != label.shape[:2]:
-            self.get_logger().warn(
-                f"Shape mismatch depth={depth.shape} label={label.shape} – "
-                "check depth & label alignment."
+        if depth_raw.shape[:2] != label.shape[:2]:
+            self.get_logger().warning(
+                f"Shape mismatch depth={depth_raw.shape} label={label.shape} – check alignment."
             )
             return
 
-        # Convert to meters
-        if depth.dtype == np.uint16:
-            z_m = depth.astype(np.float32) / 1000.0
-        else:
-            z_m = depth.astype(np.float32)
+        z_m = self._depth_to_meters(depth_raw)
+        h, w = z_m.shape
 
-        height, width = z_m.shape
-
-        # Downsample
         step = self._step
         if step > 1:
-            z_sub = z_m[0:height:step, 0:width:step]
-            lbl_sub = label[0:height:step, 0:width:step]
-            v_grid, u_grid = np.mgrid[0:height:step, 0:width:step]
+            z_sub = z_m[0:h:step, 0:w:step]
+            lbl_sub = label[0:h:step, 0:w:step]
+            v_grid, u_grid = np.mgrid[0:h:step, 0:w:step]
         else:
             z_sub = z_m
             lbl_sub = label
-            v_grid, u_grid = np.mgrid[0:height, 0:width]
+            v_grid, u_grid = np.mgrid[0:h, 0:w]
 
-        valid_depth = z_sub > 0.0
-        if not np.any(valid_depth):
+        valid = np.isfinite(z_sub) & (z_sub > 0.0)
+        if not np.any(valid):
             return
 
-        # All instance ids with valid depth
-        unique_ids = np.unique(lbl_sub[valid_depth])
+        unique_ids = np.unique(lbl_sub[valid])
         unique_ids = unique_ids[unique_ids > 0]
-
         if unique_ids.size == 0:
             return
 
@@ -314,160 +343,119 @@ class StrawberryClusterNode(Node):
         cx = float(self._cx)
         cy = float(self._cy)
 
-        rot_wc = self._R_world_cam  # 3x3
-        trans_wc = self._t_world_cam  # (3,)
+        # Pose: camera in world => world = R_world_cam @ cam + t_world_cam
+        pos = pose_msg.pose.position
+        ori = pose_msg.pose.orientation
+        r_world_cam = quaternion_to_rotation_matrix(ori.x, ori.y, ori.z, ori.w)
+        t_world_cam = np.array([pos.x, pos.y, pos.z], dtype=np.float32)
 
-        # For logging
-        frame_assignments: list[tuple[int, int, int, int, int]] = []
+        assignments: List[Tuple[int, int]] = []
 
-        # ------------------------------------------------------------------ #
-        # Per instance: compute 3D points (camera frame) and centroid,
-        # then transform centroid to world and assign to cluster.
-        # ------------------------------------------------------------------ #
-        for inst_id in unique_ids:
-            mask_inst = valid_depth & (lbl_sub == inst_id)
-            if not np.any(mask_inst):
+        for inst_id in unique_ids.tolist():
+            mask = valid & (lbl_sub == inst_id)
+            if not np.any(mask):
                 continue
 
-            z_i = z_sub[mask_inst]
-            v_i = v_grid[mask_inst].astype(np.float32)
-            u_i = u_grid[mask_inst].astype(np.float32)
+            z_i = z_sub[mask]
+            v_i = v_grid[mask].astype(np.float32)
+            u_i = u_grid[mask].astype(np.float32)
 
             x_i = (u_i - cx) * z_i / fx
             y_i = (v_i - cy) * z_i / fy
 
-            points_cam = np.stack(
-                (x_i, y_i, z_i), axis=-1
-            ).astype(np.float32)
-            num_pts = points_cam.shape[0]
-
-            if num_pts < self._min_points:
+            points_cam = np.stack((x_i, y_i, z_i), axis=-1).astype(np.float32)
+            n_pts = int(points_cam.shape[0])
+            if n_pts < self._min_points:
                 continue
 
-            centroid_cam = points_cam.mean(axis=0)  # (3,)
+            centroid_cam = points_cam.mean(axis=0)
+            centroid_world = (r_world_cam @ centroid_cam) + t_world_cam
 
-            # Transform centroid into world frame
-            centroid_world = rot_wc @ centroid_cam + trans_wc  # (3,)
-
-            cluster_id = self._assign_to_cluster(
-                centroid_world, num_pts, plant_id
+            cid, _ = self._assign_to_cluster(
+                centroid_world=centroid_world,
+                num_points=n_pts,
+                view_id=view_id,
+                frame_index=frame_index,
             )
-            frame_assignments.append(
-                (plant_id, view_id, int(inst_id), cluster_id, num_pts)
-            )
+            assignments.append((int(inst_id), int(cid)))
 
-        if frame_assignments:
-            lines = ["Cluster assignments this frame:"]
-            for (
-                p_id,
-                v_id,
-                inst_id,
-                cid,
-                n_pts,
-            ) in frame_assignments:
-                lines.append(
-                    f"  plant {p_id}, view {v_id}, instance {inst_id} "
-                    f"-> cluster {cid} (N={n_pts})"
-                )
+        if self._log_assignments and assignments:
+            lines = [
+                f"Frame {frame_index} | plant {plant_id} | view {view_id} | "
+                f"instances={len(assignments)} | clusters={len(self._clusters)}"
+            ]
+            for inst_id, cid in assignments:
+                lines.append(f"  inst {inst_id} -> cluster {cid}")
             self.get_logger().info("\n".join(lines))
 
         if self._profile:
-            dt = (time.time() - t0) * 1000.0
+            dt_ms = (time.time() - t0) * 1000.0
             self.get_logger().info(
-                "Cluster callback time: %.2f ms, clusters=%d",
-                dt,
-                len(self._clusters),
+                f"Cluster callback: {dt_ms:.2f} ms | clusters={len(self._clusters)}"
             )
 
     # ------------------------------------------------------------------ #
-    # Clustering logic                                                   #
+    # Clustering
     # ------------------------------------------------------------------ #
 
     def _assign_to_cluster(
         self,
         centroid_world: np.ndarray,
         num_points: int,
-        plant_id: int,
-    ) -> int:
-        """Assign an instance to an existing cluster or create a new one.
+        view_id: int,
+        frame_index: int,
+    ) -> Tuple[int, bool]:
+        if not self._clusters:
+            return self._create_cluster(centroid_world, num_points, view_id, frame_index), True
 
-        Clustering is restricted to clusters with the same plant_id.
-
-        Returns:
-            cluster_id (int): ID of the chosen or created cluster.
-        """
-        # Consider only clusters of the same plant
-        same_plant_clusters = [
-            c for c in self._clusters if c["plant_id"] == plant_id
-        ]
-
-        if not same_plant_clusters:
-            return self._create_cluster(
-                centroid_world, num_points, plant_id
-            )
-
-        # Find nearest cluster in Euclidean distance (same plant only)
-        dists = [
-            np.linalg.norm(
-                centroid_world - c["centroid_world"]
-            )
-            for c in same_plant_clusters
-        ]
+        dists = [float(np.linalg.norm(centroid_world - c.centroid_world)) for c in self._clusters]
         min_idx = int(np.argmin(dists))
-        min_dist = dists[min_idx]
-        cluster = same_plant_clusters[min_idx]
+        min_dist = float(dists[min_idx])
+        best = self._clusters[min_idx]
 
         if min_dist < self._dist_thresh:
-            # Update centroid with weighted average
-            total_points = cluster["num_points"] + num_points
-            w_old = cluster["num_points"] / total_points
-            w_new = num_points / total_points
+            total = best.num_points + int(num_points)
+            w_old = best.num_points / float(total)
+            w_new = int(num_points) / float(total)
 
-            new_centroid = (
-                w_old * cluster["centroid_world"]
-                + w_new * centroid_world
-            )
+            best.centroid_world = (w_old * best.centroid_world) + (w_new * centroid_world)
+            best.num_points = int(total)
+            best.views_seen.add(int(view_id))
+            best.last_frame_index = int(frame_index)
+            return best.cluster_id, True
 
-            cluster["centroid_world"] = new_centroid
-            cluster["num_points"] = total_points
-            return cluster["id"]
-
-        # No close cluster found -> create new if allowed (global limit)
         if len(self._clusters) < self._max_clusters:
-            return self._create_cluster(
-                centroid_world, num_points, plant_id
-            )
+            return self._create_cluster(centroid_world, num_points, view_id, frame_index), True
 
-        # Otherwise: assign to the nearest same-plant cluster anyway
-        return cluster["id"]
+        # Max reached: assign to nearest without drifting centroid, but update metadata.
+        best.views_seen.add(int(view_id))
+        best.last_frame_index = int(frame_index)
+        return best.cluster_id, False
 
     def _create_cluster(
         self,
         centroid_world: np.ndarray,
         num_points: int,
-        plant_id: int,
+        view_id: int,
+        frame_index: int,
     ) -> int:
-        """Create a new cluster and return its ID."""
-        cid = self._next_cluster_id
+        cid = int(self._next_cluster_id)
         self._next_cluster_id += 1
 
         self._clusters.append(
-            {
-                "id": cid,
-                "plant_id": plant_id,
-                "centroid_world": centroid_world.copy(),
-                "num_points": int(num_points),
-            }
+            Cluster(
+                cluster_id=cid,
+                centroid_world=centroid_world.copy(),
+                num_points=int(num_points),
+                views_seen={int(view_id)},
+                last_frame_index=int(frame_index),
+            )
         )
 
         self.get_logger().info(
-            "Created new cluster %d for plant %d at "
-            "(%.3f, %.3f, %.3f) m",
-            cid,
-            plant_id,
-            centroid_world[0],
-            centroid_world[1],
-            centroid_world[2],
+            f"Created cluster {cid} at "
+            f"({float(centroid_world[0]):.3f}, {float(centroid_world[1]):.3f}, {float(centroid_world[2]):.3f}) m "
+            f"| N={int(num_points)} | view={int(view_id)} | frame={int(frame_index)}"
         )
         return cid
 

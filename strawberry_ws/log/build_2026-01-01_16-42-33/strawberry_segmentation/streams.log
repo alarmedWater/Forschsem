@@ -1,0 +1,30 @@
+[1.951s] Invoking command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation': PYTHONPATH=/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation/build --no-deps symlink_data
+[2.785s] running develop
+[3.346s] running egg_info
+[3.347s] creating strawberry_segmentation.egg-info
+[3.350s] writing strawberry_segmentation.egg-info/PKG-INFO
+[3.350s] writing dependency_links to strawberry_segmentation.egg-info/dependency_links.txt
+[3.350s] writing entry points to strawberry_segmentation.egg-info/entry_points.txt
+[3.350s] writing requirements to strawberry_segmentation.egg-info/requires.txt
+[3.350s] writing top-level names to strawberry_segmentation.egg-info/top_level.txt
+[3.351s] writing manifest file 'strawberry_segmentation.egg-info/SOURCES.txt'
+[3.354s] reading manifest file 'strawberry_segmentation.egg-info/SOURCES.txt'
+[3.357s] writing manifest file 'strawberry_segmentation.egg-info/SOURCES.txt'
+[3.362s] running build_ext
+[3.362s] Creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/lib/python3.10/site-packages/strawberry-segmentation.egg-link (link to .)
+[3.370s] Installing depth_mask script to /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/lib/strawberry_segmentation
+[3.370s] Installing seg_ultra script to /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/lib/strawberry_segmentation
+[3.370s] Installing strawberry_features script to /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/lib/strawberry_segmentation
+[3.370s] Installing strawberry_selected_overlay script to /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/lib/strawberry_segmentation
+[3.370s] 
+[3.370s] Installed /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation
+[3.370s] running symlink_data
+[3.370s] creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/share/ament_index
+[3.370s] creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/share/ament_index/resource_index
+[3.370s] creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/share/ament_index/resource_index/packages
+[3.373s] symbolically linking /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation/resource/strawberry_segmentation -> /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/share/ament_index/resource_index/packages
+[3.373s] symbolically linking /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation/package.xml -> /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/share/strawberry_segmentation
+[3.373s] creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/share/strawberry_segmentation/models
+[3.374s] symbolically linking /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation/strawberry_segmentation/models/best.pt -> /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/share/strawberry_segmentation/models
+[3.374s] creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/share/strawberry_segmentation/launch
+[3.505s] Invoked command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation' returned '0': PYTHONPATH=/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation/build --no-deps symlink_data

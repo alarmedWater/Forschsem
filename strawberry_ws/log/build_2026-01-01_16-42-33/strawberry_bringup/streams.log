@@ -1,0 +1,25 @@
+[2.039s] Invoking command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup': AMENT_PREFIX_PATH=/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera:/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2:${AMENT_PREFIX_PATH} PYTHONPATH=/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/lib/python3.10/site-packages:/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/lib/python3.10/site-packages:/home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2:/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup/build --no-deps symlink_data
+[3.087s] running develop
+[3.665s] running egg_info
+[3.665s] creating strawberry_bringup.egg-info
+[3.665s] writing strawberry_bringup.egg-info/PKG-INFO
+[3.669s] writing dependency_links to strawberry_bringup.egg-info/dependency_links.txt
+[3.670s] writing entry points to strawberry_bringup.egg-info/entry_points.txt
+[3.673s] writing requirements to strawberry_bringup.egg-info/requires.txt
+[3.673s] writing top-level names to strawberry_bringup.egg-info/top_level.txt
+[3.673s] writing manifest file 'strawberry_bringup.egg-info/SOURCES.txt'
+[3.677s] reading manifest file 'strawberry_bringup.egg-info/SOURCES.txt'
+[3.683s] writing manifest file 'strawberry_bringup.egg-info/SOURCES.txt'
+[3.691s] running build_ext
+[3.691s] Creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/lib/python3.10/site-packages/strawberry-bringup.egg-link (link to .)
+[3.697s] 
+[3.698s] Installed /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup
+[3.698s] running symlink_data
+[3.698s] creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/share/ament_index
+[3.698s] creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/share/ament_index/resource_index
+[3.698s] creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/share/ament_index/resource_index/packages
+[3.698s] symbolically linking /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup/resource/strawberry_bringup -> /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/share/ament_index/resource_index/packages
+[3.698s] symbolically linking /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup/package.xml -> /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/share/strawberry_bringup
+[3.700s] creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/share/strawberry_bringup/launch
+[3.700s] symbolically linking /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup/strawberry_bringup/launch/dummy_system.launch.py -> /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/share/strawberry_bringup/launch
+[3.902s] Invoked command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup' returned '0': AMENT_PREFIX_PATH=/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera:/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2:${AMENT_PREFIX_PATH} PYTHONPATH=/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/lib/python3.10/site-packages:/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/lib/python3.10/site-packages:/home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2:/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup/build --no-deps symlink_data

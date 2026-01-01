@@ -1,0 +1,230 @@
+[1.321s] Invoking command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake /home/parallels/Forschsemrep/strawberry_ws/src/strawberry_msgs -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs
+[1.825s] -- The C compiler identification is GNU 11.4.0
+[2.031s] -- The CXX compiler identification is GNU 11.4.0
+[2.064s] -- Detecting C compiler ABI info
+[2.211s] -- Detecting C compiler ABI info - done
+[2.223s] -- Check for working C compiler: /usr/bin/cc - skipped
+[2.225s] -- Detecting C compile features
+[2.233s] -- Detecting C compile features - done
+[2.240s] -- Detecting CXX compiler ABI info
+[2.367s] -- Detecting CXX compiler ABI info - done
+[2.376s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[2.376s] -- Detecting CXX compile features
+[2.377s] -- Detecting CXX compile features - done
+[2.406s] -- Found ament_cmake: 1.3.12 (/opt/ros/humble/share/ament_cmake/cmake)
+[2.882s] -- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter 
+[3.079s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[3.279s] -- Found rosidl_default_generators: 1.2.0 (/opt/ros/humble/share/rosidl_default_generators/cmake)
+[3.313s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[3.361s] -- Found rosidl_adapter: 3.1.7 (/opt/ros/humble/share/rosidl_adapter/cmake)
+[3.681s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[3.981s] -- Found std_msgs: 4.9.0 (/opt/ros/humble/share/std_msgs/cmake)
+[4.798s] -- Found ament_cmake_ros: 0.10.0 (/opt/ros/humble/share/ament_cmake_ros/cmake)
+[5.431s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[6.300s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[6.353s] -- Found PythonInterp: /usr/bin/python3 (found suitable version "3.10.12", minimum required is "3.6") 
+[6.367s] -- Found python_cmake_module: 0.10.0 (/opt/ros/humble/share/python_cmake_module/cmake)
+[6.492s] -- Found PythonLibs: /usr/lib/x86_64-linux-gnu/libpython3.10.so (found suitable version "3.10.12", minimum required is "3.5") 
+[6.495s] -- Using PYTHON_EXECUTABLE: /usr/bin/python3
+[6.495s] -- Using PYTHON_INCLUDE_DIRS: /usr/include/python3.10
+[6.496s] -- Using PYTHON_LIBRARIES: /usr/lib/x86_64-linux-gnu/libpython3.10.so
+[6.605s] -- Found PythonExtra: .so  
+[6.851s] -- Configuring done
+[7.010s] -- Generating done
+[7.043s] -- Build files have been written to: /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs
+[7.068s] Invoked command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake /home/parallels/Forschsemrep/strawberry_ws/src/strawberry_msgs -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs
+[7.069s] Invoking command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs -- -j4 -l4
+[7.190s] [  2%] [34m[1mGenerating C code for ROS interfaces[0m
+[7.209s] [  5%] [34m[1mGenerating C++ code for ROS interfaces[0m
+[7.341s] [  5%] Built target ament_cmake_python_symlink_strawberry_msgs
+[8.241s] running egg_info
+[8.246s] creating strawberry_msgs.egg-info
+[8.246s] writing strawberry_msgs.egg-info/PKG-INFO
+[8.248s] writing dependency_links to strawberry_msgs.egg-info/dependency_links.txt
+[8.251s] writing top-level names to strawberry_msgs.egg-info/top_level.txt
+[8.252s] writing manifest file 'strawberry_msgs.egg-info/SOURCES.txt'
+[8.263s] reading manifest file 'strawberry_msgs.egg-info/SOURCES.txt'
+[8.264s] writing manifest file 'strawberry_msgs.egg-info/SOURCES.txt'
+[8.403s] [  5%] Built target ament_cmake_python_build_strawberry_msgs_egg
+[8.539s] [  5%] Built target strawberry_msgs__cpp
+[8.591s] [  7%] [34m[1mGenerating C++ type support for eProsima Fast-RTPS[0m
+[8.601s] [ 12%] [34m[1mGenerating C++ type support dispatch for ROS interfaces[0m
+[8.601s] [ 12%] [34m[1mGenerating C++ introspection for ROS interfaces[0m
+[8.980s] [ 15%] [32mBuilding C object CMakeFiles/strawberry_msgs__rosidl_generator_c.dir/rosidl_generator_c/strawberry_msgs/msg/detail/frame_info__functions.c.o[0m
+[9.480s] [ 17%] [32mBuilding C object CMakeFiles/strawberry_msgs__rosidl_generator_c.dir/rosidl_generator_c/strawberry_msgs/srv/detail/capture_snapshot__functions.c.o[0m
+[9.536s] [ 20%] [32mBuilding CXX object CMakeFiles/strawberry_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/strawberry_msgs/msg/frame_info__type_support.cpp.o[0m
+[9.627s] [ 23%] [32mBuilding CXX object CMakeFiles/strawberry_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/strawberry_msgs/msg/detail/frame_info__type_support.cpp.o[0m
+[9.739s] [ 25%] [32m[1mLinking C shared library libstrawberry_msgs__rosidl_generator_c.so[0m
+[9.893s] [ 25%] Built target strawberry_msgs__rosidl_generator_c
+[9.923s] [ 28%] [34m[1mGenerating C type support for eProsima Fast-RTPS[0m
+[10.402s] [ 30%] [32mBuilding CXX object CMakeFiles/strawberry_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/strawberry_msgs/msg/detail/dds_fastrtps/frame_info__type_support.cpp.o[0m
+[11.393s] [ 33%] [32mBuilding CXX object CMakeFiles/strawberry_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/strawberry_msgs/msg/detail/frame_info__type_support_c.cpp.o[0m
+[11.463s] [ 35%] [32mBuilding CXX object CMakeFiles/strawberry_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/strawberry_msgs/srv/capture_snapshot__type_support.cpp.o[0m
+[12.043s] [ 38%] [32mBuilding CXX object CMakeFiles/strawberry_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/strawberry_msgs/srv/detail/capture_snapshot__type_support.cpp.o[0m
+[12.712s] [ 41%] [32mBuilding CXX object CMakeFiles/strawberry_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/strawberry_msgs/srv/detail/dds_fastrtps/capture_snapshot__type_support.cpp.o[0m
+[12.896s] [ 43%] [32m[1mLinking CXX shared library libstrawberry_msgs__rosidl_typesupport_cpp.so[0m
+[13.089s] [ 43%] Built target strawberry_msgs__rosidl_typesupport_cpp
+[13.148s] [ 46%] [32mBuilding CXX object CMakeFiles/strawberry_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/strawberry_msgs/srv/detail/capture_snapshot__type_support_c.cpp.o[0m
+[13.239s] [ 48%] [34m[1mGenerating C introspection for ROS interfaces[0m
+[13.776s] [ 51%] [32m[1mLinking CXX shared library libstrawberry_msgs__rosidl_typesupport_introspection_cpp.so[0m
+[13.986s] [ 51%] Built target strawberry_msgs__rosidl_typesupport_introspection_cpp
+[14.031s] [ 53%] [34m[1mGenerating C type support dispatch for ROS interfaces[0m
+[14.288s] [ 56%] [32m[1mLinking CXX shared library libstrawberry_msgs__rosidl_typesupport_fastrtps_c.so[0m
+[14.379s] [ 58%] [32mBuilding C object CMakeFiles/strawberry_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/strawberry_msgs/msg/detail/frame_info__type_support.c.o[0m
+[14.541s] [ 61%] [32mBuilding C object CMakeFiles/strawberry_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/strawberry_msgs/srv/detail/capture_snapshot__type_support.c.o[0m
+[14.617s] [ 64%] [32m[1mLinking CXX shared library libstrawberry_msgs__rosidl_typesupport_fastrtps_cpp.so[0m
+[14.659s] [ 64%] Built target strawberry_msgs__rosidl_typesupport_fastrtps_c
+[14.681s] [ 66%] [32m[1mLinking C shared library libstrawberry_msgs__rosidl_typesupport_introspection_c.so[0m
+[14.788s] [ 66%] Built target strawberry_msgs__rosidl_typesupport_introspection_c
+[14.876s] [ 66%] Built target strawberry_msgs__rosidl_typesupport_fastrtps_cpp
+[15.075s] [ 71%] [32mBuilding CXX object CMakeFiles/strawberry_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/strawberry_msgs/msg/frame_info__type_support.cpp.o[0m
+[15.075s] [ 71%] [32mBuilding CXX object CMakeFiles/strawberry_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/strawberry_msgs/srv/capture_snapshot__type_support.cpp.o[0m
+[15.174s] [ 74%] [32m[1mLinking CXX shared library libstrawberry_msgs__rosidl_typesupport_c.so[0m
+[15.346s] [ 74%] Built target strawberry_msgs__rosidl_typesupport_c
+[15.395s] [ 74%] Built target strawberry_msgs
+[15.464s] [ 76%] [34m[1mGenerating Python code for ROS interfaces[0m
+[17.386s] [ 76%] Built target strawberry_msgs__py
+[17.448s] [ 79%] [32mBuilding C object CMakeFiles/strawberry_msgs__rosidl_generator_py.dir/rosidl_generator_py/strawberry_msgs/msg/_frame_info_s.c.o[0m
+[17.484s] [ 82%] [32mBuilding C object CMakeFiles/strawberry_msgs__rosidl_generator_py.dir/rosidl_generator_py/strawberry_msgs/srv/_capture_snapshot_s.c.o[0m
+[17.923s] [ 84%] [32m[1mLinking C shared library rosidl_generator_py/strawberry_msgs/libstrawberry_msgs__rosidl_generator_py.so[0m
+[18.093s] [ 84%] Built target strawberry_msgs__rosidl_generator_py
+[18.172s] [ 87%] [32mBuilding C object CMakeFiles/strawberry_msgs__rosidl_typesupport_fastrtps_c__pyext.dir/rosidl_generator_py/strawberry_msgs/_strawberry_msgs_s.ep.rosidl_typesupport_fastrtps_c.c.o[0m
+[18.196s] [ 89%] [32mBuilding C object CMakeFiles/strawberry_msgs__rosidl_typesupport_introspection_c__pyext.dir/rosidl_generator_py/strawberry_msgs/_strawberry_msgs_s.ep.rosidl_typesupport_introspection_c.c.o[0m
+[18.230s] [ 92%] [32mBuilding C object CMakeFiles/strawberry_msgs__rosidl_typesupport_c__pyext.dir/rosidl_generator_py/strawberry_msgs/_strawberry_msgs_s.ep.rosidl_typesupport_c.c.o[0m
+[18.562s] [ 94%] [32m[1mLinking C shared library rosidl_generator_py/strawberry_msgs/strawberry_msgs_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so[0m
+[18.607s] [ 97%] [32m[1mLinking C shared library rosidl_generator_py/strawberry_msgs/strawberry_msgs_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so[0m
+[18.621s] [100%] [32m[1mLinking C shared library rosidl_generator_py/strawberry_msgs/strawberry_msgs_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so[0m
+[18.757s] [100%] Built target strawberry_msgs__rosidl_typesupport_fastrtps_c__pyext
+[18.761s] [100%] Built target strawberry_msgs__rosidl_typesupport_c__pyext
+[18.775s] [100%] Built target strawberry_msgs__rosidl_typesupport_introspection_c__pyext
+[18.812s] Invoked command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs -- -j4 -l4
+[18.843s] Invoking command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --install /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs
+[18.860s] -- Install configuration: ""
+[18.861s] -- Execute custom install script
+[18.862s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/ament_index/resource_index/rosidl_interfaces/strawberry_msgs
+[18.883s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/detail/frame_info__functions.h
+[18.911s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/detail/frame_info__struct.h
+[18.927s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/detail/frame_info__type_support.h
+[18.944s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/frame_info.h
+[18.964s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/rosidl_generator_c__visibility_control.h
+[18.985s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/srv/capture_snapshot.h
+[19.007s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/srv/detail/capture_snapshot__functions.h
+[19.026s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/srv/detail/capture_snapshot__struct.h
+[19.045s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/srv/detail/capture_snapshot__type_support.h
+[19.063s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/environment/library_path.sh
+[19.086s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/environment/library_path.dsv
+[19.107s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/detail/frame_info__rosidl_typesupport_fastrtps_c.h
+[19.129s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
+[19.161s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/srv/detail/capture_snapshot__rosidl_typesupport_fastrtps_c.h
+[19.179s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/detail/frame_info__rosidl_typesupport_introspection_c.h
+[19.197s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/rosidl_typesupport_introspection_c__visibility_control.h
+[19.220s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/srv/detail/capture_snapshot__rosidl_typesupport_introspection_c.h
+[19.244s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/detail/frame_info__builder.hpp
+[19.260s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/detail/frame_info__struct.hpp
+[19.279s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/detail/frame_info__traits.hpp
+[19.300s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/detail/frame_info__type_support.hpp
+[19.322s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/frame_info.hpp
+[19.351s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
+[19.368s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/srv/capture_snapshot.hpp
+[19.388s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/srv/detail/capture_snapshot__builder.hpp
+[19.408s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/srv/detail/capture_snapshot__struct.hpp
+[19.430s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/srv/detail/capture_snapshot__traits.hpp
+[19.453s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/srv/detail/capture_snapshot__type_support.hpp
+[19.474s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/detail/frame_info__rosidl_typesupport_fastrtps_cpp.hpp
+[19.497s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h
+[19.518s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/srv/detail/capture_snapshot__rosidl_typesupport_fastrtps_cpp.hpp
+[19.553s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/detail/frame_info__rosidl_typesupport_introspection_cpp.hpp
+[19.577s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/srv/detail/capture_snapshot__rosidl_typesupport_introspection_cpp.hpp
+[19.604s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/environment/pythonpath.sh
+[19.634s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/environment/pythonpath.dsv
+[19.655s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs-0.0.1-py3.10.egg-info/PKG-INFO
+[19.673s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs-0.0.1-py3.10.egg-info/SOURCES.txt
+[19.693s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs-0.0.1-py3.10.egg-info/dependency_links.txt
+[19.711s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs-0.0.1-py3.10.egg-info/top_level.txt
+[19.737s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/__init__.py
+[19.763s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/_strawberry_msgs_s.ep.rosidl_typesupport_c.c
+[19.787s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/_strawberry_msgs_s.ep.rosidl_typesupport_fastrtps_c.c
+[19.813s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/_strawberry_msgs_s.ep.rosidl_typesupport_introspection_c.c
+[19.826s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/libstrawberry_msgs__rosidl_generator_py.so
+[19.845s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/msg/__init__.py
+[19.870s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/msg/_frame_info.py
+[19.887s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/msg/_frame_info_s.c
+[19.911s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/srv/__init__.py
+[19.933s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/srv/_capture_snapshot.py
+[19.960s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/srv/_capture_snapshot_s.c
+[19.979s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/strawberry_msgs_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so
+[20.000s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/strawberry_msgs_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so
+[20.024s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/strawberry_msgs_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so
+[20.045s] -- Up-to-date symlink: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/strawberry_msgs_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so
+[20.046s] -- Up-to-date symlink: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/strawberry_msgs_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so
+[20.047s] -- Up-to-date symlink: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/strawberry_msgs_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so
+[20.048s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/msg/FrameInfo.idl
+[20.075s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/srv/CaptureSnapshot.idl
+[20.098s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/msg/FrameInfo.msg
+[20.115s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/srv/CaptureSnapshot.srv
+[20.144s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/srv/CaptureSnapshot_Request.msg
+[20.180s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/srv/CaptureSnapshot_Response.msg
+[20.211s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/ament_index/resource_index/package_run_dependencies/strawberry_msgs
+[20.268s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/ament_index/resource_index/parent_prefix_path/strawberry_msgs
+[20.295s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/environment/ament_prefix_path.sh
+[20.320s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/environment/ament_prefix_path.dsv
+[20.349s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/environment/path.sh
+[20.394s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/environment/path.dsv
+[20.447s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/local_setup.bash
+[20.489s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/local_setup.sh
+[20.515s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/local_setup.zsh
+[20.541s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/local_setup.dsv
+[20.570s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/package.dsv
+[20.598s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/ament_index/resource_index/packages/strawberry_msgs
+[20.617s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/rosidl_cmake-extras.cmake
+[20.640s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/ament_cmake_export_dependencies-extras.cmake
+[20.668s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/ament_cmake_export_include_directories-extras.cmake
+[20.689s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/ament_cmake_export_libraries-extras.cmake
+[20.711s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/ament_cmake_export_targets-extras.cmake
+[20.729s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake
+[20.747s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake
+[20.773s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/strawberry_msgsConfig.cmake
+[20.798s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/strawberry_msgsConfig-version.cmake
+[20.824s] -- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/package.xml
+[20.848s] -- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_generator_c.so
+[20.849s] -- Set runtime path of "/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_generator_c.so" to ""
+[20.850s] -- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_typesupport_fastrtps_c.so
+[20.851s] -- Set runtime path of "/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_typesupport_fastrtps_c.so" to ""
+[20.853s] -- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_typesupport_introspection_c.so
+[20.854s] -- Set runtime path of "/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_typesupport_introspection_c.so" to ""
+[20.854s] -- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_typesupport_c.so
+[20.857s] -- Set runtime path of "/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_typesupport_c.so" to ""
+[20.857s] -- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_typesupport_fastrtps_cpp.so
+[20.862s] -- Set runtime path of "/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_typesupport_fastrtps_cpp.so" to ""
+[20.862s] -- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_typesupport_introspection_cpp.so
+[20.865s] -- Set runtime path of "/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_typesupport_introspection_cpp.so" to ""
+[20.866s] -- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_typesupport_cpp.so
+[20.867s] -- Set runtime path of "/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_typesupport_cpp.so" to ""
+[21.030s] Listing '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs'...
+[21.030s] Compiling '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/__init__.py'...
+[21.030s] Listing '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/msg'...
+[21.030s] Compiling '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/msg/__init__.py'...
+[21.030s] Compiling '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/msg/_frame_info.py'...
+[21.031s] Listing '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/srv'...
+[21.031s] Compiling '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/srv/__init__.py'...
+[21.031s] Compiling '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/srv/_capture_snapshot.py'...
+[21.045s] -- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_generator_py.so
+[21.048s] -- Set runtime path of "/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_generator_py.so" to ""
+[21.048s] -- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/export_strawberry_msgs__rosidl_generator_cExport.cmake
+[21.049s] -- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/export_strawberry_msgs__rosidl_generator_cExport-noconfig.cmake
+[21.049s] -- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/export_strawberry_msgs__rosidl_typesupport_fastrtps_cExport.cmake
+[21.049s] -- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/export_strawberry_msgs__rosidl_typesupport_fastrtps_cExport-noconfig.cmake
+[21.050s] -- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/strawberry_msgs__rosidl_typesupport_introspection_cExport.cmake
+[21.050s] -- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/strawberry_msgs__rosidl_typesupport_introspection_cExport-noconfig.cmake
+[21.051s] -- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/strawberry_msgs__rosidl_typesupport_cExport.cmake
+[21.054s] -- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/strawberry_msgs__rosidl_typesupport_cExport-noconfig.cmake
+[21.054s] -- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/export_strawberry_msgs__rosidl_generator_cppExport.cmake
+[21.055s] -- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/export_strawberry_msgs__rosidl_typesupport_fastrtps_cppExport.cmake
+[21.066s] -- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/export_strawberry_msgs__rosidl_typesupport_fastrtps_cppExport-noconfig.cmake
+[21.068s] -- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/strawberry_msgs__rosidl_typesupport_introspection_cppExport.cmake
+[21.068s] -- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/strawberry_msgs__rosidl_typesupport_introspection_cppExport-noconfig.cmake
+[21.068s] -- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/strawberry_msgs__rosidl_typesupport_cppExport.cmake
+[21.069s] -- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/strawberry_msgs__rosidl_typesupport_cppExport-noconfig.cmake
+[21.074s] -- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/export_strawberry_msgs__rosidl_generator_pyExport.cmake
+[21.075s] -- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/export_strawberry_msgs__rosidl_generator_pyExport-noconfig.cmake
+[21.089s] Invoked command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --install /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs

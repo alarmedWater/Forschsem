@@ -1,42 +1,55 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Folder-based "dummy camera" publisher.
+Folder-based "dummy camera" publisher (ROS 2).
 
 Publishes:
   - /camera/color/image_raw (sensor_msgs/Image, rgb8)
   - /camera/aligned_depth_to_color/image_raw (sensor_msgs/Image, 16UC1)
   - /camera/color/camera_info (sensor_msgs/CameraInfo)
+  - /camera_pose_world (geometry_msgs/PoseStamped) [optional]
+  - /camera/frame_info (strawberry_msgs/FrameInfo) [optional]
+    fallback if msg missing: /camera/frame_info_json (std_msgs/String)
 
-Calibration YAML:
-  - If parameter 'calib_yaml' is set, loads that YAML.
-  - Otherwise loads the default YAML from:
-      <share>/strawberry_camera/config/realsense_d405_640x480_30fps.yml
-  - If loading fails, falls back to fx/fy/cx/cy parameters.
-
-Notes:
-  - For aligned depth-to-color images, use camera_info_source="color" (default).
-  - RealSense distortion models are mapped to ROS CameraInfo distortion_model "plumb_bob".
+See your original header docstring for dataset modes (A/B) and pose notes.
 """
 
 from __future__ import annotations
 
 import glob
+import json
+import math
+import re
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Optional, Sequence
+from typing import Any, Dict, Optional, Sequence, Tuple
 
 import cv2
 import numpy as np
 import rclpy
 import yaml
 from ament_index_python.packages import get_package_share_directory
+from geometry_msgs.msg import PoseStamped
 from rclpy.node import Node
 from sensor_msgs.msg import CameraInfo, Image
-from std_msgs.msg import Header
+from std_msgs.msg import Header, String
+
+try:
+    from strawberry_msgs.msg import FrameInfo  # type: ignore
+except Exception:  # noqa: BLE001
+    FrameInfo = None  # type: ignore
+
+
+@dataclass(frozen=True)
+class FrameItem:
+    frame_index: int
+    plant_id: int
+    view_id: int
+    rgb_path: str
+    depth_path: Optional[str]
 
 
 def to_image_msg_rgb8(arr: np.ndarray, stamp, frame_id: str) -> Image:
-    """Convert HxWx3 RGB uint8 array to sensor_msgs/Image (rgb8)."""
     msg = Image()
     msg.header = Header(stamp=stamp, frame_id=frame_id)
     msg.height, msg.width = arr.shape[:2]
@@ -48,7 +61,6 @@ def to_image_msg_rgb8(arr: np.ndarray, stamp, frame_id: str) -> Image:
 
 
 def to_image_msg_depth16(arr_u16: np.ndarray, stamp, frame_id: str) -> Image:
-    """Convert HxW uint16 array to sensor_msgs/Image (16UC1)."""
     msg = Image()
     msg.header = Header(stamp=stamp, frame_id=frame_id)
     msg.height, msg.width = arr_u16.shape[:2]
@@ -59,98 +71,200 @@ def to_image_msg_depth16(arr_u16: np.ndarray, stamp, frame_id: str) -> Image:
     return msg
 
 
+_INDEX_RE = re.compile(r".*_(\d+)(?:\.[^.]+)?$")
+
+
+def extract_index(path: str) -> int:
+    name = Path(path).name
+    m = _INDEX_RE.match(name)
+    if not m:
+        return 10**9
+    try:
+        return int(m.group(1))
+    except ValueError:
+        return 10**9
+
+
+def rotation_matrix_to_quaternion(rot: np.ndarray) -> Tuple[float, float, float, float]:
+    r = rot.astype(np.float64)
+    tr = r[0, 0] + r[1, 1] + r[2, 2]
+
+    if tr > 0.0:
+        s = math.sqrt(tr + 1.0) * 2.0
+        qw = 0.25 * s
+        qx = (r[2, 1] - r[1, 2]) / s
+        qy = (r[0, 2] - r[2, 0]) / s
+        qz = (r[1, 0] - r[0, 1]) / s
+    elif (r[0, 0] > r[1, 1]) and (r[0, 0] > r[2, 2]):
+        s = math.sqrt(1.0 + r[0, 0] - r[1, 1] - r[2, 2]) * 2.0
+        qw = (r[2, 1] - r[1, 2]) / s
+        qx = 0.25 * s
+        qy = (r[0, 1] + r[1, 0]) / s
+        qz = (r[0, 2] + r[2, 0]) / s
+    elif r[1, 1] > r[2, 2]:
+        s = math.sqrt(1.0 + r[1, 1] - r[0, 0] - r[2, 2]) * 2.0
+        qw = (r[0, 2] - r[2, 0]) / s
+        qx = (r[0, 1] + r[1, 0]) / s
+        qy = 0.25 * s
+        qz = (r[1, 2] + r[2, 1]) / s
+    else:
+        s = math.sqrt(1.0 + r[2, 2] - r[0, 0] - r[1, 1]) * 2.0
+        qw = (r[1, 0] - r[0, 1]) / s
+        qx = (r[0, 2] + r[2, 0]) / s
+        qy = (r[1, 2] + r[2, 1]) / s
+        qz = 0.25 * s
+
+    n = math.sqrt(qx * qx + qy * qy + qz * qz + qw * qw)
+    if n <= 0.0:
+        return (0.0, 0.0, 0.0, 1.0)
+
+    return (float(qx / n), float(qy / n), float(qz / n), float(qw / n))
+
+
 class CameraFolderNode(Node):
-    """Replay RGB + depth frames from folders and publish as ROS camera topics."""
+    """Replay RGB + depth frames and publish as ROS camera topics."""
+
+    _POSES = {
+        0: {
+            "name": "links",
+            "t_mm": (158.514, 76.569, 239.850),
+            "x_axis": (0.07540488, 0.56045421, -0.82474553),
+            "y_axis": (-0.34729051, 0.79007612, 0.50514258),
+            "z_axis": (0.93472103, 0.24833608, 0.25421603),
+        },
+        1: {
+            "name": "mitte",
+            "t_mm": (112.567, 0.0, 283.585),
+            "x_axis": (6.123234e-17, 0.0, -1.0),
+            "y_axis": (0.707114186, -0.707099376, 4.32982562e-17),
+            "z_axis": (-0.707099376, -0.707114186, -4.32973494e-17),
+        },
+        2: {
+            "name": "rechts",
+            "t_mm": (167.500, -56.461, 236.505),
+            "x_axis": (-0.55041738, -0.32512835, -0.76898132),
+            "y_axis": (0.79085937, 0.0921187, -0.60502529),
+            "z_axis": (0.26754843, -0.94117251, 0.20642707),
+        },
+    }
 
     def __init__(self) -> None:
         super().__init__("camera_folder")
 
-        # ---------- Parameters ----------
+        # ---------------- Parameters ----------------
         self.declare_parameter("rgb_dir", "")
         self.declare_parameter("depth_dir", "")
         self.declare_parameter("rgb_pattern", "color_*.png")
         self.declare_parameter("depth_pattern", "depth_*.png")
+
+        self.declare_parameter(
+            "plants_root_dir",
+            "/home/parallels/Forschsemrep/strawberry_ws/data/plant_views",
+        )
+        self.declare_parameter("plant_glob", "plant_*")
+        self.declare_parameter("use_plants_root", True)
+
         self.declare_parameter("fps", 2.0)
         self.declare_parameter("loop", False)
         self.declare_parameter("publish_depth", True)
 
-        # intrinsics fallback (only used if YAML cannot be loaded)
+        # Fallback intrinsics (YAML preferred!)
         self.declare_parameter("fx", 900.0)
         self.declare_parameter("fy", 900.0)
         self.declare_parameter("cx", 640.0)
         self.declare_parameter("cy", 360.0)
 
-        # frames
         self.declare_parameter("frame_color", "camera_color_optical_frame")
         self.declare_parameter("frame_depth", "camera_color_optical_frame")
 
-        # calibration config
         self.declare_parameter("calib_yaml", "")
-        self.declare_parameter("camera_info_source", "color")  # "color" or "depth"
+        self.declare_parameter("camera_info_source", "color")
 
-        # ---------- Publishers ----------
+        self.declare_parameter("publish_pose", True)
+        self.declare_parameter("pose_topic", "/camera_pose_world")
+        self.declare_parameter("world_frame_id", "world")
+
+        self.declare_parameter("publish_frame_info", True)
+        self.declare_parameter("frame_info_topic", "/camera/frame_info")
+        self.declare_parameter("frame_info_json_topic", "/camera/frame_info_json")
+
+        # ---------------- Publishers ----------------
         self.pub_rgb = self.create_publisher(Image, "/camera/color/image_raw", 10)
-        self.pub_depth = self.create_publisher(
-            Image, "/camera/aligned_depth_to_color/image_raw", 10
-        )
+        self.pub_depth = self.create_publisher(Image, "/camera/aligned_depth_to_color/image_raw", 10)
         self.pub_info = self.create_publisher(CameraInfo, "/camera/color/camera_info", 10)
 
-        # ---------- Load calibration (optional) ----------
+        self._publish_pose = self._param_bool("publish_pose", True)
+        self._pose_topic = self._param_str("pose_topic", "/camera_pose_world")
+        self._world_frame_id = self._param_str("world_frame_id", "world")
+        self.pub_pose = self.create_publisher(PoseStamped, self._pose_topic, 10) if self._publish_pose else None
+
+        self._publish_frame_info = self._param_bool("publish_frame_info", True)
+        self._frame_info_topic = self._param_str("frame_info_topic", "/camera/frame_info")
+        self._frame_info_json_topic = self._param_str("frame_info_json_topic", "/camera/frame_info_json")
+
+        self.pub_frame_info = None
+        self.pub_frame_info_json = None
+        if self._publish_frame_info:
+            if FrameInfo is not None:
+                self.pub_frame_info = self.create_publisher(FrameInfo, self._frame_info_topic, 10)
+            else:
+                self.get_logger().warning(
+                    "FrameInfo msg not available. Falling back to JSON String on 'frame_info_json_topic'."
+                )
+                self.pub_frame_info_json = self.create_publisher(String, self._frame_info_json_topic, 10)
+
+        # ---------------- Load calibration (optional) ----------------
         self._calib: Optional[Dict[str, Any]] = None
         self._load_calibration()
 
-        # ---------- Gather files ----------
-        self.rgb_paths, self.depth_paths = self._collect_file_pairs()
-        if not self.rgb_paths:
-            raise RuntimeError("No RGB images found. Check rgb_dir and rgb_pattern.")
+        # ---------------- Gather frames ----------------
+        self._frames = self._collect_frames()
+        if not self._frames:
+            raise RuntimeError(
+                "No frames found. Check plants_root_dir (mode A) or rgb_dir/depth_dir (mode B)."
+            )
 
-        # ---------- Timer ----------
-        fps = self._param_float("fps", 2.0)
-        self.period = max(1.0 / max(fps, 0.1), 1e-3)
-        self.timer = self.create_timer(self.period, self._tick)
+        # ---------------- Timer ----------------
+        fps = float(self._param_float("fps", 2.0))
+        fps = max(fps, 0.1)
+        self._period_s = max(1.0 / fps, 1e-3)
+        self._timer = self.create_timer(self._period_s, self._tick)
 
-        self.i = 0
-        self.done = False
-        self.logged_depth_warn = False
+        self._i = 0
+        self._done = False
+        self._logged_depth_warn = False
 
         self.get_logger().info(
-            f"camera_folder: {len(self.rgb_paths)} RGB files, {len(self.depth_paths)} depth files "
-            f"| fps={fps:.3f} loop={self.get_parameter('loop').value}"
+            "camera_folder started:\n"
+            f"  frames             = {len(self._frames)}\n"
+            f"  fps                = {fps:.3f}\n"
+            f"  loop               = {self._param_bool('loop', False)}\n"
+            f"  publish_depth      = {self._param_bool('publish_depth', True)}\n"
+            f"  publish_pose       = {self._publish_pose} ({self._pose_topic})\n"
+            f"  publish_frame_info = {self._publish_frame_info}\n"
         )
 
     # ------------------------------------------------------------------ #
-    # Parameter helpers (Pylance/Pyright friendly)
+    # Parameter helpers
     # ------------------------------------------------------------------ #
 
     def _param_float(self, name: str, default: float) -> float:
-        """Read ROS parameter and return as float with safe fallback."""
         val: Any = self.get_parameter(name).value
         if val is None:
             return default
-
-        if isinstance(val, (int, float)):
-            return float(val)
-
-        if isinstance(val, str):
-            try:
-                return float(val)
-            except ValueError:
-                return default
-
         try:
             return float(val)
         except (TypeError, ValueError):
             return default
 
     def _param_str(self, name: str, default: str = "") -> str:
-        """Read ROS parameter and return as str with safe fallback."""
         val: Any = self.get_parameter(name).value
         if val is None:
             return default
-        return str(val)
+        s = str(val).strip()
+        return s if s else default
 
     def _param_bool(self, name: str, default: bool) -> bool:
-        """Read ROS parameter and return as bool with safe fallback."""
         val: Any = self.get_parameter(name).value
         if isinstance(val, bool):
             return val
@@ -168,21 +282,13 @@ class CameraFolderNode(Node):
 
     @staticmethod
     def _as_float(value: Any, fallback: float) -> float:
-        """Convert value to float; fallback if None/invalid."""
-        if value is None:
-            return fallback
         try:
             return float(value)
         except (TypeError, ValueError):
             return fallback
 
     @staticmethod
-    def _as_float_list(
-        values: Any,
-        fallback: Sequence[float],
-        length: int = 5,
-    ) -> list[float]:
-        """Convert values to list[float] of fixed length; fallback if invalid."""
+    def _as_float_list(values: Any, fallback: Sequence[float], length: int = 5) -> list[float]:
         out: list[float] = []
         if isinstance(values, (list, tuple)):
             for v in values:
@@ -202,9 +308,7 @@ class CameraFolderNode(Node):
     # ------------------------------------------------------------------ #
 
     def _load_calibration(self) -> None:
-        """Load calibration YAML from calib_yaml or default share/<pkg>/config/..."""
         self._calib = None
-
         calib_path_param = self._param_str("calib_yaml", "").strip()
 
         if calib_path_param:
@@ -212,77 +316,153 @@ class CameraFolderNode(Node):
         else:
             try:
                 share_dir = get_package_share_directory("strawberry_camera")
-                calib_path = str(
-                    Path(share_dir)
-                    / "config"
-                    / "realsense_d405_640x480_30fps.yml"
-                )
+                calib_path = str(Path(share_dir) / "config" / "realsense_d405_640x480_30fps.yml")
             except Exception as exc:  # noqa: BLE001
                 self.get_logger().warning(
-                    "Could not resolve package share directory for 'strawberry_camera'. "
-                    f"Falling back to parameter intrinsics. ({exc})"
+                    "Could not resolve 'strawberry_camera' share dir. Falling back to parameter intrinsics. "
+                    f"({exc})"
                 )
                 return
 
         calib_file = Path(calib_path)
         if not calib_file.is_file():
             self.get_logger().warning(
-                f"Calibration YAML not found at '{calib_path}'. "
-                "Falling back to parameter intrinsics."
+                f"Calibration YAML not found at '{calib_path}'. Falling back to parameter intrinsics."
             )
             return
 
         try:
             with calib_file.open("r", encoding="utf-8") as f:
                 data = yaml.safe_load(f) or {}
-
             if not isinstance(data, dict):
                 raise ValueError("Calibration YAML root must be a mapping/dict.")
-
             self._calib = data
             source = self._param_str("camera_info_source", "color")
-            self.get_logger().info(
-                f"Loaded calibration YAML: {calib_path} (camera_info_source={source})"
-            )
+            self.get_logger().info(f"Loaded calibration YAML: {calib_path} (camera_info_source={source})")
         except Exception as exc:  # noqa: BLE001
             self._calib = None
             self.get_logger().warning(
-                f"Could not load calibration YAML '{calib_path}'. "
-                f"Falling back to parameter intrinsics. ({exc})"
+                f"Could not load calibration YAML '{calib_path}'. Falling back to parameter intrinsics. ({exc})"
             )
 
     # ------------------------------------------------------------------ #
-    # File collection
+    # Frame collection
     # ------------------------------------------------------------------ #
 
-    def _collect_file_pairs(self) -> tuple[list[str], list[str]]:
-        """Collect sorted RGB and depth file lists."""
-        rgb_dir = self._param_str("rgb_dir", "")
-        depth_dir = self._param_str("depth_dir", "")
+    def _collect_frames(self) -> list[FrameItem]:
+        use_plants_root = self._param_bool("use_plants_root", True)
+        plants_root_dir = self._param_str("plants_root_dir", "")
+        plant_glob = self._param_str("plant_glob", "plant_*")
         rgb_pattern = self._param_str("rgb_pattern", "color_*.png")
         depth_pattern = self._param_str("depth_pattern", "depth_*.png")
 
-        rgb_paths = sorted(glob.glob(str(Path(rgb_dir) / rgb_pattern)))
-        depth_paths = (
-            sorted(glob.glob(str(Path(depth_dir) / depth_pattern)))
-            if depth_dir
-            else []
+        if use_plants_root and plants_root_dir:
+            root = Path(plants_root_dir)
+            if root.is_dir():
+                return self._collect_frames_plants_root(root, plant_glob, rgb_pattern, depth_pattern)
+
+            self.get_logger().warning(
+                f"use_plants_root=True but plants_root_dir is not a directory: {plants_root_dir}"
+            )
+
+        rgb_dir = self._param_str("rgb_dir", "")
+        depth_dir = self._param_str("depth_dir", "")
+
+        return self._collect_frames_flat(
+            rgb_dir=Path(rgb_dir) if rgb_dir else Path(),
+            depth_dir=Path(depth_dir) if depth_dir else None,
+            rgb_pattern=rgb_pattern,
+            depth_pattern=depth_pattern,
         )
+
+    def _collect_frames_plants_root(
+        self, root: Path, plant_glob: str, rgb_pattern: str, depth_pattern: str
+    ) -> list[FrameItem]:
+        plant_dirs = [p for p in root.glob(plant_glob) if p.is_dir()]
+        plant_dirs.sort(key=lambda p: (extract_index(str(p)), p.name))
+
+        frames: list[FrameItem] = []
+        frame_index = 0
+
+        for plant_id, plant_dir in enumerate(plant_dirs):
+            rgb_files = sorted(glob.glob(str(plant_dir / rgb_pattern)), key=lambda s: (extract_index(s), s))
+            depth_files = sorted(glob.glob(str(plant_dir / depth_pattern)), key=lambda s: (extract_index(s), s))
+
+            rgb_by_idx = {extract_index(p): p for p in rgb_files}
+            depth_by_idx = {extract_index(p): p for p in depth_files}
+
+            indices = sorted(rgb_by_idx.keys())
+            for idx_in_folder in indices:
+                rgb_path = rgb_by_idx[idx_in_folder]
+                depth_path = depth_by_idx.get(idx_in_folder)
+
+                view_id = int(idx_in_folder)
+                if view_id not in (0, 1, 2):
+                    view_id = view_id % 3
+
+                frames.append(
+                    FrameItem(
+                        frame_index=frame_index,
+                        plant_id=plant_id,
+                        view_id=view_id,
+                        rgb_path=rgb_path,
+                        depth_path=depth_path,
+                    )
+                )
+                frame_index += 1
+
+        if frames:
+            self.get_logger().info(
+                f"Collected {len(frames)} frames from plants_root_dir='{root}' (plants={len(plant_dirs)})"
+            )
+        return frames
+
+    def _collect_frames_flat(
+        self,
+        rgb_dir: Path,
+        depth_dir: Optional[Path],
+        rgb_pattern: str,
+        depth_pattern: str,
+    ) -> list[FrameItem]:
+        if not rgb_dir.is_dir():
+            self.get_logger().warning("rgb_dir is empty or not a directory (flat mode).")
+            return []
+
+        rgb_paths = sorted(glob.glob(str(rgb_dir / rgb_pattern)), key=lambda s: (extract_index(s), s))
+
+        depth_paths: list[str] = []
+        if depth_dir and depth_dir.is_dir():
+            depth_paths = sorted(glob.glob(str(depth_dir / depth_pattern)), key=lambda s: (extract_index(s), s))
+
+        if not rgb_paths:
+            return []
 
         if depth_paths and len(depth_paths) != len(rgb_paths):
             self.get_logger().warning(
                 f"Depth/RGB count mismatch ({len(depth_paths)} vs {len(rgb_paths)}). "
-                "Will still publish RGB; depth will be published by index if present."
+                "Depth will be published by index if present."
             )
 
-        return rgb_paths, depth_paths
+        frames: list[FrameItem] = []
+        for i, rgb_path in enumerate(rgb_paths):
+            depth_path = depth_paths[i] if i < len(depth_paths) else None
+            frames.append(
+                FrameItem(
+                    frame_index=i,
+                    plant_id=i // 3,
+                    view_id=i % 3,
+                    rgb_path=rgb_path,
+                    depth_path=depth_path,
+                )
+            )
+        self.get_logger().info(f"Collected {len(frames)} frames from flat folders: rgb_dir='{rgb_dir}'")
+        return frames
 
     # ------------------------------------------------------------------ #
     # CameraInfo
     # ------------------------------------------------------------------ #
 
     def _make_camera_info(self, stamp, w: int, h: int) -> CameraInfo:
-        """Create CameraInfo from YAML (preferred) or fallback fx/fy/cx/cy."""
         frame = self._param_str("frame_color", "camera_color_optical_frame")
 
         msg = CameraInfo()
@@ -290,7 +470,6 @@ class CameraFolderNode(Node):
         msg.width = int(w)
         msg.height = int(h)
 
-        # Fallback intrinsics from parameters
         fx_fb = self._param_float("fx", 900.0)
         fy_fb = self._param_float("fy", 900.0)
         cx_fb = self._param_float("cx", 640.0)
@@ -303,9 +482,7 @@ class CameraFolderNode(Node):
         else:
             src = self._param_str("camera_info_source", "color").lower()
             if src not in ("color", "depth"):
-                self.get_logger().warning(
-                    f"camera_info_source='{src}' invalid. Using 'color'."
-                )
+                self.get_logger().warning(f"camera_info_source='{src}' invalid. Using 'color'.")
                 src = "color"
 
             intr_any = self._calib.get("intrinsics", {}).get(src, {})
@@ -321,108 +498,149 @@ class CameraFolderNode(Node):
                 fallback=[0.0, 0.0, 0.0, 0.0, 0.0],
                 length=5,
             )
-
-            # Keep compatibility with ROS tooling
             msg.distortion_model = "plumb_bob"
 
-        msg.k = [
-            fx, 0.0, cx,
-            0.0, fy, cy,
-            0.0, 0.0, 1.0,
-        ]
-        msg.r = [
-            1.0, 0.0, 0.0,
-            0.0, 1.0, 0.0,
-            0.0, 0.0, 1.0,
-        ]
-        msg.p = [
-            fx, 0.0, cx, 0.0,
-            0.0, fy, cy, 0.0,
-            0.0, 0.0, 1.0, 0.0,
-        ]
+        msg.k = [fx, 0.0, cx, 0.0, fy, cy, 0.0, 0.0, 1.0]
+        msg.r = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+        msg.p = [fx, 0.0, cx, 0.0, 0.0, fy, cy, 0.0, 0.0, 0.0, 1.0, 0.0]
         return msg
+
+    # ------------------------------------------------------------------ #
+    # Pose + FrameInfo publishing
+    # ------------------------------------------------------------------ #
+
+    def _make_pose_msg(self, stamp, view_id: int) -> PoseStamped:
+        pose_def = self._POSES.get(int(view_id), self._POSES[1])
+
+        t_mm = pose_def["t_mm"]
+        t_m = (float(t_mm[0]) / 1000.0, float(t_mm[1]) / 1000.0, float(t_mm[2]) / 1000.0)
+
+        x_axis = np.array(pose_def["x_axis"], dtype=np.float64)
+        y_axis = np.array(pose_def["y_axis"], dtype=np.float64)
+        z_axis = np.array(pose_def["z_axis"], dtype=np.float64)
+
+        rot = np.column_stack((x_axis, y_axis, z_axis)).astype(np.float64)
+
+        # Orthonormalize (robust)
+        u, _, vt = np.linalg.svd(rot)
+        rot_ortho = (u @ vt).astype(np.float64)
+
+        qx, qy, qz, qw = rotation_matrix_to_quaternion(rot_ortho)
+
+        msg = PoseStamped()
+        msg.header = Header(stamp=stamp, frame_id=self._world_frame_id)
+        msg.pose.position.x = t_m[0]
+        msg.pose.position.y = t_m[1]
+        msg.pose.position.z = t_m[2]
+        msg.pose.orientation.x = qx
+        msg.pose.orientation.y = qy
+        msg.pose.orientation.z = qz
+        msg.pose.orientation.w = qw
+        return msg
+
+    def _publish_frame_info_msg(self, stamp, frame_id_for_info: str, item: FrameItem) -> None:
+        if not self._publish_frame_info:
+            return
+
+        # IMPORTANT: FrameInfo should carry the *camera/image* frame_id (not world)
+        if self.pub_frame_info is not None and FrameInfo is not None:
+            msg = FrameInfo()
+            msg.header = Header(stamp=stamp, frame_id=frame_id_for_info)
+            msg.frame_index = int(item.frame_index)
+            msg.plant_id = int(item.plant_id)
+            msg.view_id = int(item.view_id)
+            msg.rgb_path = str(item.rgb_path)
+            msg.depth_path = str(item.depth_path) if item.depth_path else ""
+            self.pub_frame_info.publish(msg)
+            return
+
+        if self.pub_frame_info_json is not None:
+            payload = {
+                "frame_index": int(item.frame_index),
+                "plant_id": int(item.plant_id),
+                "view_id": int(item.view_id),
+                "rgb_path": str(item.rgb_path),
+                "depth_path": str(item.depth_path) if item.depth_path else "",
+            }
+            out = String()
+            out.data = json.dumps(payload)
+            self.pub_frame_info_json.publish(out)
 
     # ------------------------------------------------------------------ #
     # Main tick
     # ------------------------------------------------------------------ #
 
     def _tick(self) -> None:
-        if self.done:
+        if self._done:
             return
 
         loop = self._param_bool("loop", False)
-        idx = self.i
+        publish_depth = self._param_bool("publish_depth", True)
 
-        if idx >= len(self.rgb_paths):
+        idx = self._i
+        if idx >= len(self._frames):
             if loop:
-                idx = idx % len(self.rgb_paths)
-                self.i = idx
+                idx = idx % len(self._frames)
+                self._i = idx
             else:
-                self.get_logger().info("Finished all files (loop=False). Stopping timer.")
-                self.timer.cancel()
-                self.done = True
+                self.get_logger().info("Finished all frames (loop=False). Stopping timer.")
+                self._timer.cancel()
+                self._done = True
                 return
+
+        item = self._frames[idx]
 
         stamp = self.get_clock().now().to_msg()
         frame_color = self._param_str("frame_color", "camera_color_optical_frame")
         frame_depth = self._param_str("frame_depth", "camera_color_optical_frame")
 
-        # ---- RGB ----
-        rgb_path = self.rgb_paths[idx]
-        bgr = cv2.imread(rgb_path, cv2.IMREAD_COLOR)
+        bgr = cv2.imread(item.rgb_path, cv2.IMREAD_COLOR)
         if bgr is None:
-            self.get_logger().warning(f"Failed to read RGB: {rgb_path}")
-            self.i += 1
+            self.get_logger().warning(f"Failed to read RGB: {item.rgb_path}")
+            self._i += 1
             return
 
         rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
         height, width = rgb.shape[:2]
         rgb_msg = to_image_msg_rgb8(rgb, stamp, frame_color)
 
-        # ---- Depth (optional) ----
         depth_msg = None
-        if self._param_bool("publish_depth", True) and idx < len(self.depth_paths):
-            depth_path = self.depth_paths[idx]
-            depth_raw = cv2.imread(depth_path, cv2.IMREAD_UNCHANGED)
-
+        if publish_depth and item.depth_path:
+            depth_raw = cv2.imread(item.depth_path, cv2.IMREAD_UNCHANGED)
             if depth_raw is None:
-                if not self.logged_depth_warn:
+                if not self._logged_depth_warn:
                     self.get_logger().warning(
-                        f"Failed to read depth: {depth_path} (publishing RGB only)."
+                        f"Failed to read depth: {item.depth_path} (publishing RGB only)."
                     )
-                    self.logged_depth_warn = True
+                    self._logged_depth_warn = True
             else:
                 if depth_raw.ndim == 3:
                     depth_raw = cv2.cvtColor(depth_raw, cv2.COLOR_BGR2GRAY)
 
                 if depth_raw.dtype != np.uint16:
-                    # Fallback conversion: assume meters -> mm
-                    depth_raw = (
-                        (depth_raw.astype(np.float32) * 1000.0)
-                        .clip(0, 65535)
-                        .astype(np.uint16)
-                    )
+                    depth_raw = (depth_raw.astype(np.float32) * 1000.0).clip(0, 65535).astype(np.uint16)
 
-                # Resize to color if needed (aligned)
                 if depth_raw.shape[:2] != (height, width):
-                    depth_raw = cv2.resize(
-                        depth_raw,
-                        (width, height),
-                        interpolation=cv2.INTER_NEAREST,
-                    )
+                    depth_raw = cv2.resize(depth_raw, (width, height), interpolation=cv2.INTER_NEAREST)
 
                 depth_msg = to_image_msg_depth16(depth_raw, stamp, frame_depth)
 
-        # ---- CameraInfo ----
         info_msg = self._make_camera_info(stamp, width, height)
 
-        # ---- Publish ----
+        # Pose in world (optional)
+        if self.pub_pose is not None:
+            self.pub_pose.publish(self._make_pose_msg(stamp, item.view_id))
+
+        # FrameInfo should be aligned with image stamp and use camera frame_id
+        self._publish_frame_info_msg(stamp, frame_color, item)
+
+        # Publish streams
         self.pub_rgb.publish(rgb_msg)
         if depth_msg is not None:
             self.pub_depth.publish(depth_msg)
         self.pub_info.publish(info_msg)
 
-        self.i += 1
+        self._i += 1
 
 
 def main() -> None:

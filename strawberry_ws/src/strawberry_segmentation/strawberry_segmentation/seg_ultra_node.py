@@ -1,23 +1,17 @@
 #!/usr/bin/env python3
-# strawberry_segmentation/seg_ultra_node.py
 # -*- coding: utf-8 -*-
-
 """
 ROS 2 node: Ultralytics YOLOv8 segmentation (.pt).
 
-Subscribes:
-  - /camera/color/image_raw (sensor_msgs/Image, rgb8) [param: topic_in]
+Subscribes (synchronized):
+  - topic_in         (sensor_msgs/Image, rgb8)
+  - frame_info_topic (strawberry_msgs/FrameInfo)
 
 Publishes:
   - /seg/label_image       (sensor_msgs/Image, mono16): instance IDs (0 = BG, 1..N)
   - /seg/label_image_vis   (sensor_msgs/Image, mono8):  debug mask (0/255)
-  - /seg/overlay           (sensor_msgs/Image, rgb8):   YOLO overlay (boxes + masks)
-
-Important:
-  - rclpy logger methods take ONLY ONE positional argument (the message string).
-    So we always use f-strings (no printf-style formatting args).
-  - Ultralytics API varies between versions. predict() is called with a full set of
-    kwargs first, then falls back to a reduced set if TypeError occurs.
+  - /seg/overlay           (sensor_msgs/Image, rgb8):   YOLO overlay (optional)
+  - frame_info_out_topic   (strawberry_msgs/FrameInfo): passthrough for downstream sync
 """
 
 from __future__ import annotations
@@ -27,6 +21,7 @@ import time
 from typing import Any, Dict, List, Optional, Tuple
 
 import cv2
+import message_filters
 import numpy as np
 import rclpy
 import torch
@@ -35,14 +30,15 @@ from cv_bridge import CvBridge
 from rcl_interfaces.msg import ParameterDescriptor
 from rcl_interfaces.msg import ParameterType as PT
 from rclpy.node import Node
+from rclpy.qos import QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicy
 from sensor_msgs.msg import Image
 from std_msgs.msg import Header
 
+from strawberry_msgs.msg import FrameInfo
+
 try:
-    # Pylance-friendly for many Ultralytics versions
     from ultralytics.yolo.engine.model import YOLO  # type: ignore
 except Exception:  # noqa: BLE001
-    # Runtime fallback (often works even if typing stubs complain)
     from ultralytics import YOLO  # type: ignore
 
 
@@ -56,6 +52,13 @@ class YoloSegUltralyticsNode(Node):
         self.declare_parameter("model_path", "")
         self.declare_parameter("topic_in", "/camera/color/image_raw")
         self.declare_parameter("publish_overlay", True)
+
+        self.declare_parameter("frame_info_topic", "/camera/frame_info")
+        self.declare_parameter("publish_frame_info", True)
+        self.declare_parameter("frame_info_out_topic", "/seg/frame_info")
+
+        self.declare_parameter("sync_queue_size", 200)
+        self.declare_parameter("sync_slop", 0.2)
 
         self.declare_parameter("device", "auto")  # auto|cpu|cuda:0
         self.declare_parameter("imgsz", 640)
@@ -74,9 +77,18 @@ class YoloSegUltralyticsNode(Node):
             ),
         )
 
-        # Read params (Pylance-safe)
+        # ---------------- Read parameters ----------------
         topic_in = self._param_str("topic_in", "/camera/color/image_raw")
-        publish_overlay = self._param_bool("publish_overlay", True)
+        self._publish_overlay = self._param_bool("publish_overlay", True)
+
+        frame_info_topic = self._param_str("frame_info_topic", "/camera/frame_info")
+        self._publish_frame_info = self._param_bool("publish_frame_info", True)
+        frame_info_out_topic = self._param_str("frame_info_out_topic", "/seg/frame_info")
+
+        self._sync_queue_size = max(1, self._param_int("sync_queue_size", 200))
+        self._sync_slop = self._param_float("sync_slop", 0.2)
+        if self._sync_slop <= 0.0:
+            self._sync_slop = 0.05
 
         self._imgsz = self._param_int("imgsz", 640)
         self._conf = self._param_float("conf_thres", 0.65)
@@ -90,44 +102,77 @@ class YoloSegUltralyticsNode(Node):
         self._device, self._half = self._resolve_device()
 
         self.get_logger().info(
-            "seg_ultra params: "
-            f"topic_in={topic_in} "
-            f"publish_overlay={publish_overlay} "
-            f"device={self._device} "
-            f"half={self._half} "
-            f"imgsz={self._imgsz} "
-            f"conf={self._conf:.3f} "
-            f"iou={self._iou:.3f} "
-            f"max_det={self._max_det} "
-            f"min_area={self._min_area} "
-            f"classes={self._classes}"
+            "seg_ultra params:\n"
+            f"  topic_in             = {topic_in}\n"
+            f"  frame_info_topic     = {frame_info_topic}\n"
+            f"  publish_frame_info   = {self._publish_frame_info}\n"
+            f"  frame_info_out_topic = {frame_info_out_topic}\n"
+            f"  sync_queue_size      = {self._sync_queue_size}\n"
+            f"  sync_slop            = {self._sync_slop}\n"
+            f"  publish_overlay      = {self._publish_overlay}\n"
+            f"  device               = {self._device}\n"
+            f"  half                 = {self._half}\n"
+            f"  imgsz                = {self._imgsz}\n"
+            f"  conf                 = {self._conf:.3f}\n"
+            f"  iou                  = {self._iou:.3f}\n"
+            f"  max_det              = {self._max_det}\n"
+            f"  min_area             = {self._min_area}\n"
+            f"  classes              = {self._classes}\n"
+            f"  profile              = {self._profile}"
         )
 
         # ---------------- ROS I/O ----------------
-        self.bridge = CvBridge()
+        self._bridge = CvBridge()
 
-        self.sub_rgb = self.create_subscription(Image, topic_in, self.on_image, 10)
-        self.pub_label = self.create_publisher(Image, "/seg/label_image", 10)
-        self.pub_label_vis = self.create_publisher(Image, "/seg/label_image_vis", 10)
-        self.pub_overlay = (
-            self.create_publisher(Image, "/seg/overlay", 10) if publish_overlay else None
+        self._pub_label = self.create_publisher(Image, "/seg/label_image", 10)
+        self._pub_label_vis = self.create_publisher(Image, "/seg/label_image_vis", 10)
+        self._pub_overlay = (
+            self.create_publisher(Image, "/seg/overlay", 10)
+            if self._publish_overlay
+            else None
         )
+        self._pub_frame_info = (
+            self.create_publisher(FrameInfo, frame_info_out_topic, 10)
+            if self._publish_frame_info
+            else None
+        )
+
+        qos = QoSProfile(
+            reliability=QoSReliabilityPolicy.BEST_EFFORT,
+            history=QoSHistoryPolicy.KEEP_LAST,
+            depth=10,
+        )
+
+        self._sub_rgb = message_filters.Subscriber(self, Image, topic_in, qos_profile=qos)
+        self._sub_frame_info = message_filters.Subscriber(
+            self, FrameInfo, frame_info_topic, qos_profile=qos
+        )
+
+        self._ts = message_filters.ApproximateTimeSynchronizer(
+            [self._sub_rgb, self._sub_frame_info],
+            queue_size=self._sync_queue_size,
+            slop=self._sync_slop,
+        )
+        self._ts.registerCallback(self._sync_cb)
 
         # ---------------- Load YOLO model ----------------
         t0 = time.time()
-        self.model = YOLO(model_path)
-        dt = time.time() - t0
+        self._model = YOLO(model_path)
         self.get_logger().info(
-            f"YOLO loaded in {dt:.2f}s | model={model_path} | device={self._device} half={self._half}"
+            f"YOLO loaded in {time.time() - t0:.2f}s | model={model_path} "
+            f"| device={self._device} half={self._half}"
         )
 
     # ------------------------------------------------------------------ #
-    # Param helpers (Pylance-friendly)
+    # Param helpers
     # ------------------------------------------------------------------ #
 
     def _param_str(self, name: str, default: str) -> str:
         val: Any = self.get_parameter(name).value
-        return default if val is None else str(val)
+        if val is None:
+            return default
+        s = str(val).strip()
+        return s if s else default
 
     def _param_bool(self, name: str, default: bool) -> bool:
         val: Any = self.get_parameter(name).value
@@ -161,24 +206,21 @@ class YoloSegUltralyticsNode(Node):
 
     def _param_int_list(self, name: str) -> List[int]:
         val: Any = self.get_parameter(name).value
-        if val is None:
+        if not isinstance(val, (list, tuple)):
             return []
-        if isinstance(val, (list, tuple)):
-            out: List[int] = []
-            for x in val:
-                try:
-                    out.append(int(x))
-                except Exception:  # noqa: BLE001
-                    continue
-            return out
-        return []
+        out: List[int] = []
+        for x in val:
+            try:
+                out.append(int(x))
+            except Exception:  # noqa: BLE001
+                continue
+        return out
 
     # ------------------------------------------------------------------ #
     # Helpers
     # ------------------------------------------------------------------ #
 
     def _resolve_model_path(self) -> str:
-        """Resolve model_path parameter or fall back to the package share."""
         model_path = self._param_str("model_path", "").strip()
         if model_path:
             if not os.path.exists(model_path):
@@ -187,7 +229,6 @@ class YoloSegUltralyticsNode(Node):
 
         share_dir = get_package_share_directory("strawberry_segmentation")
         default_model = os.path.join(share_dir, "models", "best.pt")
-
         if os.path.exists(default_model):
             self.get_logger().info(f"model_path empty -> using package model: {default_model}")
             return default_model
@@ -197,24 +238,20 @@ class YoloSegUltralyticsNode(Node):
         )
 
     def _resolve_device(self) -> Tuple[str, bool]:
-        """Select device and half-precision flag."""
         device_param = self._param_str("device", "auto").lower()
         if device_param == "auto":
             device = "cuda:0" if torch.cuda.is_available() else "cpu"
         else:
             device = device_param
-        half = device.startswith("cuda")
-        return device, half
+        return device, device.startswith("cuda")
 
     def _masks_to_numpy_u8(self, res: Any, h0: int, w0: int) -> Optional[np.ndarray]:
-        """Return masks as uint8 numpy array (n, h0, w0) with values {0,1}."""
         if res is None or getattr(res, "masks", None) is None:
             return None
         if getattr(res.masks, "data", None) is None:
             return None
 
         data = res.masks.data
-
         if isinstance(data, np.ndarray):
             t = torch.from_numpy(data)
         elif isinstance(data, torch.Tensor):
@@ -245,7 +282,6 @@ class YoloSegUltralyticsNode(Node):
         return masks
 
     def _predict(self, img_bgr: np.ndarray) -> Any:
-        """Call Ultralytics predict() in a version-tolerant way."""
         kwargs: Dict[str, Any] = {
             "source": img_bgr,
             "imgsz": self._imgsz,
@@ -254,110 +290,121 @@ class YoloSegUltralyticsNode(Node):
             "max_det": self._max_det,
             "device": self._device,
             "verbose": False,
+            "half": self._half,
+            "agnostic_nms": False,
+            "retina_masks": True,
         }
-
-        # Optional kwargs (not supported in every Ultralytics version)
-        kwargs["half"] = self._half
-        kwargs["agnostic_nms"] = False
-        kwargs["retina_masks"] = True
         if self._classes:
             kwargs["classes"] = self._classes
 
         try:
-            return self.model.predict(**kwargs)
+            return self._model.predict(**kwargs)
         except TypeError:
-            # Drop optional kwargs that frequently break on older versions
             for k in ("classes", "retina_masks", "agnostic_nms", "half"):
                 kwargs.pop(k, None)
-            return self.model.predict(**kwargs)
+            return self._model.predict(**kwargs)
+
+    @staticmethod
+    def _copy_frame_info(src: FrameInfo, stamp) -> FrameInfo:
+        out = FrameInfo()
+        out.header = Header(stamp=stamp, frame_id=src.header.frame_id)
+        out.frame_index = int(src.frame_index)
+        out.plant_id = int(src.plant_id)
+        out.view_id = int(src.view_id)
+        out.rgb_path = str(src.rgb_path)
+        out.depth_path = str(src.depth_path)
+        return out
 
     # ------------------------------------------------------------------ #
-    # Image callback
+    # Sync callback
     # ------------------------------------------------------------------ #
 
-    def on_image(self, msg: Image) -> None:
+    def _sync_cb(self, img_msg: Image, frame_info: FrameInfo) -> None:
         t_all0 = time.time()
 
-        img_rgb = self.bridge.imgmsg_to_cv2(msg, desired_encoding="rgb8")
+        img_rgb = self._bridge.imgmsg_to_cv2(img_msg, desired_encoding="rgb8")
         img_bgr = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR)
         h0, w0 = img_rgb.shape[:2]
 
         t_inf0 = time.time()
         results = self._predict(img_bgr)
-        t_inf = time.time() - t_inf0
-
-        if not results:
-            self._publish(msg, img_rgb, np.zeros((h0, w0), dtype=np.uint16))
-            return
-
-        res = results[0]
-
-        overlay_bgr = res.plot()
-        overlay_rgb = cv2.cvtColor(overlay_bgr, cv2.COLOR_BGR2RGB)
-        if overlay_rgb.shape[:2] != (h0, w0):
-            overlay_rgb = cv2.resize(overlay_rgb, (w0, h0), interpolation=cv2.INTER_LINEAR)
+        t_inf_s = time.time() - t_inf0
 
         label = np.zeros((h0, w0), dtype=np.uint16)
 
-        masks_np = self._masks_to_numpy_u8(res, h0, w0)
-        if masks_np is not None and masks_np.shape[0] > 0:
-            order = np.arange(masks_np.shape[0])
+        if results:
+            res = results[0]
+            masks_np = self._masks_to_numpy_u8(res, h0, w0)
 
-            boxes = getattr(res, "boxes", None)
-            conf = getattr(boxes, "conf", None) if boxes is not None else None
-            if isinstance(conf, torch.Tensor) and conf.numel() == masks_np.shape[0]:
-                order = torch.argsort(conf).detach().cpu().numpy()[::-1]
+            if masks_np is not None and masks_np.shape[0] > 0:
+                order = np.arange(masks_np.shape[0])
 
-            k_out = 0
-            for k in order:
-                mask = masks_np[int(k)]
-                if int(mask.sum()) < self._min_area:
-                    continue
-                k_out += 1
-                newpix = (mask == 1) & (label == 0)
-                label[newpix] = k_out
+                boxes = getattr(res, "boxes", None)
+                conf = getattr(boxes, "conf", None) if boxes is not None else None
+                if isinstance(conf, torch.Tensor) and conf.numel() == masks_np.shape[0]:
+                    order = torch.argsort(conf).detach().cpu().numpy()[::-1]
 
-        self._publish(msg, overlay_rgb if self.pub_overlay else img_rgb, label)
+                k_out = 0
+                for k in order:
+                    mask = masks_np[int(k)]
+                    if int(mask.sum()) < self._min_area:
+                        continue
+                    k_out += 1
+                    newpix = (mask == 1) & (label == 0)
+                    label[newpix] = k_out
+
+        # Overlay nur berechnen, wenn wirklich abonniert
+        overlay_rgb: Optional[np.ndarray] = None
+        if results and self._pub_overlay is not None and self._pub_overlay.get_subscription_count() > 0:
+            overlay_bgr = results[0].plot()
+            overlay_rgb = cv2.cvtColor(overlay_bgr, cv2.COLOR_BGR2RGB)
+            if overlay_rgb.shape[:2] != (h0, w0):
+                overlay_rgb = cv2.resize(overlay_rgb, (w0, h0), interpolation=cv2.INTER_LINEAR)
+
+        self._publish(img_msg, frame_info, label, overlay_rgb)
 
         if self._profile:
-            t_all = (time.time() - t_all0) * 1000.0
+            t_all_ms = (time.time() - t_all0) * 1000.0
             n_inst = int(label.max())
             self.get_logger().info(
-                f"inference {t_inf * 1000.0:.1f} ms | total {t_all:.1f} ms | instances={n_inst}"
+                f"Frame {int(frame_info.frame_index)} | plant {int(frame_info.plant_id)} "
+                f"| view {int(frame_info.view_id)} | inference {t_inf_s * 1000.0:.1f} ms "
+                f"| total {t_all_ms:.1f} ms | instances={n_inst}"
             )
 
-    # ------------------------------------------------------------------ #
-    # Publish helper
-    # ------------------------------------------------------------------ #
+    def _publish(
+        self,
+        src_msg: Image,
+        frame_info: FrameInfo,
+        label_u16: np.ndarray,
+        overlay_rgb: Optional[np.ndarray],
+    ) -> None:
+        stamp = src_msg.header.stamp
 
-    def _publish(self, src_msg: Image, overlay_rgb: np.ndarray, label_u16: np.ndarray) -> None:
-        if self.pub_overlay is not None and self.pub_overlay.get_subscription_count() > 0:
-            ov_msg = self.bridge.cv2_to_imgmsg(overlay_rgb, encoding="rgb8")
-            ov_msg.header = Header(
-                stamp=src_msg.header.stamp,
-                frame_id=src_msg.header.frame_id,
-            )
-            self.pub_overlay.publish(ov_msg)
+        if self._pub_frame_info is not None:
+            self._pub_frame_info.publish(self._copy_frame_info(frame_info, stamp))
+
+        if overlay_rgb is not None and self._pub_overlay is not None:
+            ov_msg = self._bridge.cv2_to_imgmsg(overlay_rgb, encoding="rgb8")
+            ov_msg.header = Header(stamp=stamp, frame_id=src_msg.header.frame_id)
+            self._pub_overlay.publish(ov_msg)
 
         height, width = label_u16.shape
         lbl = Image()
-        lbl.header = Header(
-            stamp=src_msg.header.stamp,
-            frame_id=src_msg.header.frame_id,
-        )
+        lbl.header = Header(stamp=stamp, frame_id=src_msg.header.frame_id)
         lbl.height = int(height)
         lbl.width = int(width)
         lbl.encoding = "mono16"
         lbl.is_bigendian = 0
         lbl.step = int(width) * 2
         lbl.data = label_u16.tobytes()
-        self.pub_label.publish(lbl)
+        self._pub_label.publish(lbl)
 
-        if self.pub_label_vis.get_subscription_count() > 0:
+        if self._pub_label_vis.get_subscription_count() > 0:
             label_vis = (label_u16 > 0).astype(np.uint8) * 255
-            lbl_vis_msg = self.bridge.cv2_to_imgmsg(label_vis, encoding="mono8")
+            lbl_vis_msg = self._bridge.cv2_to_imgmsg(label_vis, encoding="mono8")
             lbl_vis_msg.header = lbl.header
-            self.pub_label_vis.publish(lbl_vis_msg)
+            self._pub_label_vis.publish(lbl_vis_msg)
 
 
 def main() -> None:

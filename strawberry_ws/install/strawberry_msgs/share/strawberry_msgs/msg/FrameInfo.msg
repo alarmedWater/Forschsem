@@ -1,0 +1,1 @@
+/home/parallels/Forschsemrep/strawberry_ws/src/strawberry_msgs/msg/FrameInfo.msg

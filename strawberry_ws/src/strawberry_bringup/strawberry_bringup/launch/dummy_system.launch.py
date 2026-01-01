@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
-"""Launch file for the strawberry demo pipeline.
+"""
+Launch file for the strawberry demo pipeline (dummy dataset playback).
 
 Nodes:
 - camera_folder: plays RGB + depth images from folders as a fake camera
@@ -19,24 +19,72 @@ from launch_ros.actions import Node
 
 def generate_launch_description() -> LaunchDescription:
     """Generate the launch description for the strawberry pipeline."""
+    # Dataset mode A (recommended): plants root directory
+    plants_root_dir = LaunchConfiguration("plants_root_dir")
+    plant_glob = LaunchConfiguration("plant_glob")
+    use_plants_root = LaunchConfiguration("use_plants_root")
+
+    rgb_pattern = LaunchConfiguration("rgb_pattern")
+    depth_pattern = LaunchConfiguration("depth_pattern")
+
+    # Legacy mode B (flat folders) kept for fallback
     rgb_dir = LaunchConfiguration("rgb_dir")
     depth_dir = LaunchConfiguration("depth_dir")
+
+    # General
     fps = LaunchConfiguration("fps")
     loop = LaunchConfiguration("loop")
     model_path = LaunchConfiguration("model_path")
+
+    # Pose + FrameInfo topics
+    publish_pose = LaunchConfiguration("publish_pose")
+    pose_topic = LaunchConfiguration("pose_topic")
+    world_frame_id = LaunchConfiguration("world_frame_id")
+
+    publish_frame_info = LaunchConfiguration("publish_frame_info")
+    frame_info_topic = LaunchConfiguration("frame_info_topic")
 
     return LaunchDescription(
         [
             # ---------------- Launch arguments ----------------
             DeclareLaunchArgument(
+                "plants_root_dir",
+                default_value="/home/parallels/Forschsemrep/strawberry_ws/data/plant_views",
+                description=(
+                    "Root folder containing plant subfolders (recommended mode). "
+                    "Example: plant_000/, plant_001/, ..."
+                ),
+            ),
+            DeclareLaunchArgument(
+                "plant_glob",
+                default_value="plant_*",
+                description="Glob for plant directories inside plants_root_dir.",
+            ),
+            DeclareLaunchArgument(
+                "use_plants_root",
+                default_value="true",
+                description="Use plants_root_dir mode (true/false).",
+            ),
+            DeclareLaunchArgument(
+                "rgb_pattern",
+                default_value="color_*.png",
+                description="RGB filename pattern inside each plant folder.",
+            ),
+            DeclareLaunchArgument(
+                "depth_pattern",
+                default_value="depth_*.png",
+                description="Depth filename pattern inside each plant folder.",
+            ),
+            # Legacy flat-folder args (still available)
+            DeclareLaunchArgument(
                 "rgb_dir",
                 default_value="/home/parallels/Forschsemrep/strawberry_ws/data/test_rgb",
-                description="Folder containing RGB images.",
+                description="(Legacy) Folder containing RGB images.",
             ),
             DeclareLaunchArgument(
                 "depth_dir",
                 default_value="/home/parallels/Forschsemrep/strawberry_ws/data/test_depth",
-                description="Folder containing depth images.",
+                description="(Legacy) Folder containing depth images.",
             ),
             DeclareLaunchArgument(
                 "fps",
@@ -45,18 +93,41 @@ def generate_launch_description() -> LaunchDescription:
             ),
             DeclareLaunchArgument(
                 "loop",
-                default_value="true",
-                description="Whether to loop the images (true/false).",
+                default_value="false",
+                description="Whether to loop the dataset (true/false).",
             ),
             DeclareLaunchArgument(
                 "model_path",
                 default_value="",
                 description=(
-                    "Path to best.pt "
-                    "(empty = use model from strawberry_segmentation/models in share)."
+                    "Path to best.pt (empty = use model from strawberry_segmentation/models in share)."
                 ),
             ),
-
+            DeclareLaunchArgument(
+                "publish_pose",
+                default_value="true",
+                description="Publish /camera_pose_world PoseStamped (true/false).",
+            ),
+            DeclareLaunchArgument(
+                "pose_topic",
+                default_value="/camera_pose_world",
+                description="PoseStamped topic name.",
+            ),
+            DeclareLaunchArgument(
+                "world_frame_id",
+                default_value="world",
+                description="Frame id for published camera pose + frame info header.",
+            ),
+            DeclareLaunchArgument(
+                "publish_frame_info",
+                default_value="true",
+                description="Publish FrameInfo on /camera/frame_info (true/false).",
+            ),
+            DeclareLaunchArgument(
+                "frame_info_topic",
+                default_value="/camera/frame_info",
+                description="FrameInfo topic name.",
+            ),
             # ---------------- Camera from folder ----------------
             Node(
                 package="strawberry_camera",
@@ -64,15 +135,27 @@ def generate_launch_description() -> LaunchDescription:
                 name="camera_folder",
                 parameters=[
                     {
+                        # Mode A (recommended)
+                        "use_plants_root": use_plants_root,
+                        "plants_root_dir": plants_root_dir,
+                        "plant_glob": plant_glob,
+                        "rgb_pattern": rgb_pattern,
+                        "depth_pattern": depth_pattern,
+                        # Mode B (legacy fallback)
                         "rgb_dir": rgb_dir,
                         "depth_dir": depth_dir,
+                        # Playback
                         "fps": fps,
                         "loop": loop,
-                        # fx, fy, cx, cy have defaults inside the node
+                        # Pose + frame info
+                        "publish_pose": publish_pose,
+                        "pose_topic": pose_topic,
+                        "world_frame_id": world_frame_id,
+                        "publish_frame_info": publish_frame_info,
+                        "frame_info_topic": frame_info_topic,
                     }
                 ],
             ),
-
             # ---------------- YOLOv8 segmentation ----------------
             Node(
                 package="strawberry_segmentation",
@@ -80,24 +163,16 @@ def generate_launch_description() -> LaunchDescription:
                 name="strawberry_seg_ultra",
                 parameters=[
                     {
-                        # empty -> use share/strawberry_segmentation/models/best.pt
                         "model_path": model_path,
-                        # "topic_in": "/camera/color/image_raw",  # default in node
                     }
                 ],
             ),
-
             # ---------------- Depth masking ----------------
             Node(
                 package="strawberry_segmentation",
                 executable="depth_mask",
                 name="strawberry_depth_mask",
-                # defaults in node:
-                # depth_topic:  /camera/aligned_depth_to_color/image_raw
-                # label_topic:  /seg/label_image
-                # output_topic: /seg/depth_masked
             ),
-
             # ---------------- Features + point clouds ----------------
             Node(
                 package="strawberry_segmentation",
@@ -111,7 +186,6 @@ def generate_launch_description() -> LaunchDescription:
                         "downsample_step": 1,
                         "min_points": 50,
                         "profile": False,
-                        # point cloud publishing
                         "publish_all_cloud": True,
                         "cloud_topic_all": "/seg/strawberry_cloud",
                         "publish_selected_cloud": True,
@@ -120,7 +194,6 @@ def generate_launch_description() -> LaunchDescription:
                     }
                 ],
             ),
-
             # ---------------- Selected instance overlay ----------------
             Node(
                 package="strawberry_segmentation",

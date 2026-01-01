@@ -1,0 +1,1 @@
+/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs/rosidl_generator_c/strawberry_msgs/msg/frame_info.h

@@ -1,0 +1,1 @@
+/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs/rosidl_generator_py/strawberry_msgs/msg/__init__.py

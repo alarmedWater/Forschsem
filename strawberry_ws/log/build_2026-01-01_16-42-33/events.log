@@ -1,0 +1,592 @@
+[0.000000] (-) TimerEvent: {}
+[0.000413] (meca500_ros2) JobQueued: {'identifier': 'meca500_ros2', 'dependencies': OrderedDict()}
+[0.001279] (strawberry_camera) JobQueued: {'identifier': 'strawberry_camera', 'dependencies': OrderedDict()}
+[0.001392] (strawberry_cluster) JobQueued: {'identifier': 'strawberry_cluster', 'dependencies': OrderedDict()}
+[0.001410] (strawberry_msgs) JobQueued: {'identifier': 'strawberry_msgs', 'dependencies': OrderedDict()}
+[0.001423] (strawberry_segmentation) JobQueued: {'identifier': 'strawberry_segmentation', 'dependencies': OrderedDict()}
+[0.001465] (strawberry_bringup) JobQueued: {'identifier': 'strawberry_bringup', 'dependencies': OrderedDict([('meca500_ros2', '/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2'), ('strawberry_camera', '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera')])}
+[0.001515] (meca500_ros2) JobStarted: {'identifier': 'meca500_ros2'}
+[0.033843] (strawberry_camera) JobStarted: {'identifier': 'strawberry_camera'}
+[0.045940] (strawberry_cluster) JobStarted: {'identifier': 'strawberry_cluster'}
+[0.061844] (strawberry_msgs) JobStarted: {'identifier': 'strawberry_msgs'}
+[0.098422] (-) TimerEvent: {}
+[0.199032] (-) TimerEvent: {}
+[0.299695] (-) TimerEvent: {}
+[0.401155] (-) TimerEvent: {}
+[0.501694] (-) TimerEvent: {}
+[0.602328] (-) TimerEvent: {}
+[0.702865] (-) TimerEvent: {}
+[0.805095] (-) TimerEvent: {}
+[0.905710] (-) TimerEvent: {}
+[1.006938] (-) TimerEvent: {}
+[1.108607] (-) TimerEvent: {}
+[1.209468] (-) TimerEvent: {}
+[1.310042] (-) TimerEvent: {}
+[1.373696] (strawberry_msgs) JobProgress: {'identifier': 'strawberry_msgs', 'progress': 'cmake'}
+[1.376194] (strawberry_msgs) Command: {'cmd': ['/usr/bin/cmake', '/home/parallels/Forschsemrep/strawberry_ws/src/strawberry_msgs', '-DAMENT_CMAKE_SYMLINK_INSTALL=1', '-DCMAKE_INSTALL_PREFIX=/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs'], 'cwd': '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs', 'env': OrderedDict([('GJS_DEBUG_TOPICS', 'JS ERROR;JS LOG'), ('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'parallels'), ('XDG_SESSION_TYPE', 'wayland'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/parallels'), ('CONDA_SHLVL', '0'), ('OLDPWD', '/home/parallels/Forschsemrep'), ('DESKTOP_SESSION', 'ubuntu'), ('GIO_LAUNCHED_DESKTOP_FILE', '/usr/share/applications/terminator.desktop'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('MANAGERPID', '3376'), ('SYSTEMD_EXEC_PID', '3552'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('TERMINATOR_DBUS_NAME', 'net.tenshu.Terminator25ef4b219e3b005583550f2b0f9f990c3'), ('GIO_LAUNCHED_DESKTOP_FILE_PID', '5273'), ('IM_CONFIG_PHASE', '1'), ('WAYLAND_DISPLAY', 'wayland-0'), ('ROS_DISTRO', 'humble'), ('LOGNAME', 'parallels'), ('JOURNAL_STREAM', '8:21016'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'parallels'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/opt/ros/humble/bin:/home/parallels/.local/bin:/home/parallels/miniforge3/condabin:/home/parallels/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/home/parallels/.dotnet/tools:/opt/mssql-tools/bin'), ('SESSION_MANAGER', 'local/parallels-Parallels-Virtual-Platform:@/tmp/.ICE-unix/3530,unix/parallels-Parallels-Virtual-Platform:/tmp/.ICE-unix/3530'), ('INVOCATION_ID', '0d0b5cfba9fc449d924a57ec03a43c96'), ('XDG_MENU_PREFIX', 'gnome-'), ('GNOME_SETUP_DISPLAY', ':1'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('MAMBA_ROOT_PREFIX', '/home/parallels/miniforge3'), ('DISPLAY', ':0'), ('TERMINATOR_DBUS_PATH', '/net/tenshu/Terminator2'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('DOTNET_BUNDLE_EXTRACT_BASE_DIR', '/home/parallels/.cache/dotnet_bundle_extract'), ('IBUS_DISABLE_SNOOPER', '1'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/.mutter-Xwaylandauth.ZKDCI3'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/opt/ros/humble'), ('CONDA_PYTHON_EXE', '/home/parallels/miniforge3/bin/python'), ('SHELL', '/bin/bash'), ('TERMINATOR_UUID', 'urn:uuid:d73d8bd8-f437-4bce-a731-43b4e4b62c79'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('GJS_DEBUG_OUTPUT', 'stderr'), ('MAMBA_EXE', '/home/parallels/miniforge3/bin/mamba'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('CONDA_EXE', '/home/parallels/miniforge3/bin/conda'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/opt/ros/humble')]), 'shell': False}
+[1.412691] (-) TimerEvent: {}
+[1.513182] (-) TimerEvent: {}
+[1.613623] (-) TimerEvent: {}
+[1.714112] (-) TimerEvent: {}
+[1.814593] (-) TimerEvent: {}
+[1.887134] (strawberry_msgs) StdoutLine: {'line': b'-- The C compiler identification is GNU 11.4.0\n'}
+[1.914771] (-) TimerEvent: {}
+[2.015272] (-) TimerEvent: {}
+[2.093095] (strawberry_msgs) StdoutLine: {'line': b'-- The CXX compiler identification is GNU 11.4.0\n'}
+[2.115492] (-) TimerEvent: {}
+[2.125994] (strawberry_msgs) StdoutLine: {'line': b'-- Detecting C compiler ABI info\n'}
+[2.215744] (-) TimerEvent: {}
+[2.272312] (strawberry_msgs) StdoutLine: {'line': b'-- Detecting C compiler ABI info - done\n'}
+[2.284667] (strawberry_msgs) StdoutLine: {'line': b'-- Check for working C compiler: /usr/bin/cc - skipped\n'}
+[2.286249] (strawberry_msgs) StdoutLine: {'line': b'-- Detecting C compile features\n'}
+[2.295142] (strawberry_msgs) StdoutLine: {'line': b'-- Detecting C compile features - done\n'}
+[2.302096] (strawberry_msgs) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info\n'}
+[2.315880] (-) TimerEvent: {}
+[2.416248] (-) TimerEvent: {}
+[2.428762] (strawberry_msgs) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info - done\n'}
+[2.438036] (strawberry_msgs) StdoutLine: {'line': b'-- Check for working CXX compiler: /usr/bin/c++ - skipped\n'}
+[2.438280] (strawberry_msgs) StdoutLine: {'line': b'-- Detecting CXX compile features\n'}
+[2.438381] (strawberry_msgs) StdoutLine: {'line': b'-- Detecting CXX compile features - done\n'}
+[2.467857] (strawberry_msgs) StdoutLine: {'line': b'-- Found ament_cmake: 1.3.12 (/opt/ros/humble/share/ament_cmake/cmake)\n'}
+[2.517671] (-) TimerEvent: {}
+[2.553248] (strawberry_camera) Command: {'cmd': ['/usr/bin/python3', '-W', 'ignore:setup.py install is deprecated', '-W', 'ignore:easy_install command is deprecated', 'setup.py', 'develop', '--editable', '--build-directory', '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera/build', '--no-deps', 'symlink_data'], 'cwd': '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera', 'env': {'GJS_DEBUG_TOPICS': 'JS ERROR;JS LOG', 'LESSOPEN': '| /usr/bin/lesspipe %s', 'USER': 'parallels', 'XDG_SESSION_TYPE': 'wayland', 'SHLVL': '1', 'LD_LIBRARY_PATH': '/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib', 'HOME': '/home/parallels', 'CONDA_SHLVL': '0', 'OLDPWD': '/home/parallels/Forschsemrep', 'DESKTOP_SESSION': 'ubuntu', 'GIO_LAUNCHED_DESKTOP_FILE': '/usr/share/applications/terminator.desktop', 'ROS_PYTHON_VERSION': '3', 'GNOME_SHELL_SESSION_MODE': 'ubuntu', 'GTK_MODULES': 'gail:atk-bridge', 'MANAGERPID': '3376', 'SYSTEMD_EXEC_PID': '3552', 'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/user/1000/bus', 'COLORTERM': 'truecolor', 'TERMINATOR_DBUS_NAME': 'net.tenshu.Terminator25ef4b219e3b005583550f2b0f9f990c3', 'GIO_LAUNCHED_DESKTOP_FILE_PID': '5273', 'IM_CONFIG_PHASE': '1', 'WAYLAND_DISPLAY': 'wayland-0', 'ROS_DISTRO': 'humble', 'LOGNAME': 'parallels', 'JOURNAL_STREAM': '8:21016', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'XDG_SESSION_CLASS': 'user', 'USERNAME': 'parallels', 'TERM': 'xterm-256color', 'GNOME_DESKTOP_SESSION_ID': 'this-is-deprecated', 'ROS_LOCALHOST_ONLY': '0', 'PATH': '/opt/ros/humble/bin:/home/parallels/.local/bin:/home/parallels/miniforge3/condabin:/home/parallels/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/home/parallels/.dotnet/tools:/opt/mssql-tools/bin', 'SESSION_MANAGER': 'local/parallels-Parallels-Virtual-Platform:@/tmp/.ICE-unix/3530,unix/parallels-Parallels-Virtual-Platform:/tmp/.ICE-unix/3530', 'INVOCATION_ID': '0d0b5cfba9fc449d924a57ec03a43c96', 'XDG_MENU_PREFIX': 'gnome-', 'GNOME_SETUP_DISPLAY': ':1', 'XDG_RUNTIME_DIR': '/run/user/1000', 'MAMBA_ROOT_PREFIX': '/home/parallels/miniforge3', 'DISPLAY': ':0', 'TERMINATOR_DBUS_PATH': '/net/tenshu/Terminator2', 'LANG': 'en_US.UTF-8', 'XDG_CURRENT_DESKTOP': 'ubuntu:GNOME', 'DOTNET_BUNDLE_EXTRACT_BASE_DIR': '/home/parallels/.cache/dotnet_bundle_extract', 'IBUS_DISABLE_SNOOPER': '1', 'XMODIFIERS': '@im=ibus', 'XDG_SESSION_DESKTOP': 'ubuntu', 'XAUTHORITY': '/run/user/1000/.mutter-Xwaylandauth.ZKDCI3', 'LS_COLORS': 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:', 'SSH_AGENT_LAUNCHER': 'gnome-keyring', 'SSH_AUTH_SOCK': '/run/user/1000/keyring/ssh', 'AMENT_PREFIX_PATH': '/opt/ros/humble', 'CONDA_PYTHON_EXE': '/home/parallels/miniforge3/bin/python', 'SHELL': '/bin/bash', 'TERMINATOR_UUID': 'urn:uuid:d73d8bd8-f437-4bce-a731-43b4e4b62c79', 'QT_ACCESSIBILITY': '1', 'GDMSESSION': 'ubuntu', 'LESSCLOSE': '/usr/bin/lesspipe %s %s', 'GJS_DEBUG_OUTPUT': 'stderr', 'MAMBA_EXE': '/home/parallels/miniforge3/bin/mamba', 'QT_IM_MODULE': 'ibus', 'PWD': '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera', 'XDG_CONFIG_DIRS': '/etc/xdg/xdg-ubuntu:/etc/xdg', 'CONDA_EXE': '/home/parallels/miniforge3/bin/conda', 'XDG_DATA_DIRS': '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop', 'PYTHONPATH': '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages', 'COLCON': '1', 'VTE_VERSION': '6800'}, 'shell': False}
+[2.591720] (strawberry_cluster) Command: {'cmd': ['/usr/bin/python3', '-W', 'ignore:setup.py install is deprecated', '-W', 'ignore:easy_install command is deprecated', 'setup.py', 'develop', '--editable', '--build-directory', '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/build', '--no-deps', 'symlink_data'], 'cwd': '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster', 'env': {'GJS_DEBUG_TOPICS': 'JS ERROR;JS LOG', 'LESSOPEN': '| /usr/bin/lesspipe %s', 'USER': 'parallels', 'XDG_SESSION_TYPE': 'wayland', 'SHLVL': '1', 'LD_LIBRARY_PATH': '/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib', 'HOME': '/home/parallels', 'CONDA_SHLVL': '0', 'OLDPWD': '/home/parallels/Forschsemrep', 'DESKTOP_SESSION': 'ubuntu', 'GIO_LAUNCHED_DESKTOP_FILE': '/usr/share/applications/terminator.desktop', 'ROS_PYTHON_VERSION': '3', 'GNOME_SHELL_SESSION_MODE': 'ubuntu', 'GTK_MODULES': 'gail:atk-bridge', 'MANAGERPID': '3376', 'SYSTEMD_EXEC_PID': '3552', 'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/user/1000/bus', 'COLORTERM': 'truecolor', 'TERMINATOR_DBUS_NAME': 'net.tenshu.Terminator25ef4b219e3b005583550f2b0f9f990c3', 'GIO_LAUNCHED_DESKTOP_FILE_PID': '5273', 'IM_CONFIG_PHASE': '1', 'WAYLAND_DISPLAY': 'wayland-0', 'ROS_DISTRO': 'humble', 'LOGNAME': 'parallels', 'JOURNAL_STREAM': '8:21016', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'XDG_SESSION_CLASS': 'user', 'USERNAME': 'parallels', 'TERM': 'xterm-256color', 'GNOME_DESKTOP_SESSION_ID': 'this-is-deprecated', 'ROS_LOCALHOST_ONLY': '0', 'PATH': '/opt/ros/humble/bin:/home/parallels/.local/bin:/home/parallels/miniforge3/condabin:/home/parallels/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/home/parallels/.dotnet/tools:/opt/mssql-tools/bin', 'SESSION_MANAGER': 'local/parallels-Parallels-Virtual-Platform:@/tmp/.ICE-unix/3530,unix/parallels-Parallels-Virtual-Platform:/tmp/.ICE-unix/3530', 'INVOCATION_ID': '0d0b5cfba9fc449d924a57ec03a43c96', 'XDG_MENU_PREFIX': 'gnome-', 'GNOME_SETUP_DISPLAY': ':1', 'XDG_RUNTIME_DIR': '/run/user/1000', 'MAMBA_ROOT_PREFIX': '/home/parallels/miniforge3', 'DISPLAY': ':0', 'TERMINATOR_DBUS_PATH': '/net/tenshu/Terminator2', 'LANG': 'en_US.UTF-8', 'XDG_CURRENT_DESKTOP': 'ubuntu:GNOME', 'DOTNET_BUNDLE_EXTRACT_BASE_DIR': '/home/parallels/.cache/dotnet_bundle_extract', 'IBUS_DISABLE_SNOOPER': '1', 'XMODIFIERS': '@im=ibus', 'XDG_SESSION_DESKTOP': 'ubuntu', 'XAUTHORITY': '/run/user/1000/.mutter-Xwaylandauth.ZKDCI3', 'LS_COLORS': 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:', 'SSH_AGENT_LAUNCHER': 'gnome-keyring', 'SSH_AUTH_SOCK': '/run/user/1000/keyring/ssh', 'AMENT_PREFIX_PATH': '/opt/ros/humble', 'CONDA_PYTHON_EXE': '/home/parallels/miniforge3/bin/python', 'SHELL': '/bin/bash', 'TERMINATOR_UUID': 'urn:uuid:d73d8bd8-f437-4bce-a731-43b4e4b62c79', 'QT_ACCESSIBILITY': '1', 'GDMSESSION': 'ubuntu', 'LESSCLOSE': '/usr/bin/lesspipe %s %s', 'GJS_DEBUG_OUTPUT': 'stderr', 'MAMBA_EXE': '/home/parallels/miniforge3/bin/mamba', 'QT_IM_MODULE': 'ibus', 'PWD': '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster', 'XDG_CONFIG_DIRS': '/etc/xdg/xdg-ubuntu:/etc/xdg', 'CONDA_EXE': '/home/parallels/miniforge3/bin/conda', 'XDG_DATA_DIRS': '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop', 'PYTHONPATH': '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages', 'COLCON': '1', 'VTE_VERSION': '6800'}, 'shell': False}
+[2.610736] (meca500_ros2) Command: {'cmd': ['/usr/bin/python3', '-W', 'ignore:setup.py install is deprecated', '-W', 'ignore:easy_install command is deprecated', 'setup.py', 'develop', '--editable', '--build-directory', '/home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2/build', '--no-deps', 'symlink_data'], 'cwd': '/home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2', 'env': {'GJS_DEBUG_TOPICS': 'JS ERROR;JS LOG', 'LESSOPEN': '| /usr/bin/lesspipe %s', 'USER': 'parallels', 'XDG_SESSION_TYPE': 'wayland', 'SHLVL': '1', 'LD_LIBRARY_PATH': '/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib', 'HOME': '/home/parallels', 'CONDA_SHLVL': '0', 'OLDPWD': '/home/parallels/Forschsemrep', 'DESKTOP_SESSION': 'ubuntu', 'GIO_LAUNCHED_DESKTOP_FILE': '/usr/share/applications/terminator.desktop', 'ROS_PYTHON_VERSION': '3', 'GNOME_SHELL_SESSION_MODE': 'ubuntu', 'GTK_MODULES': 'gail:atk-bridge', 'MANAGERPID': '3376', 'SYSTEMD_EXEC_PID': '3552', 'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/user/1000/bus', 'COLORTERM': 'truecolor', 'TERMINATOR_DBUS_NAME': 'net.tenshu.Terminator25ef4b219e3b005583550f2b0f9f990c3', 'GIO_LAUNCHED_DESKTOP_FILE_PID': '5273', 'IM_CONFIG_PHASE': '1', 'WAYLAND_DISPLAY': 'wayland-0', 'ROS_DISTRO': 'humble', 'LOGNAME': 'parallels', 'JOURNAL_STREAM': '8:21016', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'XDG_SESSION_CLASS': 'user', 'USERNAME': 'parallels', 'TERM': 'xterm-256color', 'GNOME_DESKTOP_SESSION_ID': 'this-is-deprecated', 'ROS_LOCALHOST_ONLY': '0', 'PATH': '/opt/ros/humble/bin:/home/parallels/.local/bin:/home/parallels/miniforge3/condabin:/home/parallels/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/home/parallels/.dotnet/tools:/opt/mssql-tools/bin', 'SESSION_MANAGER': 'local/parallels-Parallels-Virtual-Platform:@/tmp/.ICE-unix/3530,unix/parallels-Parallels-Virtual-Platform:/tmp/.ICE-unix/3530', 'INVOCATION_ID': '0d0b5cfba9fc449d924a57ec03a43c96', 'XDG_MENU_PREFIX': 'gnome-', 'GNOME_SETUP_DISPLAY': ':1', 'XDG_RUNTIME_DIR': '/run/user/1000', 'MAMBA_ROOT_PREFIX': '/home/parallels/miniforge3', 'DISPLAY': ':0', 'TERMINATOR_DBUS_PATH': '/net/tenshu/Terminator2', 'LANG': 'en_US.UTF-8', 'XDG_CURRENT_DESKTOP': 'ubuntu:GNOME', 'DOTNET_BUNDLE_EXTRACT_BASE_DIR': '/home/parallels/.cache/dotnet_bundle_extract', 'IBUS_DISABLE_SNOOPER': '1', 'XMODIFIERS': '@im=ibus', 'XDG_SESSION_DESKTOP': 'ubuntu', 'XAUTHORITY': '/run/user/1000/.mutter-Xwaylandauth.ZKDCI3', 'LS_COLORS': 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:', 'SSH_AGENT_LAUNCHER': 'gnome-keyring', 'SSH_AUTH_SOCK': '/run/user/1000/keyring/ssh', 'AMENT_PREFIX_PATH': '/opt/ros/humble', 'CONDA_PYTHON_EXE': '/home/parallels/miniforge3/bin/python', 'SHELL': '/bin/bash', 'TERMINATOR_UUID': 'urn:uuid:d73d8bd8-f437-4bce-a731-43b4e4b62c79', 'QT_ACCESSIBILITY': '1', 'GDMSESSION': 'ubuntu', 'LESSCLOSE': '/usr/bin/lesspipe %s %s', 'GJS_DEBUG_OUTPUT': 'stderr', 'MAMBA_EXE': '/home/parallels/miniforge3/bin/mamba', 'QT_IM_MODULE': 'ibus', 'PWD': '/home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2', 'XDG_CONFIG_DIRS': '/etc/xdg/xdg-ubuntu:/etc/xdg', 'CONDA_EXE': '/home/parallels/miniforge3/bin/conda', 'XDG_DATA_DIRS': '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop', 'PYTHONPATH': '/home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages', 'COLCON': '1', 'VTE_VERSION': '6800'}, 'shell': False}
+[2.621668] (-) TimerEvent: {}
+[2.722183] (-) TimerEvent: {}
+[2.824610] (-) TimerEvent: {}
+[2.925119] (-) TimerEvent: {}
+[2.944033] (strawberry_msgs) StdoutLine: {'line': b'-- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter \n'}
+[3.025315] (-) TimerEvent: {}
+[3.128809] (-) TimerEvent: {}
+[3.140236] (strawberry_msgs) StdoutLine: {'line': b'-- Override CMake install command with custom implementation using symlinks instead of copying resources\n'}
+[3.144790] (meca500_ros2) StdoutLine: {'line': b'running develop\n'}
+[3.204770] (strawberry_cluster) StdoutLine: {'line': b'running develop\n'}
+[3.219107] (strawberry_camera) StdoutLine: {'line': b'running develop\n'}
+[3.228994] (-) TimerEvent: {}
+[3.332650] (-) TimerEvent: {}
+[3.340661] (strawberry_msgs) StdoutLine: {'line': b'-- Found rosidl_default_generators: 1.2.0 (/opt/ros/humble/share/rosidl_default_generators/cmake)\n'}
+[3.374589] (strawberry_msgs) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c\n'}
+[3.422709] (strawberry_msgs) StdoutLine: {'line': b'-- Found rosidl_adapter: 3.1.7 (/opt/ros/humble/share/rosidl_adapter/cmake)\n'}
+[3.432929] (-) TimerEvent: {}
+[3.535606] (-) TimerEvent: {}
+[3.600627] (strawberry_cluster) StdoutLine: {'line': b'running egg_info\n'}
+[3.601299] (strawberry_cluster) StdoutLine: {'line': b'creating strawberry_cluster.egg-info\n'}
+[3.602961] (strawberry_cluster) StdoutLine: {'line': b'writing strawberry_cluster.egg-info/PKG-INFO\n'}
+[3.605336] (strawberry_cluster) StdoutLine: {'line': b'writing dependency_links to strawberry_cluster.egg-info/dependency_links.txt\n'}
+[3.607375] (strawberry_cluster) StdoutLine: {'line': b'writing entry points to strawberry_cluster.egg-info/entry_points.txt\n'}
+[3.608494] (strawberry_cluster) StdoutLine: {'line': b'writing requirements to strawberry_cluster.egg-info/requires.txt\n'}
+[3.609270] (strawberry_cluster) StdoutLine: {'line': b'writing top-level names to strawberry_cluster.egg-info/top_level.txt\n'}
+[3.610200] (strawberry_cluster) StdoutLine: {'line': b"writing manifest file 'strawberry_cluster.egg-info/SOURCES.txt'\n"}
+[3.614227] (strawberry_cluster) StdoutLine: {'line': b"reading manifest file 'strawberry_cluster.egg-info/SOURCES.txt'\n"}
+[3.614682] (strawberry_cluster) StdoutLine: {'line': b"writing manifest file 'strawberry_cluster.egg-info/SOURCES.txt'\n"}
+[3.620296] (strawberry_cluster) StdoutLine: {'line': b'running build_ext\n'}
+[3.622634] (strawberry_cluster) StdoutLine: {'line': b'Creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/lib/python3.10/site-packages/strawberry-cluster.egg-link (link to .)\n'}
+[3.624156] (strawberry_cluster) StdoutLine: {'line': b'Installing strawberry_cluster script to /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/lib/strawberry_cluster\n'}
+[3.625457] (strawberry_cluster) StdoutLine: {'line': b'\n'}
+[3.625738] (strawberry_cluster) StdoutLine: {'line': b'Installed /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster\n'}
+[3.626108] (strawberry_cluster) StdoutLine: {'line': b'running symlink_data\n'}
+[3.626457] (strawberry_cluster) StdoutLine: {'line': b'creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/share/ament_index\n'}
+[3.629275] (strawberry_cluster) StdoutLine: {'line': b'creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/share/ament_index/resource_index\n'}
+[3.631049] (strawberry_cluster) StdoutLine: {'line': b'creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/share/ament_index/resource_index/packages\n'}
+[3.631233] (strawberry_cluster) StdoutLine: {'line': b'symbolically linking /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/resource/strawberry_cluster -> /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/share/ament_index/resource_index/packages\n'}
+[3.632967] (strawberry_cluster) StdoutLine: {'line': b'symbolically linking /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/package.xml -> /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/share/strawberry_cluster\n'}
+[3.635780] (-) TimerEvent: {}
+[3.729862] (strawberry_cluster) CommandEnded: {'returncode': 0}
+[3.736007] (-) TimerEvent: {}
+[3.742482] (strawberry_msgs) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp\n'}
+[3.836243] (-) TimerEvent: {}
+[3.842814] (strawberry_cluster) JobEnded: {'identifier': 'strawberry_cluster', 'rc': 0}
+[3.845168] (strawberry_segmentation) JobStarted: {'identifier': 'strawberry_segmentation'}
+[3.937251] (-) TimerEvent: {}
+[3.952648] (meca500_ros2) StdoutLine: {'line': b'running egg_info\n'}
+[3.953308] (meca500_ros2) StdoutLine: {'line': b'creating meca500_ros2.egg-info\n'}
+[3.955406] (meca500_ros2) StdoutLine: {'line': b'writing meca500_ros2.egg-info/PKG-INFO\n'}
+[3.957971] (meca500_ros2) StdoutLine: {'line': b'writing dependency_links to meca500_ros2.egg-info/dependency_links.txt\n'}
+[3.960294] (meca500_ros2) StdoutLine: {'line': b'writing entry points to meca500_ros2.egg-info/entry_points.txt\n'}
+[3.960488] (meca500_ros2) StdoutLine: {'line': b'writing requirements to meca500_ros2.egg-info/requires.txt\n'}
+[3.960638] (meca500_ros2) StdoutLine: {'line': b'writing top-level names to meca500_ros2.egg-info/top_level.txt\n'}
+[3.960697] (meca500_ros2) StdoutLine: {'line': b"writing manifest file 'meca500_ros2.egg-info/SOURCES.txt'\n"}
+[3.962403] (meca500_ros2) StdoutLine: {'line': b"reading manifest file 'meca500_ros2.egg-info/SOURCES.txt'\n"}
+[3.963299] (meca500_ros2) StdoutLine: {'line': b"writing manifest file 'meca500_ros2.egg-info/SOURCES.txt'\n"}
+[3.965703] (meca500_ros2) StdoutLine: {'line': b'running build_ext\n'}
+[3.967257] (meca500_ros2) StdoutLine: {'line': b'Creating /home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/lib/python3.10/site-packages/meca500-ros2.egg-link (link to .)\n'}
+[3.967346] (meca500_ros2) StdoutLine: {'line': b'Installing robot_dummy script to /home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/lib/meca500_ros2\n'}
+[3.967761] (meca500_ros2) StdoutLine: {'line': b'\n'}
+[3.968062] (meca500_ros2) StdoutLine: {'line': b'Installed /home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2\n'}
+[3.968271] (meca500_ros2) StdoutLine: {'line': b'running symlink_data\n'}
+[3.968401] (meca500_ros2) StdoutLine: {'line': b'creating /home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/share/ament_index\n'}
+[3.968899] (meca500_ros2) StdoutLine: {'line': b'creating /home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/share/ament_index/resource_index\n'}
+[3.969168] (meca500_ros2) StdoutLine: {'line': b'creating /home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/share/ament_index/resource_index/packages\n'}
+[3.969225] (meca500_ros2) StdoutLine: {'line': b'symbolically linking /home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2/resource/meca500_ros2 -> /home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/share/ament_index/resource_index/packages\n'}
+[3.969274] (meca500_ros2) StdoutLine: {'line': b'symbolically linking /home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2/package.xml -> /home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/share/meca500_ros2\n'}
+[4.042137] (strawberry_msgs) StdoutLine: {'line': b'-- Found std_msgs: 4.9.0 (/opt/ros/humble/share/std_msgs/cmake)\n'}
+[4.042840] (-) TimerEvent: {}
+[4.133956] (strawberry_camera) StdoutLine: {'line': b'running egg_info\n'}
+[4.134277] (strawberry_camera) StdoutLine: {'line': b'creating strawberry_camera.egg-info\n'}
+[4.134360] (strawberry_camera) StdoutLine: {'line': b'writing strawberry_camera.egg-info/PKG-INFO\n'}
+[4.134413] (strawberry_camera) StdoutLine: {'line': b'writing dependency_links to strawberry_camera.egg-info/dependency_links.txt\n'}
+[4.134462] (strawberry_camera) StdoutLine: {'line': b'writing entry points to strawberry_camera.egg-info/entry_points.txt\n'}
+[4.136585] (strawberry_camera) StdoutLine: {'line': b'writing requirements to strawberry_camera.egg-info/requires.txt\n'}
+[4.136770] (strawberry_camera) StdoutLine: {'line': b'writing top-level names to strawberry_camera.egg-info/top_level.txt\n'}
+[4.136901] (strawberry_camera) StdoutLine: {'line': b"writing manifest file 'strawberry_camera.egg-info/SOURCES.txt'\n"}
+[4.143128] (-) TimerEvent: {}
+[4.143989] (strawberry_camera) StdoutLine: {'line': b"reading manifest file 'strawberry_camera.egg-info/SOURCES.txt'\n"}
+[4.145461] (strawberry_camera) StdoutLine: {'line': b"writing manifest file 'strawberry_camera.egg-info/SOURCES.txt'\n"}
+[4.148465] (strawberry_camera) StdoutLine: {'line': b'running build_ext\n'}
+[4.150164] (strawberry_camera) StdoutLine: {'line': b'Creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/lib/python3.10/site-packages/strawberry-camera.egg-link (link to .)\n'}
+[4.150304] (strawberry_camera) StdoutLine: {'line': b'Installing camera_dummy script to /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/lib/strawberry_camera\n'}
+[4.150388] (strawberry_camera) StdoutLine: {'line': b'Installing camera_folder script to /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/lib/strawberry_camera\n'}
+[4.150580] (strawberry_camera) StdoutLine: {'line': b'\n'}
+[4.150702] (strawberry_camera) StdoutLine: {'line': b'Installed /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera\n'}
+[4.150760] (strawberry_camera) StdoutLine: {'line': b'running symlink_data\n'}
+[4.150839] (strawberry_camera) StdoutLine: {'line': b'creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/share/ament_index\n'}
+[4.153753] (strawberry_camera) StdoutLine: {'line': b'creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/share/ament_index/resource_index\n'}
+[4.155824] (strawberry_camera) StdoutLine: {'line': b'creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/share/ament_index/resource_index/packages\n'}
+[4.157905] (strawberry_camera) StdoutLine: {'line': b'symbolically linking /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera/resource/strawberry_camera -> /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/share/ament_index/resource_index/packages\n'}
+[4.158009] (strawberry_camera) StdoutLine: {'line': b'symbolically linking /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera/package.xml -> /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/share/strawberry_camera\n'}
+[4.158073] (strawberry_camera) StdoutLine: {'line': b'creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/share/strawberry_camera/config\n'}
+[4.158124] (strawberry_camera) StdoutLine: {'line': b'symbolically linking /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera/config/realsense_d405_640x480_30fps.yml -> /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/share/strawberry_camera/config\n'}
+[4.243262] (-) TimerEvent: {}
+[4.347116] (-) TimerEvent: {}
+[4.447518] (-) TimerEvent: {}
+[4.548127] (-) TimerEvent: {}
+[4.649938] (-) TimerEvent: {}
+[4.668767] (meca500_ros2) CommandEnded: {'returncode': 0}
+[4.698458] (meca500_ros2) JobEnded: {'identifier': 'meca500_ros2', 'rc': 0}
+[4.701667] (strawberry_camera) CommandEnded: {'returncode': 0}
+[4.717819] (strawberry_camera) JobEnded: {'identifier': 'strawberry_camera', 'rc': 0}
+[4.721800] (strawberry_bringup) JobStarted: {'identifier': 'strawberry_bringup'}
+[4.755923] (-) TimerEvent: {}
+[4.857869] (-) TimerEvent: {}
+[4.860226] (strawberry_msgs) StdoutLine: {'line': b'-- Found ament_cmake_ros: 0.10.0 (/opt/ros/humble/share/ament_cmake_ros/cmake)\n'}
+[4.958321] (-) TimerEvent: {}
+[5.060431] (-) TimerEvent: {}
+[5.161053] (-) TimerEvent: {}
+[5.261427] (-) TimerEvent: {}
+[5.362862] (-) TimerEvent: {}
+[5.467628] (-) TimerEvent: {}
+[5.492250] (strawberry_msgs) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c\n'}
+[5.567830] (-) TimerEvent: {}
+[5.671733] (-) TimerEvent: {}
+[5.772631] (-) TimerEvent: {}
+[5.795611] (strawberry_segmentation) Command: {'cmd': ['/usr/bin/python3', '-W', 'ignore:setup.py install is deprecated', '-W', 'ignore:easy_install command is deprecated', 'setup.py', 'develop', '--editable', '--build-directory', '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation/build', '--no-deps', 'symlink_data'], 'cwd': '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation', 'env': {'GJS_DEBUG_TOPICS': 'JS ERROR;JS LOG', 'LESSOPEN': '| /usr/bin/lesspipe %s', 'USER': 'parallels', 'XDG_SESSION_TYPE': 'wayland', 'SHLVL': '1', 'LD_LIBRARY_PATH': '/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib', 'HOME': '/home/parallels', 'CONDA_SHLVL': '0', 'OLDPWD': '/home/parallels/Forschsemrep', 'DESKTOP_SESSION': 'ubuntu', 'GIO_LAUNCHED_DESKTOP_FILE': '/usr/share/applications/terminator.desktop', 'ROS_PYTHON_VERSION': '3', 'GNOME_SHELL_SESSION_MODE': 'ubuntu', 'GTK_MODULES': 'gail:atk-bridge', 'MANAGERPID': '3376', 'SYSTEMD_EXEC_PID': '3552', 'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/user/1000/bus', 'COLORTERM': 'truecolor', 'TERMINATOR_DBUS_NAME': 'net.tenshu.Terminator25ef4b219e3b005583550f2b0f9f990c3', 'GIO_LAUNCHED_DESKTOP_FILE_PID': '5273', 'IM_CONFIG_PHASE': '1', 'WAYLAND_DISPLAY': 'wayland-0', 'ROS_DISTRO': 'humble', 'LOGNAME': 'parallels', 'JOURNAL_STREAM': '8:21016', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'XDG_SESSION_CLASS': 'user', 'USERNAME': 'parallels', 'TERM': 'xterm-256color', 'GNOME_DESKTOP_SESSION_ID': 'this-is-deprecated', 'ROS_LOCALHOST_ONLY': '0', 'PATH': '/opt/ros/humble/bin:/home/parallels/.local/bin:/home/parallels/miniforge3/condabin:/home/parallels/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/home/parallels/.dotnet/tools:/opt/mssql-tools/bin', 'SESSION_MANAGER': 'local/parallels-Parallels-Virtual-Platform:@/tmp/.ICE-unix/3530,unix/parallels-Parallels-Virtual-Platform:/tmp/.ICE-unix/3530', 'INVOCATION_ID': '0d0b5cfba9fc449d924a57ec03a43c96', 'XDG_MENU_PREFIX': 'gnome-', 'GNOME_SETUP_DISPLAY': ':1', 'XDG_RUNTIME_DIR': '/run/user/1000', 'MAMBA_ROOT_PREFIX': '/home/parallels/miniforge3', 'DISPLAY': ':0', 'TERMINATOR_DBUS_PATH': '/net/tenshu/Terminator2', 'LANG': 'en_US.UTF-8', 'XDG_CURRENT_DESKTOP': 'ubuntu:GNOME', 'DOTNET_BUNDLE_EXTRACT_BASE_DIR': '/home/parallels/.cache/dotnet_bundle_extract', 'IBUS_DISABLE_SNOOPER': '1', 'XMODIFIERS': '@im=ibus', 'XDG_SESSION_DESKTOP': 'ubuntu', 'XAUTHORITY': '/run/user/1000/.mutter-Xwaylandauth.ZKDCI3', 'LS_COLORS': 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:', 'SSH_AGENT_LAUNCHER': 'gnome-keyring', 'SSH_AUTH_SOCK': '/run/user/1000/keyring/ssh', 'AMENT_PREFIX_PATH': '/opt/ros/humble', 'CONDA_PYTHON_EXE': '/home/parallels/miniforge3/bin/python', 'SHELL': '/bin/bash', 'TERMINATOR_UUID': 'urn:uuid:d73d8bd8-f437-4bce-a731-43b4e4b62c79', 'QT_ACCESSIBILITY': '1', 'GDMSESSION': 'ubuntu', 'LESSCLOSE': '/usr/bin/lesspipe %s %s', 'GJS_DEBUG_OUTPUT': 'stderr', 'MAMBA_EXE': '/home/parallels/miniforge3/bin/mamba', 'QT_IM_MODULE': 'ibus', 'PWD': '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation', 'XDG_CONFIG_DIRS': '/etc/xdg/xdg-ubuntu:/etc/xdg', 'CONDA_EXE': '/home/parallels/miniforge3/bin/conda', 'XDG_DATA_DIRS': '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop', 'PYTHONPATH': '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages', 'COLCON': '1', 'VTE_VERSION': '6800'}, 'shell': False}
+[5.872801] (-) TimerEvent: {}
+[5.975941] (-) TimerEvent: {}
+[6.076320] (-) TimerEvent: {}
+[6.179391] (-) TimerEvent: {}
+[6.279796] (-) TimerEvent: {}
+[6.361854] (strawberry_msgs) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp\n'}
+[6.379933] (-) TimerEvent: {}
+[6.414823] (strawberry_msgs) StdoutLine: {'line': b'-- Found PythonInterp: /usr/bin/python3 (found suitable version "3.10.12", minimum required is "3.6") \n'}
+[6.428621] (strawberry_msgs) StdoutLine: {'line': b'-- Found python_cmake_module: 0.10.0 (/opt/ros/humble/share/python_cmake_module/cmake)\n'}
+[6.480071] (-) TimerEvent: {}
+[6.554227] (strawberry_msgs) StdoutLine: {'line': b'-- Found PythonLibs: /usr/lib/x86_64-linux-gnu/libpython3.10.so (found suitable version "3.10.12", minimum required is "3.5") \n'}
+[6.557069] (strawberry_msgs) StdoutLine: {'line': b'-- Using PYTHON_EXECUTABLE: /usr/bin/python3\n'}
+[6.557282] (strawberry_msgs) StdoutLine: {'line': b'-- Using PYTHON_INCLUDE_DIRS: /usr/include/python3.10\n'}
+[6.557369] (strawberry_msgs) StdoutLine: {'line': b'-- Using PYTHON_LIBRARIES: /usr/lib/x86_64-linux-gnu/libpython3.10.so\n'}
+[6.580204] (-) TimerEvent: {}
+[6.629555] (strawberry_segmentation) StdoutLine: {'line': b'running develop\n'}
+[6.666441] (strawberry_msgs) StdoutLine: {'line': b'-- Found PythonExtra: .so  \n'}
+[6.680344] (-) TimerEvent: {}
+[6.755309] (strawberry_bringup) Command: {'cmd': ['/usr/bin/python3', '-W', 'ignore:setup.py install is deprecated', '-W', 'ignore:easy_install command is deprecated', 'setup.py', 'develop', '--editable', '--build-directory', '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup/build', '--no-deps', 'symlink_data'], 'cwd': '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup', 'env': {'GJS_DEBUG_TOPICS': 'JS ERROR;JS LOG', 'LESSOPEN': '| /usr/bin/lesspipe %s', 'USER': 'parallels', 'XDG_SESSION_TYPE': 'wayland', 'SHLVL': '1', 'LD_LIBRARY_PATH': '/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib', 'HOME': '/home/parallels', 'CONDA_SHLVL': '0', 'OLDPWD': '/home/parallels/Forschsemrep', 'DESKTOP_SESSION': 'ubuntu', 'GIO_LAUNCHED_DESKTOP_FILE': '/usr/share/applications/terminator.desktop', 'ROS_PYTHON_VERSION': '3', 'GNOME_SHELL_SESSION_MODE': 'ubuntu', 'GTK_MODULES': 'gail:atk-bridge', 'MANAGERPID': '3376', 'SYSTEMD_EXEC_PID': '3552', 'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/user/1000/bus', 'COLORTERM': 'truecolor', 'TERMINATOR_DBUS_NAME': 'net.tenshu.Terminator25ef4b219e3b005583550f2b0f9f990c3', 'GIO_LAUNCHED_DESKTOP_FILE_PID': '5273', 'IM_CONFIG_PHASE': '1', 'WAYLAND_DISPLAY': 'wayland-0', 'ROS_DISTRO': 'humble', 'LOGNAME': 'parallels', 'JOURNAL_STREAM': '8:21016', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'XDG_SESSION_CLASS': 'user', 'USERNAME': 'parallels', 'TERM': 'xterm-256color', 'GNOME_DESKTOP_SESSION_ID': 'this-is-deprecated', 'ROS_LOCALHOST_ONLY': '0', 'PATH': '/opt/ros/humble/bin:/home/parallels/.local/bin:/home/parallels/miniforge3/condabin:/home/parallels/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/home/parallels/.dotnet/tools:/opt/mssql-tools/bin', 'SESSION_MANAGER': 'local/parallels-Parallels-Virtual-Platform:@/tmp/.ICE-unix/3530,unix/parallels-Parallels-Virtual-Platform:/tmp/.ICE-unix/3530', 'INVOCATION_ID': '0d0b5cfba9fc449d924a57ec03a43c96', 'XDG_MENU_PREFIX': 'gnome-', 'GNOME_SETUP_DISPLAY': ':1', 'XDG_RUNTIME_DIR': '/run/user/1000', 'MAMBA_ROOT_PREFIX': '/home/parallels/miniforge3', 'DISPLAY': ':0', 'TERMINATOR_DBUS_PATH': '/net/tenshu/Terminator2', 'LANG': 'en_US.UTF-8', 'XDG_CURRENT_DESKTOP': 'ubuntu:GNOME', 'DOTNET_BUNDLE_EXTRACT_BASE_DIR': '/home/parallels/.cache/dotnet_bundle_extract', 'IBUS_DISABLE_SNOOPER': '1', 'XMODIFIERS': '@im=ibus', 'XDG_SESSION_DESKTOP': 'ubuntu', 'XAUTHORITY': '/run/user/1000/.mutter-Xwaylandauth.ZKDCI3', 'LS_COLORS': 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:', 'SSH_AGENT_LAUNCHER': 'gnome-keyring', 'SSH_AUTH_SOCK': '/run/user/1000/keyring/ssh', 'AMENT_PREFIX_PATH': '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera:/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2:/opt/ros/humble', 'CONDA_PYTHON_EXE': '/home/parallels/miniforge3/bin/python', 'SHELL': '/bin/bash', 'TERMINATOR_UUID': 'urn:uuid:d73d8bd8-f437-4bce-a731-43b4e4b62c79', 'QT_ACCESSIBILITY': '1', 'GDMSESSION': 'ubuntu', 'LESSCLOSE': '/usr/bin/lesspipe %s %s', 'GJS_DEBUG_OUTPUT': 'stderr', 'MAMBA_EXE': '/home/parallels/miniforge3/bin/mamba', 'QT_IM_MODULE': 'ibus', 'PWD': '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup', 'XDG_CONFIG_DIRS': '/etc/xdg/xdg-ubuntu:/etc/xdg', 'CONDA_EXE': '/home/parallels/miniforge3/bin/conda', 'XDG_DATA_DIRS': '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop', 'PYTHONPATH': '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/lib/python3.10/site-packages:/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/lib/python3.10/site-packages:/home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2:/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages', 'COLCON': '1', 'VTE_VERSION': '6800'}, 'shell': False}
+[6.780609] (-) TimerEvent: {}
+[6.885854] (-) TimerEvent: {}
+[6.912477] (strawberry_msgs) StdoutLine: {'line': b'-- Configuring done\n'}
+[6.986007] (-) TimerEvent: {}
+[7.071649] (strawberry_msgs) StdoutLine: {'line': b'-- Generating done\n'}
+[7.087402] (-) TimerEvent: {}
+[7.104006] (strawberry_msgs) StdoutLine: {'line': b'-- Build files have been written to: /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs\n'}
+[7.129799] (strawberry_msgs) CommandEnded: {'returncode': 0}
+[7.130755] (strawberry_msgs) JobProgress: {'identifier': 'strawberry_msgs', 'progress': 'build'}
+[7.130808] (strawberry_msgs) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs', '--', '-j4', '-l4'], 'cwd': '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs', 'env': OrderedDict([('GJS_DEBUG_TOPICS', 'JS ERROR;JS LOG'), ('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'parallels'), ('XDG_SESSION_TYPE', 'wayland'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/parallels'), ('CONDA_SHLVL', '0'), ('OLDPWD', '/home/parallels/Forschsemrep'), ('DESKTOP_SESSION', 'ubuntu'), ('GIO_LAUNCHED_DESKTOP_FILE', '/usr/share/applications/terminator.desktop'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('MANAGERPID', '3376'), ('SYSTEMD_EXEC_PID', '3552'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('TERMINATOR_DBUS_NAME', 'net.tenshu.Terminator25ef4b219e3b005583550f2b0f9f990c3'), ('GIO_LAUNCHED_DESKTOP_FILE_PID', '5273'), ('IM_CONFIG_PHASE', '1'), ('WAYLAND_DISPLAY', 'wayland-0'), ('ROS_DISTRO', 'humble'), ('LOGNAME', 'parallels'), ('JOURNAL_STREAM', '8:21016'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'parallels'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/opt/ros/humble/bin:/home/parallels/.local/bin:/home/parallels/miniforge3/condabin:/home/parallels/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/home/parallels/.dotnet/tools:/opt/mssql-tools/bin'), ('SESSION_MANAGER', 'local/parallels-Parallels-Virtual-Platform:@/tmp/.ICE-unix/3530,unix/parallels-Parallels-Virtual-Platform:/tmp/.ICE-unix/3530'), ('INVOCATION_ID', '0d0b5cfba9fc449d924a57ec03a43c96'), ('XDG_MENU_PREFIX', 'gnome-'), ('GNOME_SETUP_DISPLAY', ':1'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('MAMBA_ROOT_PREFIX', '/home/parallels/miniforge3'), ('DISPLAY', ':0'), ('TERMINATOR_DBUS_PATH', '/net/tenshu/Terminator2'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('DOTNET_BUNDLE_EXTRACT_BASE_DIR', '/home/parallels/.cache/dotnet_bundle_extract'), ('IBUS_DISABLE_SNOOPER', '1'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/.mutter-Xwaylandauth.ZKDCI3'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/opt/ros/humble'), ('CONDA_PYTHON_EXE', '/home/parallels/miniforge3/bin/python'), ('SHELL', '/bin/bash'), ('TERMINATOR_UUID', 'urn:uuid:d73d8bd8-f437-4bce-a731-43b4e4b62c79'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('GJS_DEBUG_OUTPUT', 'stderr'), ('MAMBA_EXE', '/home/parallels/miniforge3/bin/mamba'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('CONDA_EXE', '/home/parallels/miniforge3/bin/conda'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/opt/ros/humble')]), 'shell': False}
+[7.190848] (strawberry_segmentation) StdoutLine: {'line': b'running egg_info\n'}
+[7.191317] (-) TimerEvent: {}
+[7.191713] (strawberry_segmentation) StdoutLine: {'line': b'creating strawberry_segmentation.egg-info\n'}
+[7.194792] (strawberry_segmentation) StdoutLine: {'line': b'writing strawberry_segmentation.egg-info/PKG-INFO\n'}
+[7.195134] (strawberry_segmentation) StdoutLine: {'line': b'writing dependency_links to strawberry_segmentation.egg-info/dependency_links.txt\n'}
+[7.195214] (strawberry_segmentation) StdoutLine: {'line': b'writing entry points to strawberry_segmentation.egg-info/entry_points.txt\n'}
+[7.195357] (strawberry_segmentation) StdoutLine: {'line': b'writing requirements to strawberry_segmentation.egg-info/requires.txt\n'}
+[7.195423] (strawberry_segmentation) StdoutLine: {'line': b'writing top-level names to strawberry_segmentation.egg-info/top_level.txt\n'}
+[7.195784] (strawberry_segmentation) StdoutLine: {'line': b"writing manifest file 'strawberry_segmentation.egg-info/SOURCES.txt'\n"}
+[7.198613] (strawberry_segmentation) StdoutLine: {'line': b"reading manifest file 'strawberry_segmentation.egg-info/SOURCES.txt'\n"}
+[7.201672] (strawberry_segmentation) StdoutLine: {'line': b"writing manifest file 'strawberry_segmentation.egg-info/SOURCES.txt'\n"}
+[7.206855] (strawberry_segmentation) StdoutLine: {'line': b'running build_ext\n'}
+[7.207328] (strawberry_segmentation) StdoutLine: {'line': b'Creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/lib/python3.10/site-packages/strawberry-segmentation.egg-link (link to .)\n'}
+[7.214821] (strawberry_segmentation) StdoutLine: {'line': b'Installing depth_mask script to /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/lib/strawberry_segmentation\n'}
+[7.214996] (strawberry_segmentation) StdoutLine: {'line': b'Installing seg_ultra script to /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/lib/strawberry_segmentation\n'}
+[7.215056] (strawberry_segmentation) StdoutLine: {'line': b'Installing strawberry_features script to /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/lib/strawberry_segmentation\n'}
+[7.215106] (strawberry_segmentation) StdoutLine: {'line': b'Installing strawberry_selected_overlay script to /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/lib/strawberry_segmentation\n'}
+[7.215158] (strawberry_segmentation) StdoutLine: {'line': b'\n'}
+[7.215208] (strawberry_segmentation) StdoutLine: {'line': b'Installed /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation\n'}
+[7.215305] (strawberry_segmentation) StdoutLine: {'line': b'running symlink_data\n'}
+[7.215357] (strawberry_segmentation) StdoutLine: {'line': b'creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/share/ament_index\n'}
+[7.215408] (strawberry_segmentation) StdoutLine: {'line': b'creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/share/ament_index/resource_index\n'}
+[7.215475] (strawberry_segmentation) StdoutLine: {'line': b'creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/share/ament_index/resource_index/packages\n'}
+[7.217724] (strawberry_segmentation) StdoutLine: {'line': b'symbolically linking /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation/resource/strawberry_segmentation -> /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/share/ament_index/resource_index/packages\n'}
+[7.218291] (strawberry_segmentation) StdoutLine: {'line': b'symbolically linking /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation/package.xml -> /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/share/strawberry_segmentation\n'}
+[7.218458] (strawberry_segmentation) StdoutLine: {'line': b'creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/share/strawberry_segmentation/models\n'}
+[7.218640] (strawberry_segmentation) StdoutLine: {'line': b'symbolically linking /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation/strawberry_segmentation/models/best.pt -> /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/share/strawberry_segmentation/models\n'}
+[7.219065] (strawberry_segmentation) StdoutLine: {'line': b'creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/share/strawberry_segmentation/launch\n'}
+[7.251629] (strawberry_msgs) StdoutLine: {'line': b'[  2%] \x1b[34m\x1b[1mGenerating C code for ROS interfaces\x1b[0m\n'}
+[7.270442] (strawberry_msgs) StdoutLine: {'line': b'[  5%] \x1b[34m\x1b[1mGenerating C++ code for ROS interfaces\x1b[0m\n'}
+[7.291612] (-) TimerEvent: {}
+[7.349842] (strawberry_segmentation) CommandEnded: {'returncode': 0}
+[7.377615] (strawberry_segmentation) JobEnded: {'identifier': 'strawberry_segmentation', 'rc': 0}
+[7.394415] (-) TimerEvent: {}
+[7.402027] (strawberry_msgs) StdoutLine: {'line': b'[  5%] Built target ament_cmake_python_symlink_strawberry_msgs\n'}
+[7.499805] (-) TimerEvent: {}
+[7.602831] (-) TimerEvent: {}
+[7.703654] (-) TimerEvent: {}
+[7.807632] (-) TimerEvent: {}
+[7.809041] (strawberry_bringup) StdoutLine: {'line': b'running develop\n'}
+[7.907644] (-) TimerEvent: {}
+[8.008356] (-) TimerEvent: {}
+[8.112249] (-) TimerEvent: {}
+[8.212886] (-) TimerEvent: {}
+[8.302328] (strawberry_msgs) StdoutLine: {'line': b'running egg_info\n'}
+[8.306632] (strawberry_msgs) StdoutLine: {'line': b'creating strawberry_msgs.egg-info\n'}
+[8.308045] (strawberry_msgs) StdoutLine: {'line': b'writing strawberry_msgs.egg-info/PKG-INFO\n'}
+[8.309465] (strawberry_msgs) StdoutLine: {'line': b'writing dependency_links to strawberry_msgs.egg-info/dependency_links.txt\n'}
+[8.312444] (strawberry_msgs) StdoutLine: {'line': b'writing top-level names to strawberry_msgs.egg-info/top_level.txt\n'}
+[8.313611] (strawberry_msgs) StdoutLine: {'line': b"writing manifest file 'strawberry_msgs.egg-info/SOURCES.txt'\n"}
+[8.313774] (-) TimerEvent: {}
+[8.323254] (strawberry_msgs) StdoutLine: {'line': b"reading manifest file 'strawberry_msgs.egg-info/SOURCES.txt'\n"}
+[8.325409] (strawberry_msgs) StdoutLine: {'line': b"writing manifest file 'strawberry_msgs.egg-info/SOURCES.txt'\n"}
+[8.386274] (strawberry_bringup) StdoutLine: {'line': b'running egg_info\n'}
+[8.386456] (strawberry_bringup) StdoutLine: {'line': b'creating strawberry_bringup.egg-info\n'}
+[8.386653] (strawberry_bringup) StdoutLine: {'line': b'writing strawberry_bringup.egg-info/PKG-INFO\n'}
+[8.390897] (strawberry_bringup) StdoutLine: {'line': b'writing dependency_links to strawberry_bringup.egg-info/dependency_links.txt\n'}
+[8.391377] (strawberry_bringup) StdoutLine: {'line': b'writing entry points to strawberry_bringup.egg-info/entry_points.txt\n'}
+[8.394787] (strawberry_bringup) StdoutLine: {'line': b'writing requirements to strawberry_bringup.egg-info/requires.txt\n'}
+[8.394949] (strawberry_bringup) StdoutLine: {'line': b'writing top-level names to strawberry_bringup.egg-info/top_level.txt\n'}
+[8.395007] (strawberry_bringup) StdoutLine: {'line': b"writing manifest file 'strawberry_bringup.egg-info/SOURCES.txt'\n"}
+[8.398890] (strawberry_bringup) StdoutLine: {'line': b"reading manifest file 'strawberry_bringup.egg-info/SOURCES.txt'\n"}
+[8.404359] (strawberry_bringup) StdoutLine: {'line': b"writing manifest file 'strawberry_bringup.egg-info/SOURCES.txt'\n"}
+[8.412446] (strawberry_bringup) StdoutLine: {'line': b'running build_ext\n'}
+[8.412969] (strawberry_bringup) StdoutLine: {'line': b'Creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/lib/python3.10/site-packages/strawberry-bringup.egg-link (link to .)\n'}
+[8.413953] (-) TimerEvent: {}
+[8.417827] (strawberry_bringup) StdoutLine: {'line': b'\n'}
+[8.418671] (strawberry_bringup) StdoutLine: {'line': b'Installed /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup\n'}
+[8.419863] (strawberry_bringup) StdoutLine: {'line': b'running symlink_data\n'}
+[8.419966] (strawberry_bringup) StdoutLine: {'line': b'creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/share/ament_index\n'}
+[8.420024] (strawberry_bringup) StdoutLine: {'line': b'creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/share/ament_index/resource_index\n'}
+[8.420079] (strawberry_bringup) StdoutLine: {'line': b'creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/share/ament_index/resource_index/packages\n'}
+[8.420134] (strawberry_bringup) StdoutLine: {'line': b'symbolically linking /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup/resource/strawberry_bringup -> /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/share/ament_index/resource_index/packages\n'}
+[8.420301] (strawberry_bringup) StdoutLine: {'line': b'symbolically linking /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup/package.xml -> /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/share/strawberry_bringup\n'}
+[8.422085] (strawberry_bringup) StdoutLine: {'line': b'creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/share/strawberry_bringup/launch\n'}
+[8.422290] (strawberry_bringup) StdoutLine: {'line': b'symbolically linking /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup/strawberry_bringup/launch/dummy_system.launch.py -> /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/share/strawberry_bringup/launch\n'}
+[8.464407] (strawberry_msgs) StdoutLine: {'line': b'[  5%] Built target ament_cmake_python_build_strawberry_msgs_egg\n'}
+[8.515701] (-) TimerEvent: {}
+[8.601061] (strawberry_msgs) StdoutLine: {'line': b'[  5%] Built target strawberry_msgs__cpp\n'}
+[8.615859] (-) TimerEvent: {}
+[8.623254] (strawberry_bringup) CommandEnded: {'returncode': 0}
+[8.652890] (strawberry_msgs) StdoutLine: {'line': b'[  7%] \x1b[34m\x1b[1mGenerating C++ type support for eProsima Fast-RTPS\x1b[0m\n'}
+[8.662684] (strawberry_msgs) StdoutLine: {'line': b'[ 12%] \x1b[34m\x1b[1mGenerating C++ type support dispatch for ROS interfaces\x1b[0m\n'}
+[8.662952] (strawberry_msgs) StdoutLine: {'line': b'[ 12%] \x1b[34m\x1b[1mGenerating C++ introspection for ROS interfaces\x1b[0m\n'}
+[8.667553] (strawberry_bringup) JobEnded: {'identifier': 'strawberry_bringup', 'rc': 0}
+[8.716122] (-) TimerEvent: {}
+[8.818438] (-) TimerEvent: {}
+[8.921740] (-) TimerEvent: {}
+[9.025683] (-) TimerEvent: {}
+[9.041345] (strawberry_msgs) StdoutLine: {'line': b'[ 15%] \x1b[32mBuilding C object CMakeFiles/strawberry_msgs__rosidl_generator_c.dir/rosidl_generator_c/strawberry_msgs/msg/detail/frame_info__functions.c.o\x1b[0m\n'}
+[9.125797] (-) TimerEvent: {}
+[9.226688] (-) TimerEvent: {}
+[9.327144] (-) TimerEvent: {}
+[9.429141] (-) TimerEvent: {}
+[9.531072] (-) TimerEvent: {}
+[9.541654] (strawberry_msgs) StdoutLine: {'line': b'[ 17%] \x1b[32mBuilding C object CMakeFiles/strawberry_msgs__rosidl_generator_c.dir/rosidl_generator_c/strawberry_msgs/srv/detail/capture_snapshot__functions.c.o\x1b[0m\n'}
+[9.597359] (strawberry_msgs) StdoutLine: {'line': b'[ 20%] \x1b[32mBuilding CXX object CMakeFiles/strawberry_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/strawberry_msgs/msg/frame_info__type_support.cpp.o\x1b[0m\n'}
+[9.633801] (-) TimerEvent: {}
+[9.688931] (strawberry_msgs) StdoutLine: {'line': b'[ 23%] \x1b[32mBuilding CXX object CMakeFiles/strawberry_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/strawberry_msgs/msg/detail/frame_info__type_support.cpp.o\x1b[0m\n'}
+[9.733973] (-) TimerEvent: {}
+[9.800316] (strawberry_msgs) StdoutLine: {'line': b'[ 25%] \x1b[32m\x1b[1mLinking C shared library libstrawberry_msgs__rosidl_generator_c.so\x1b[0m\n'}
+[9.834235] (-) TimerEvent: {}
+[9.935767] (-) TimerEvent: {}
+[9.954275] (strawberry_msgs) StdoutLine: {'line': b'[ 25%] Built target strawberry_msgs__rosidl_generator_c\n'}
+[9.985083] (strawberry_msgs) StdoutLine: {'line': b'[ 28%] \x1b[34m\x1b[1mGenerating C type support for eProsima Fast-RTPS\x1b[0m\n'}
+[10.039336] (-) TimerEvent: {}
+[10.139920] (-) TimerEvent: {}
+[10.240805] (-) TimerEvent: {}
+[10.342193] (-) TimerEvent: {}
+[10.446714] (-) TimerEvent: {}
+[10.463597] (strawberry_msgs) StdoutLine: {'line': b'[ 30%] \x1b[32mBuilding CXX object CMakeFiles/strawberry_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/strawberry_msgs/msg/detail/dds_fastrtps/frame_info__type_support.cpp.o\x1b[0m\n'}
+[10.546948] (-) TimerEvent: {}
+[10.647854] (-) TimerEvent: {}
+[10.751001] (-) TimerEvent: {}
+[10.851708] (-) TimerEvent: {}
+[10.955140] (-) TimerEvent: {}
+[11.059293] (-) TimerEvent: {}
+[11.165368] (-) TimerEvent: {}
+[11.268155] (-) TimerEvent: {}
+[11.368707] (-) TimerEvent: {}
+[11.454278] (strawberry_msgs) StdoutLine: {'line': b'[ 33%] \x1b[32mBuilding CXX object CMakeFiles/strawberry_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/strawberry_msgs/msg/detail/frame_info__type_support_c.cpp.o\x1b[0m\n'}
+[11.469657] (-) TimerEvent: {}
+[11.524618] (strawberry_msgs) StdoutLine: {'line': b'[ 35%] \x1b[32mBuilding CXX object CMakeFiles/strawberry_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/strawberry_msgs/srv/capture_snapshot__type_support.cpp.o\x1b[0m\n'}
+[11.569964] (-) TimerEvent: {}
+[11.673932] (-) TimerEvent: {}
+[11.774795] (-) TimerEvent: {}
+[11.877119] (-) TimerEvent: {}
+[11.977794] (-) TimerEvent: {}
+[12.079771] (-) TimerEvent: {}
+[12.104639] (strawberry_msgs) StdoutLine: {'line': b'[ 38%] \x1b[32mBuilding CXX object CMakeFiles/strawberry_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/strawberry_msgs/srv/detail/capture_snapshot__type_support.cpp.o\x1b[0m\n'}
+[12.183119] (-) TimerEvent: {}
+[12.283638] (-) TimerEvent: {}
+[12.386763] (-) TimerEvent: {}
+[12.487349] (-) TimerEvent: {}
+[12.587940] (-) TimerEvent: {}
+[12.692664] (-) TimerEvent: {}
+[12.773175] (strawberry_msgs) StdoutLine: {'line': b'[ 41%] \x1b[32mBuilding CXX object CMakeFiles/strawberry_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/strawberry_msgs/srv/detail/dds_fastrtps/capture_snapshot__type_support.cpp.o\x1b[0m\n'}
+[12.795636] (-) TimerEvent: {}
+[12.896060] (-) TimerEvent: {}
+[12.958054] (strawberry_msgs) StdoutLine: {'line': b'[ 43%] \x1b[32m\x1b[1mLinking CXX shared library libstrawberry_msgs__rosidl_typesupport_cpp.so\x1b[0m\n'}
+[12.998814] (-) TimerEvent: {}
+[13.099339] (-) TimerEvent: {}
+[13.151055] (strawberry_msgs) StdoutLine: {'line': b'[ 43%] Built target strawberry_msgs__rosidl_typesupport_cpp\n'}
+[13.199599] (-) TimerEvent: {}
+[13.209385] (strawberry_msgs) StdoutLine: {'line': b'[ 46%] \x1b[32mBuilding CXX object CMakeFiles/strawberry_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/strawberry_msgs/srv/detail/capture_snapshot__type_support_c.cpp.o\x1b[0m\n'}
+[13.300741] (strawberry_msgs) StdoutLine: {'line': b'[ 48%] \x1b[34m\x1b[1mGenerating C introspection for ROS interfaces\x1b[0m\n'}
+[13.301024] (-) TimerEvent: {}
+[13.405122] (-) TimerEvent: {}
+[13.505975] (-) TimerEvent: {}
+[13.608619] (-) TimerEvent: {}
+[13.709170] (-) TimerEvent: {}
+[13.809957] (-) TimerEvent: {}
+[13.837815] (strawberry_msgs) StdoutLine: {'line': b'[ 51%] \x1b[32m\x1b[1mLinking CXX shared library libstrawberry_msgs__rosidl_typesupport_introspection_cpp.so\x1b[0m\n'}
+[13.910245] (-) TimerEvent: {}
+[14.010647] (-) TimerEvent: {}
+[14.047178] (strawberry_msgs) StdoutLine: {'line': b'[ 51%] Built target strawberry_msgs__rosidl_typesupport_introspection_cpp\n'}
+[14.092281] (strawberry_msgs) StdoutLine: {'line': b'[ 53%] \x1b[34m\x1b[1mGenerating C type support dispatch for ROS interfaces\x1b[0m\n'}
+[14.110800] (-) TimerEvent: {}
+[14.214655] (-) TimerEvent: {}
+[14.317650] (-) TimerEvent: {}
+[14.349902] (strawberry_msgs) StdoutLine: {'line': b'[ 56%] \x1b[32m\x1b[1mLinking CXX shared library libstrawberry_msgs__rosidl_typesupport_fastrtps_c.so\x1b[0m\n'}
+[14.417808] (-) TimerEvent: {}
+[14.440761] (strawberry_msgs) StdoutLine: {'line': b'[ 58%] \x1b[32mBuilding C object CMakeFiles/strawberry_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/strawberry_msgs/msg/detail/frame_info__type_support.c.o\x1b[0m\n'}
+[14.518118] (-) TimerEvent: {}
+[14.602454] (strawberry_msgs) StdoutLine: {'line': b'[ 61%] \x1b[32mBuilding C object CMakeFiles/strawberry_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/strawberry_msgs/srv/detail/capture_snapshot__type_support.c.o\x1b[0m\n'}
+[14.621073] (-) TimerEvent: {}
+[14.678744] (strawberry_msgs) StdoutLine: {'line': b'[ 64%] \x1b[32m\x1b[1mLinking CXX shared library libstrawberry_msgs__rosidl_typesupport_fastrtps_cpp.so\x1b[0m\n'}
+[14.720376] (strawberry_msgs) StdoutLine: {'line': b'[ 64%] Built target strawberry_msgs__rosidl_typesupport_fastrtps_c\n'}
+[14.720938] (-) TimerEvent: {}
+[14.742898] (strawberry_msgs) StdoutLine: {'line': b'[ 66%] \x1b[32m\x1b[1mLinking C shared library libstrawberry_msgs__rosidl_typesupport_introspection_c.so\x1b[0m\n'}
+[14.821094] (-) TimerEvent: {}
+[14.849288] (strawberry_msgs) StdoutLine: {'line': b'[ 66%] Built target strawberry_msgs__rosidl_typesupport_introspection_c\n'}
+[14.921339] (-) TimerEvent: {}
+[14.937734] (strawberry_msgs) StdoutLine: {'line': b'[ 66%] Built target strawberry_msgs__rosidl_typesupport_fastrtps_cpp\n'}
+[15.021624] (-) TimerEvent: {}
+[15.122152] (-) TimerEvent: {}
+[15.136416] (strawberry_msgs) StdoutLine: {'line': b'[ 71%] \x1b[32mBuilding CXX object CMakeFiles/strawberry_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/strawberry_msgs/msg/frame_info__type_support.cpp.o\x1b[0m\n'}
+[15.137012] (strawberry_msgs) StdoutLine: {'line': b'[ 71%] \x1b[32mBuilding CXX object CMakeFiles/strawberry_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/strawberry_msgs/srv/capture_snapshot__type_support.cpp.o\x1b[0m\n'}
+[15.223893] (-) TimerEvent: {}
+[15.235771] (strawberry_msgs) StdoutLine: {'line': b'[ 74%] \x1b[32m\x1b[1mLinking CXX shared library libstrawberry_msgs__rosidl_typesupport_c.so\x1b[0m\n'}
+[15.325785] (-) TimerEvent: {}
+[15.408123] (strawberry_msgs) StdoutLine: {'line': b'[ 74%] Built target strawberry_msgs__rosidl_typesupport_c\n'}
+[15.425936] (-) TimerEvent: {}
+[15.456608] (strawberry_msgs) StdoutLine: {'line': b'[ 74%] Built target strawberry_msgs\n'}
+[15.525325] (strawberry_msgs) StdoutLine: {'line': b'[ 76%] \x1b[34m\x1b[1mGenerating Python code for ROS interfaces\x1b[0m\n'}
+[15.526163] (-) TimerEvent: {}
+[15.629017] (-) TimerEvent: {}
+[15.730079] (-) TimerEvent: {}
+[15.832053] (-) TimerEvent: {}
+[15.938674] (-) TimerEvent: {}
+[16.047638] (-) TimerEvent: {}
+[16.149682] (-) TimerEvent: {}
+[16.250174] (-) TimerEvent: {}
+[16.351173] (-) TimerEvent: {}
+[16.452237] (-) TimerEvent: {}
+[16.552902] (-) TimerEvent: {}
+[16.654904] (-) TimerEvent: {}
+[16.757102] (-) TimerEvent: {}
+[16.861674] (-) TimerEvent: {}
+[16.964612] (-) TimerEvent: {}
+[17.065158] (-) TimerEvent: {}
+[17.165627] (-) TimerEvent: {}
+[17.268698] (-) TimerEvent: {}
+[17.371629] (-) TimerEvent: {}
+[17.447283] (strawberry_msgs) StdoutLine: {'line': b'[ 76%] Built target strawberry_msgs__py\n'}
+[17.471829] (-) TimerEvent: {}
+[17.509715] (strawberry_msgs) StdoutLine: {'line': b'[ 79%] \x1b[32mBuilding C object CMakeFiles/strawberry_msgs__rosidl_generator_py.dir/rosidl_generator_py/strawberry_msgs/msg/_frame_info_s.c.o\x1b[0m\n'}
+[17.545469] (strawberry_msgs) StdoutLine: {'line': b'[ 82%] \x1b[32mBuilding C object CMakeFiles/strawberry_msgs__rosidl_generator_py.dir/rosidl_generator_py/strawberry_msgs/srv/_capture_snapshot_s.c.o\x1b[0m\n'}
+[17.573695] (-) TimerEvent: {}
+[17.677657] (-) TimerEvent: {}
+[17.778109] (-) TimerEvent: {}
+[17.878652] (-) TimerEvent: {}
+[17.979083] (-) TimerEvent: {}
+[17.984883] (strawberry_msgs) StdoutLine: {'line': b'[ 84%] \x1b[32m\x1b[1mLinking C shared library rosidl_generator_py/strawberry_msgs/libstrawberry_msgs__rosidl_generator_py.so\x1b[0m\n'}
+[18.079243] (-) TimerEvent: {}
+[18.154814] (strawberry_msgs) StdoutLine: {'line': b'[ 84%] Built target strawberry_msgs__rosidl_generator_py\n'}
+[18.179424] (-) TimerEvent: {}
+[18.233368] (strawberry_msgs) StdoutLine: {'line': b'[ 87%] \x1b[32mBuilding C object CMakeFiles/strawberry_msgs__rosidl_typesupport_fastrtps_c__pyext.dir/rosidl_generator_py/strawberry_msgs/_strawberry_msgs_s.ep.rosidl_typesupport_fastrtps_c.c.o\x1b[0m\n'}
+[18.258134] (strawberry_msgs) StdoutLine: {'line': b'[ 89%] \x1b[32mBuilding C object CMakeFiles/strawberry_msgs__rosidl_typesupport_introspection_c__pyext.dir/rosidl_generator_py/strawberry_msgs/_strawberry_msgs_s.ep.rosidl_typesupport_introspection_c.c.o\x1b[0m\n'}
+[18.280823] (-) TimerEvent: {}
+[18.291704] (strawberry_msgs) StdoutLine: {'line': b'[ 92%] \x1b[32mBuilding C object CMakeFiles/strawberry_msgs__rosidl_typesupport_c__pyext.dir/rosidl_generator_py/strawberry_msgs/_strawberry_msgs_s.ep.rosidl_typesupport_c.c.o\x1b[0m\n'}
+[18.385765] (-) TimerEvent: {}
+[18.488648] (-) TimerEvent: {}
+[18.589146] (-) TimerEvent: {}
+[18.623432] (strawberry_msgs) StdoutLine: {'line': b'[ 94%] \x1b[32m\x1b[1mLinking C shared library rosidl_generator_py/strawberry_msgs/strawberry_msgs_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so\x1b[0m\n'}
+[18.668742] (strawberry_msgs) StdoutLine: {'line': b'[ 97%] \x1b[32m\x1b[1mLinking C shared library rosidl_generator_py/strawberry_msgs/strawberry_msgs_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so\x1b[0m\n'}
+[18.682222] (strawberry_msgs) StdoutLine: {'line': b'[100%] \x1b[32m\x1b[1mLinking C shared library rosidl_generator_py/strawberry_msgs/strawberry_msgs_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so\x1b[0m\n'}
+[18.689320] (-) TimerEvent: {}
+[18.789947] (-) TimerEvent: {}
+[18.818217] (strawberry_msgs) StdoutLine: {'line': b'[100%] Built target strawberry_msgs__rosidl_typesupport_fastrtps_c__pyext\n'}
+[18.822199] (strawberry_msgs) StdoutLine: {'line': b'[100%] Built target strawberry_msgs__rosidl_typesupport_c__pyext\n'}
+[18.837163] (strawberry_msgs) StdoutLine: {'line': b'[100%] Built target strawberry_msgs__rosidl_typesupport_introspection_c__pyext\n'}
+[18.873865] (strawberry_msgs) CommandEnded: {'returncode': 0}
+[18.875070] (strawberry_msgs) JobProgress: {'identifier': 'strawberry_msgs', 'progress': 'install'}
+[18.891812] (-) TimerEvent: {}
+[18.904296] (strawberry_msgs) Command: {'cmd': ['/usr/bin/cmake', '--install', '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs'], 'cwd': '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs', 'env': OrderedDict([('GJS_DEBUG_TOPICS', 'JS ERROR;JS LOG'), ('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'parallels'), ('XDG_SESSION_TYPE', 'wayland'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/parallels'), ('CONDA_SHLVL', '0'), ('OLDPWD', '/home/parallels/Forschsemrep'), ('DESKTOP_SESSION', 'ubuntu'), ('GIO_LAUNCHED_DESKTOP_FILE', '/usr/share/applications/terminator.desktop'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('MANAGERPID', '3376'), ('SYSTEMD_EXEC_PID', '3552'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('TERMINATOR_DBUS_NAME', 'net.tenshu.Terminator25ef4b219e3b005583550f2b0f9f990c3'), ('GIO_LAUNCHED_DESKTOP_FILE_PID', '5273'), ('IM_CONFIG_PHASE', '1'), ('WAYLAND_DISPLAY', 'wayland-0'), ('ROS_DISTRO', 'humble'), ('LOGNAME', 'parallels'), ('JOURNAL_STREAM', '8:21016'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'parallels'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/opt/ros/humble/bin:/home/parallels/.local/bin:/home/parallels/miniforge3/condabin:/home/parallels/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/home/parallels/.dotnet/tools:/opt/mssql-tools/bin'), ('SESSION_MANAGER', 'local/parallels-Parallels-Virtual-Platform:@/tmp/.ICE-unix/3530,unix/parallels-Parallels-Virtual-Platform:/tmp/.ICE-unix/3530'), ('INVOCATION_ID', '0d0b5cfba9fc449d924a57ec03a43c96'), ('XDG_MENU_PREFIX', 'gnome-'), ('GNOME_SETUP_DISPLAY', ':1'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('MAMBA_ROOT_PREFIX', '/home/parallels/miniforge3'), ('DISPLAY', ':0'), ('TERMINATOR_DBUS_PATH', '/net/tenshu/Terminator2'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('DOTNET_BUNDLE_EXTRACT_BASE_DIR', '/home/parallels/.cache/dotnet_bundle_extract'), ('IBUS_DISABLE_SNOOPER', '1'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/.mutter-Xwaylandauth.ZKDCI3'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/opt/ros/humble'), ('CONDA_PYTHON_EXE', '/home/parallels/miniforge3/bin/python'), ('SHELL', '/bin/bash'), ('TERMINATOR_UUID', 'urn:uuid:d73d8bd8-f437-4bce-a731-43b4e4b62c79'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('GJS_DEBUG_OUTPUT', 'stderr'), ('MAMBA_EXE', '/home/parallels/miniforge3/bin/mamba'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('CONDA_EXE', '/home/parallels/miniforge3/bin/conda'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/opt/ros/humble')]), 'shell': False}
+[18.920745] (strawberry_msgs) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[18.922300] (strawberry_msgs) StdoutLine: {'line': b'-- Execute custom install script\n'}
+[18.923844] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/ament_index/resource_index/rosidl_interfaces/strawberry_msgs\n'}
+[18.945222] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/detail/frame_info__functions.h\n'}
+[18.972658] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/detail/frame_info__struct.h\n'}
+[18.988454] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/detail/frame_info__type_support.h\n'}
+[18.991967] (-) TimerEvent: {}
+[19.005270] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/frame_info.h\n'}
+[19.025355] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/rosidl_generator_c__visibility_control.h\n'}
+[19.046598] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/srv/capture_snapshot.h\n'}
+[19.068775] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/srv/detail/capture_snapshot__functions.h\n'}
+[19.088024] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/srv/detail/capture_snapshot__struct.h\n'}
+[19.092197] (-) TimerEvent: {}
+[19.106984] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/srv/detail/capture_snapshot__type_support.h\n'}
+[19.125162] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/environment/library_path.sh\n'}
+[19.147260] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/environment/library_path.dsv\n'}
+[19.168248] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/detail/frame_info__rosidl_typesupport_fastrtps_c.h\n'}
+[19.190760] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/rosidl_typesupport_fastrtps_c__visibility_control.h\n'}
+[19.193451] (-) TimerEvent: {}
+[19.222142] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/srv/detail/capture_snapshot__rosidl_typesupport_fastrtps_c.h\n'}
+[19.241199] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/detail/frame_info__rosidl_typesupport_introspection_c.h\n'}
+[19.259174] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/rosidl_typesupport_introspection_c__visibility_control.h\n'}
+[19.281349] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/srv/detail/capture_snapshot__rosidl_typesupport_introspection_c.h\n'}
+[19.293638] (-) TimerEvent: {}
+[19.305434] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/detail/frame_info__builder.hpp\n'}
+[19.321823] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/detail/frame_info__struct.hpp\n'}
+[19.340380] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/detail/frame_info__traits.hpp\n'}
+[19.361464] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/detail/frame_info__type_support.hpp\n'}
+[19.383779] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/frame_info.hpp\n'}
+[19.393821] (-) TimerEvent: {}
+[19.412427] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/rosidl_generator_cpp__visibility_control.hpp\n'}
+[19.429819] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/srv/capture_snapshot.hpp\n'}
+[19.449259] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/srv/detail/capture_snapshot__builder.hpp\n'}
+[19.469609] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/srv/detail/capture_snapshot__struct.hpp\n'}
+[19.491604] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/srv/detail/capture_snapshot__traits.hpp\n'}
+[19.494653] (-) TimerEvent: {}
+[19.515209] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/srv/detail/capture_snapshot__type_support.hpp\n'}
+[19.535837] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/detail/frame_info__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[19.558762] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h\n'}
+[19.580099] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/srv/detail/capture_snapshot__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[19.596755] (-) TimerEvent: {}
+[19.614711] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/msg/detail/frame_info__rosidl_typesupport_introspection_cpp.hpp\n'}
+[19.638051] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/include/strawberry_msgs/strawberry_msgs/srv/detail/capture_snapshot__rosidl_typesupport_introspection_cpp.hpp\n'}
+[19.665702] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/environment/pythonpath.sh\n'}
+[19.695734] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/environment/pythonpath.dsv\n'}
+[19.696920] (-) TimerEvent: {}
+[19.716984] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs-0.0.1-py3.10.egg-info/PKG-INFO\n'}
+[19.734637] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs-0.0.1-py3.10.egg-info/SOURCES.txt\n'}
+[19.754402] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs-0.0.1-py3.10.egg-info/dependency_links.txt\n'}
+[19.772464] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs-0.0.1-py3.10.egg-info/top_level.txt\n'}
+[19.797894] (-) TimerEvent: {}
+[19.798297] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/__init__.py\n'}
+[19.824970] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/_strawberry_msgs_s.ep.rosidl_typesupport_c.c\n'}
+[19.848426] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/_strawberry_msgs_s.ep.rosidl_typesupport_fastrtps_c.c\n'}
+[19.874705] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/_strawberry_msgs_s.ep.rosidl_typesupport_introspection_c.c\n'}
+[19.886877] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/libstrawberry_msgs__rosidl_generator_py.so\n'}
+[19.899675] (-) TimerEvent: {}
+[19.906438] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/msg/__init__.py\n'}
+[19.930943] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/msg/_frame_info.py\n'}
+[19.948617] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/msg/_frame_info_s.c\n'}
+[19.973161] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/srv/__init__.py\n'}
+[19.995163] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/srv/_capture_snapshot.py\n'}
+[19.999838] (-) TimerEvent: {}
+[20.022085] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/srv/_capture_snapshot_s.c\n'}
+[20.040690] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/strawberry_msgs_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so\n'}
+[20.061236] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/strawberry_msgs_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so\n'}
+[20.085352] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/strawberry_msgs_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so\n'}
+[20.100920] (-) TimerEvent: {}
+[20.106856] (strawberry_msgs) StdoutLine: {'line': b'-- Up-to-date symlink: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/strawberry_msgs_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so\n'}
+[20.108255] (strawberry_msgs) StdoutLine: {'line': b'-- Up-to-date symlink: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/strawberry_msgs_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so\n'}
+[20.108748] (strawberry_msgs) StdoutLine: {'line': b'-- Up-to-date symlink: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/strawberry_msgs_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so\n'}
+[20.109607] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/msg/FrameInfo.idl\n'}
+[20.136668] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/srv/CaptureSnapshot.idl\n'}
+[20.159657] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/msg/FrameInfo.msg\n'}
+[20.176650] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/srv/CaptureSnapshot.srv\n'}
+[20.201670] (-) TimerEvent: {}
+[20.205095] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/srv/CaptureSnapshot_Request.msg\n'}
+[20.242208] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/srv/CaptureSnapshot_Response.msg\n'}
+[20.272932] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/ament_index/resource_index/package_run_dependencies/strawberry_msgs\n'}
+[20.305693] (-) TimerEvent: {}
+[20.329359] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/ament_index/resource_index/parent_prefix_path/strawberry_msgs\n'}
+[20.357056] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/environment/ament_prefix_path.sh\n'}
+[20.382150] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/environment/ament_prefix_path.dsv\n'}
+[20.407068] (-) TimerEvent: {}
+[20.411046] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/environment/path.sh\n'}
+[20.455215] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/environment/path.dsv\n'}
+[20.509027] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/local_setup.bash\n'}
+[20.509431] (-) TimerEvent: {}
+[20.550943] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/local_setup.sh\n'}
+[20.577143] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/local_setup.zsh\n'}
+[20.602370] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/local_setup.dsv\n'}
+[20.609629] (-) TimerEvent: {}
+[20.631080] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/package.dsv\n'}
+[20.660182] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/ament_index/resource_index/packages/strawberry_msgs\n'}
+[20.678361] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/rosidl_cmake-extras.cmake\n'}
+[20.701385] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/ament_cmake_export_dependencies-extras.cmake\n'}
+[20.710968] (-) TimerEvent: {}
+[20.730040] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/ament_cmake_export_include_directories-extras.cmake\n'}
+[20.750680] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/ament_cmake_export_libraries-extras.cmake\n'}
+[20.772708] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/ament_cmake_export_targets-extras.cmake\n'}
+[20.790826] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake\n'}
+[20.808405] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake\n'}
+[20.811099] (-) TimerEvent: {}
+[20.834705] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/strawberry_msgsConfig.cmake\n'}
+[20.859518] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/strawberry_msgsConfig-version.cmake\n'}
+[20.885681] (strawberry_msgs) StdoutLine: {'line': b'-- Symlinking: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/package.xml\n'}
+[20.909524] (strawberry_msgs) StdoutLine: {'line': b'-- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_generator_c.so\n'}
+[20.910265] (strawberry_msgs) StdoutLine: {'line': b'-- Set runtime path of "/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_generator_c.so" to ""\n'}
+[20.911649] (strawberry_msgs) StdoutLine: {'line': b'-- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_typesupport_fastrtps_c.so\n'}
+[20.911834] (-) TimerEvent: {}
+[20.912961] (strawberry_msgs) StdoutLine: {'line': b'-- Set runtime path of "/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_typesupport_fastrtps_c.so" to ""\n'}
+[20.914706] (strawberry_msgs) StdoutLine: {'line': b'-- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_typesupport_introspection_c.so\n'}
+[20.915616] (strawberry_msgs) StdoutLine: {'line': b'-- Set runtime path of "/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_typesupport_introspection_c.so" to ""\n'}
+[20.916009] (strawberry_msgs) StdoutLine: {'line': b'-- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_typesupport_c.so\n'}
+[20.918959] (strawberry_msgs) StdoutLine: {'line': b'-- Set runtime path of "/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_typesupport_c.so" to ""\n'}
+[20.919189] (strawberry_msgs) StdoutLine: {'line': b'-- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_typesupport_fastrtps_cpp.so\n'}
+[20.923583] (strawberry_msgs) StdoutLine: {'line': b'-- Set runtime path of "/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_typesupport_fastrtps_cpp.so" to ""\n'}
+[20.924056] (strawberry_msgs) StdoutLine: {'line': b'-- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_typesupport_introspection_cpp.so\n'}
+[20.927104] (strawberry_msgs) StdoutLine: {'line': b'-- Set runtime path of "/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_typesupport_introspection_cpp.so" to ""\n'}
+[20.927388] (strawberry_msgs) StdoutLine: {'line': b'-- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_typesupport_cpp.so\n'}
+[20.928624] (strawberry_msgs) StdoutLine: {'line': b'-- Set runtime path of "/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_typesupport_cpp.so" to ""\n'}
+[21.014686] (-) TimerEvent: {}
+[21.091841] (strawberry_msgs) StdoutLine: {'line': b"Listing '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs'...\n"}
+[21.092096] (strawberry_msgs) StdoutLine: {'line': b"Compiling '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/__init__.py'...\n"}
+[21.092180] (strawberry_msgs) StdoutLine: {'line': b"Listing '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/msg'...\n"}
+[21.092248] (strawberry_msgs) StdoutLine: {'line': b"Compiling '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/msg/__init__.py'...\n"}
+[21.092318] (strawberry_msgs) StdoutLine: {'line': b"Compiling '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/msg/_frame_info.py'...\n"}
+[21.092391] (strawberry_msgs) StdoutLine: {'line': b"Listing '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/srv'...\n"}
+[21.092458] (strawberry_msgs) StdoutLine: {'line': b"Compiling '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/srv/__init__.py'...\n"}
+[21.092607] (strawberry_msgs) StdoutLine: {'line': b"Compiling '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages/strawberry_msgs/srv/_capture_snapshot.py'...\n"}
+[21.106498] (strawberry_msgs) StdoutLine: {'line': b'-- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_generator_py.so\n'}
+[21.109786] (strawberry_msgs) StdoutLine: {'line': b'-- Set runtime path of "/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/libstrawberry_msgs__rosidl_generator_py.so" to ""\n'}
+[21.110191] (strawberry_msgs) StdoutLine: {'line': b'-- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/export_strawberry_msgs__rosidl_generator_cExport.cmake\n'}
+[21.110379] (strawberry_msgs) StdoutLine: {'line': b'-- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/export_strawberry_msgs__rosidl_generator_cExport-noconfig.cmake\n'}
+[21.110451] (strawberry_msgs) StdoutLine: {'line': b'-- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/export_strawberry_msgs__rosidl_typesupport_fastrtps_cExport.cmake\n'}
+[21.110640] (strawberry_msgs) StdoutLine: {'line': b'-- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/export_strawberry_msgs__rosidl_typesupport_fastrtps_cExport-noconfig.cmake\n'}
+[21.111219] (strawberry_msgs) StdoutLine: {'line': b'-- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/strawberry_msgs__rosidl_typesupport_introspection_cExport.cmake\n'}
+[21.111508] (strawberry_msgs) StdoutLine: {'line': b'-- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/strawberry_msgs__rosidl_typesupport_introspection_cExport-noconfig.cmake\n'}
+[21.112330] (strawberry_msgs) StdoutLine: {'line': b'-- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/strawberry_msgs__rosidl_typesupport_cExport.cmake\n'}
+[21.114765] (-) TimerEvent: {}
+[21.115691] (strawberry_msgs) StdoutLine: {'line': b'-- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/strawberry_msgs__rosidl_typesupport_cExport-noconfig.cmake\n'}
+[21.116265] (strawberry_msgs) StdoutLine: {'line': b'-- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/export_strawberry_msgs__rosidl_generator_cppExport.cmake\n'}
+[21.116429] (strawberry_msgs) StdoutLine: {'line': b'-- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/export_strawberry_msgs__rosidl_typesupport_fastrtps_cppExport.cmake\n'}
+[21.127121] (strawberry_msgs) StdoutLine: {'line': b'-- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/export_strawberry_msgs__rosidl_typesupport_fastrtps_cppExport-noconfig.cmake\n'}
+[21.127981] (strawberry_msgs) StdoutLine: {'line': b'-- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/strawberry_msgs__rosidl_typesupport_introspection_cppExport.cmake\n'}
+[21.129998] (strawberry_msgs) StdoutLine: {'line': b'-- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/strawberry_msgs__rosidl_typesupport_introspection_cppExport-noconfig.cmake\n'}
+[21.130243] (strawberry_msgs) StdoutLine: {'line': b'-- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/strawberry_msgs__rosidl_typesupport_cppExport.cmake\n'}
+[21.130420] (strawberry_msgs) StdoutLine: {'line': b'-- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/strawberry_msgs__rosidl_typesupport_cppExport-noconfig.cmake\n'}
+[21.131220] (strawberry_msgs) StdoutLine: {'line': b'-- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/export_strawberry_msgs__rosidl_generator_pyExport.cmake\n'}
+[21.136435] (strawberry_msgs) StdoutLine: {'line': b'-- Installing: /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/cmake/export_strawberry_msgs__rosidl_generator_pyExport-noconfig.cmake\n'}
+[21.150749] (strawberry_msgs) CommandEnded: {'returncode': 0}
+[21.215488] (-) TimerEvent: {}
+[21.238599] (strawberry_msgs) JobEnded: {'identifier': 'strawberry_msgs', 'rc': 0}
+[21.246860] (-) EventReactorShutdown: {}
