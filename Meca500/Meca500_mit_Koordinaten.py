@@ -51,9 +51,9 @@ ROBOT_VEL = 20
 ROBOT_ACC = 20
 
 POSITIONS = {
-    "links":  (48, 14, 24, -108, 91, -81),
-    "mitte":  (0, -35, 35, 0, 0, 135),
-    "rechts": (-41, 14, 24, 106, 89, 6)
+    "l":  (48, 14, 24, -108, 91, -81),
+    "m":  (0, -35, 35, 0, 0, 135),
+    "r": (-41, 14, 24, 106, 89, 6)
 }
 
 HOME_JOINTS = (0, 0, 0, 0, 0, 0)
@@ -102,7 +102,7 @@ def main():
         robot.SetJointVel(ROBOT_VEL)
         robot.SetJointAcc(ROBOT_ACC)
 
-        print("Gib die gewünschte Position ein (links, mitte, rechts).")
+        print("Gib die gewünschte Position ein (l=links, m=mitte, r=rechts).")
         print("Tippe 'exit', um das Programm zu beenden.")
 
         while True:
@@ -177,4 +177,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
