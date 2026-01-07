@@ -1,0 +1,18 @@
+[2.198s] Invoking command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera': PYTHONPATH=/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera/build --no-deps symlink_data
+[3.031s] running develop
+[3.563s] running egg_info
+[3.563s] writing strawberry_camera.egg-info/PKG-INFO
+[3.564s] writing dependency_links to strawberry_camera.egg-info/dependency_links.txt
+[3.565s] writing entry points to strawberry_camera.egg-info/entry_points.txt
+[3.567s] writing requirements to strawberry_camera.egg-info/requires.txt
+[3.567s] writing top-level names to strawberry_camera.egg-info/top_level.txt
+[3.576s] reading manifest file 'strawberry_camera.egg-info/SOURCES.txt'
+[3.577s] writing manifest file 'strawberry_camera.egg-info/SOURCES.txt'
+[3.581s] running build_ext
+[3.582s] Creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/lib/python3.10/site-packages/strawberry-camera.egg-link (link to .)
+[3.583s] Installing camera_dummy script to /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/lib/strawberry_camera
+[3.584s] Installing camera_folder script to /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/lib/strawberry_camera
+[3.585s] 
+[3.585s] Installed /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera
+[3.586s] running symlink_data
+[3.640s] Invoked command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera' returned '0': PYTHONPATH=/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera/build --no-deps symlink_data

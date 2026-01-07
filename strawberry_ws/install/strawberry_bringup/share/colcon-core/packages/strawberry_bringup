@@ -1,1 +1,1 @@
-launch:launch_ros:meca500_ros2:strawberry_camera
+launch:launch_ros:strawberry_camera:strawberry_cluster:strawberry_msgs:strawberry_segmentation

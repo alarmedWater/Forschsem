@@ -11,7 +11,7 @@ setup(
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='you',
-    maintainer_email='you@example.com',
+    maintainer_email="julian_martin.schrenk@smail.th-koeln.de",
     description='Dummy Meca500 publishers (joint_states + TF)',
     license='MIT',
     entry_points={

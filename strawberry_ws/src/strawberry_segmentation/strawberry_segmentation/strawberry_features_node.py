@@ -8,10 +8,8 @@ Computes per-instance 3D point clouds and simple 3D features from:
   - instance label image (/seg/label_image)
   - camera intrinsics (/camera/color/camera_info)
 
-Additionally consumes (synchronized):
-  - frame info (FrameInfo)
-    Recommended default: /seg/frame_info_depth_masked
-    (passthrough from depth_mask, aligned to the masked depth stamp)
+Additionally consumes:
+  - frame info (FrameInfo) aligned to depth stamp
 
 Depth scaling:
 - If depth is RealSense raw units (uint16): depth_unit="realsense_units"
@@ -48,8 +46,6 @@ class StrawberryFeaturesNode(Node):
         self.declare_parameter("depth_topic", "/seg/depth_masked")
         self.declare_parameter("label_topic", "/seg/label_image")
         self.declare_parameter("camera_info_topic", "/camera/color/camera_info")
-
-        # IMPORTANT: default is the aligned/passthrough FrameInfo from depth_mask
         self.declare_parameter("frame_info_topic", "/seg/frame_info_depth_masked")
 
         self.declare_parameter("downsample_step", 1)
@@ -57,7 +53,7 @@ class StrawberryFeaturesNode(Node):
         self.declare_parameter("frame_id", "")
         self.declare_parameter("profile", False)
 
-        self.declare_parameter("depth_unit", "realsense_units")
+        self.declare_parameter("depth_unit", "mm")
         self.declare_parameter("depth_scale_m_per_unit", 9.999999747378752e-05)
 
         self.declare_parameter("sync_queue_size", 200)
@@ -72,6 +68,11 @@ class StrawberryFeaturesNode(Node):
 
         self.declare_parameter("log_features", True)
 
+        # -------- NEW (guard): optional range filter --------
+        self.declare_parameter("range_filter_enable", False)
+        self.declare_parameter("min_depth_m", 0.05)
+        self.declare_parameter("max_depth_m", 0.60)
+
         # ---------------- Read parameters ----------------
         depth_topic = self._param_str("depth_topic", "/seg/depth_masked")
         label_topic = self._param_str("label_topic", "/seg/label_image")
@@ -83,10 +84,8 @@ class StrawberryFeaturesNode(Node):
         self._frame_id = self._param_str("frame_id", "")
         self._profile = self._param_bool("profile", False)
 
-        self._depth_unit = self._param_str("depth_unit", "realsense_units").strip().lower()
-        self._depth_scale = float(
-            self._param_float("depth_scale_m_per_unit", 9.999999747378752e-05)
-        )
+        self._depth_unit = self._param_str("depth_unit", "mm").strip().lower()
+        self._depth_scale = float(self._param_float("depth_scale_m_per_unit", 9.999999747378752e-05))
 
         self._sync_queue_size = max(1, self._param_int("sync_queue_size", 200))
         self._sync_slop = float(self._param_float("sync_slop", 0.2))
@@ -104,6 +103,12 @@ class StrawberryFeaturesNode(Node):
 
         self._log_features = self._param_bool("log_features", True)
 
+        self._range_filter_enable = self._param_bool("range_filter_enable", False)
+        self._min_depth_m = float(self._param_float("min_depth_m", 0.05))
+        self._max_depth_m = float(self._param_float("max_depth_m", 0.60))
+        if self._min_depth_m > self._max_depth_m:
+            self._min_depth_m, self._max_depth_m = self._max_depth_m, self._min_depth_m
+
         self.get_logger().info(
             "StrawberryFeaturesNode starting:\n"
             f"  depth_topic           = {depth_topic}\n"
@@ -114,6 +119,9 @@ class StrawberryFeaturesNode(Node):
             f"  min_points            = {self._min_points}\n"
             f"  depth_unit            = {self._depth_unit}\n"
             f"  depth_scale_m_per_unit= {self._depth_scale:.3e}\n"
+            f"  range_filter_enable   = {self._range_filter_enable}\n"
+            f"  min_depth_m           = {self._min_depth_m:.3f}\n"
+            f"  max_depth_m           = {self._max_depth_m:.3f}\n"
             f"  sync_queue_size       = {self._sync_queue_size}\n"
             f"  sync_slop             = {self._sync_slop}\n"
             f"  selected_instance     = {self._selected_instance_id}\n"
@@ -133,7 +141,6 @@ class StrawberryFeaturesNode(Node):
         self._cx: Optional[float] = None
         self._cy: Optional[float] = None
 
-        # Last clouds for selected publishing
         self._last_clouds: Dict[int, np.ndarray] = {}
 
         self._warned_no_intrinsics = False
@@ -172,7 +179,7 @@ class StrawberryFeaturesNode(Node):
         )
 
     # ------------------------------------------------------------------ #
-    # Param helpers                                                      #
+    # Param helpers
     # ------------------------------------------------------------------ #
 
     def _param_str(self, name: str, default: str) -> str:
@@ -213,7 +220,7 @@ class StrawberryFeaturesNode(Node):
             return default
 
     # ------------------------------------------------------------------ #
-    # CameraInfo callback                                                #
+    # CameraInfo callback
     # ------------------------------------------------------------------ #
 
     def _camera_info_cb(self, msg: CameraInfo) -> None:
@@ -226,7 +233,7 @@ class StrawberryFeaturesNode(Node):
             self._frame_id = msg.header.frame_id
 
     # ------------------------------------------------------------------ #
-    # Depth conversion                                                   #
+    # Depth conversion
     # ------------------------------------------------------------------ #
 
     def _depth_to_meters(self, depth: np.ndarray) -> np.ndarray:
@@ -239,26 +246,23 @@ class StrawberryFeaturesNode(Node):
             if not self._warned_bad_depth_unit:
                 self.get_logger().warning(
                     f"Unknown depth_unit='{self._depth_unit}'. Falling back to "
-                    f"'realsense_units' with scale={self._depth_scale:.3e}."
+                    f"'mm'."
                 )
                 self._warned_bad_depth_unit = True
-            return depth.astype(np.float32) * float(self._depth_scale)
+            return depth.astype(np.float32) / 1000.0
 
         return depth.astype(np.float32)
 
     # ------------------------------------------------------------------ #
-    # Sync callback                                                      #
+    # Sync callback
     # ------------------------------------------------------------------ #
 
     def _sync_cb(self, depth_msg: Image, label_msg: Image, info_msg: FrameInfo) -> None:
         t0 = time.time()
 
-        # Intrinsics required
         if self._fx is None or self._fy is None or self._cx is None or self._cy is None:
             if not self._warned_no_intrinsics:
-                self.get_logger().warning(
-                    "No CameraInfo received yet – cannot compute features."
-                )
+                self.get_logger().warning("No CameraInfo received yet – cannot compute features.")
                 self._warned_no_intrinsics = True
             return
 
@@ -271,16 +275,13 @@ class StrawberryFeaturesNode(Node):
 
         if depth.shape[:2] != label.shape[:2]:
             self.get_logger().warning(
-                f"Shape mismatch depth={depth.shape} label={label.shape} – "
-                "check if depth & label are aligned!"
+                f"Shape mismatch depth={depth.shape} label={label.shape} – check alignment!"
             )
             return
 
         z_m = self._depth_to_meters(depth)
-
         height, width = z_m.shape
 
-        # Downsample
         step = self._step
         if step > 1:
             z_sub = z_m[0:height:step, 0:width:step]
@@ -292,6 +293,10 @@ class StrawberryFeaturesNode(Node):
             v_grid, u_grid = np.mgrid[0:height, 0:width]
 
         valid = np.isfinite(z_sub) & (z_sub > 0.0)
+
+        if self._range_filter_enable:
+            valid &= (z_sub >= self._min_depth_m) & (z_sub <= self._max_depth_m)
+
         if not np.any(valid):
             return
 
@@ -320,8 +325,7 @@ class StrawberryFeaturesNode(Node):
             y_i = (v_i - cy) * z_i / fy
             points_i = np.stack((x_i, y_i, z_i), axis=-1).astype(np.float32)
 
-            n_points = int(points_i.shape[0])
-            if n_points < self._min_points:
+            if points_i.shape[0] < self._min_points:
                 continue
 
             current_clouds[int(inst_id)] = points_i
@@ -331,7 +335,6 @@ class StrawberryFeaturesNode(Node):
 
         self._last_clouds = current_clouds
 
-        # Logging
         if self._log_features:
             inst_list = sorted(current_clouds.keys())
             lines: List[str] = [
@@ -366,7 +369,6 @@ class StrawberryFeaturesNode(Node):
         header.stamp = depth_msg.header.stamp
         header.frame_id = self._frame_id if self._frame_id else depth_msg.header.frame_id
 
-        # Publish all cloud
         if self._publish_all_cloud and self._pub_cloud_all.get_subscription_count() > 0:
             all_points: List[List[float]] = []
             for pts in current_clouds.values():
@@ -374,11 +376,8 @@ class StrawberryFeaturesNode(Node):
             cloud_all_msg = point_cloud2.create_cloud_xyz32(header, all_points)
             self._pub_cloud_all.publish(cloud_all_msg)
 
-        # Publish selected cloud
         if self._publish_selected_cloud and self._pub_cloud_selected.get_subscription_count() > 0:
-            self._selected_instance_id = self._param_int(
-                "selected_instance_id", self._selected_instance_id
-            )
+            self._selected_instance_id = self._param_int("selected_instance_id", self._selected_instance_id)
             pts_sel = current_clouds.get(int(self._selected_instance_id))
             cloud_sel_msg = point_cloud2.create_cloud_xyz32(
                 header,

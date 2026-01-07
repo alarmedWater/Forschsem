@@ -44,7 +44,7 @@ T_FCP_to_TCP = make_transform(TCP_ROT, TCP_OFFSET)
 
 
 #########################
-# Roboter-Konfiguration #
+# Roboter-Konfiguration #f
 #########################
 ROBOT_IP = "192.168.0.100"
 ROBOT_VEL = 20

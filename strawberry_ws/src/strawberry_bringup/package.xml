@@ -3,18 +3,27 @@
 <package format="3">
   <name>strawberry_bringup</name>
   <version>0.0.1</version>
-  <description>Launch files for the strawberry pipeline (camera + robot dummies).</description>
+  <description>Launch files for the strawberry perception pipeline (dataset camera + segmentation + features).</description>
 
   <maintainer email="julian.schrenk@stud.hs-hannover.de">Julian Schrenk</maintainer>
   <license>MIT</license>
 
-  <!-- Launch deps -->
+  <!-- Build system -->
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <!-- Launch runtime -->
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
 
-  <!-- Auf die beiden Pakete verweisen -->
+  <!-- Nodes launched by this bringup -->
   <exec_depend>strawberry_camera</exec_depend>
-  <exec_depend>meca500_ros2</exec_depend>
+  <exec_depend>strawberry_segmentation</exec_depend>
+
+  <!-- Optional clustering package (only needed if enable_cluster:=true) -->
+  <exec_depend>strawberry_cluster</exec_depend>
+
+  <!-- Message package used across the pipeline (FrameInfo) -->
+  <exec_depend>strawberry_msgs</exec_depend>
 
   <export>
     <build_type>ament_python</build_type>
