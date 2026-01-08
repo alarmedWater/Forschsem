@@ -1,0 +1,11 @@
+[ 10%] Built target strawberry_msgs__rosidl_generator_c
+[ 12%] Built target strawberry_msgs__cpp
+[ 12%] Built target ament_cmake_python_symlink_strawberry_msgs
+[ 23%] Built target strawberry_msgs__rosidl_typesupport_introspection_c
+[ 33%] Built target strawberry_msgs__rosidl_typesupport_fastrtps_c
+[ 53%] Built target strawberry_msgs__rosidl_typesupport_c
+[ 53%] Built target strawberry_msgs__rosidl_typesupport_fastrtps_cpp
+[ 64%] Built target strawberry_msgs__rosidl_typesupport_introspection_cpp
+[ 74%] Built target strawberry_msgs__rosidl_typesupport_cpp
+[ 74%] Built target strawberry_msgs
+[ 76%] Built target strawberry_msgs__py

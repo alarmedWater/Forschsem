@@ -1,0 +1,48 @@
+[ 10%] Built target strawberry_msgs__rosidl_generator_c
+[ 12%] Built target strawberry_msgs__cpp
+[ 12%] Built target ament_cmake_python_symlink_strawberry_msgs
+[ 23%] Built target strawberry_msgs__rosidl_typesupport_introspection_c
+[ 33%] Built target strawberry_msgs__rosidl_typesupport_fastrtps_c
+[ 53%] Built target strawberry_msgs__rosidl_typesupport_c
+[ 53%] Built target strawberry_msgs__rosidl_typesupport_fastrtps_cpp
+[ 64%] Built target strawberry_msgs__rosidl_typesupport_introspection_cpp
+[ 74%] Built target strawberry_msgs__rosidl_typesupport_cpp
+[ 74%] Built target strawberry_msgs
+[ 76%] Built target strawberry_msgs__py
+gmake[2]: *** [CMakeFiles/strawberry_msgs__rosidl_generator_py.dir/build.make:139: CMakeFiles/strawberry_msgs__rosidl_generator_py.dir/depend] Interrupt
+Traceback (most recent call last):
+  File "/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs/ament_cmake_python/strawberry_msgs/setup.py", line 1, in <module>
+gmake[1]: *** [CMakeFiles/Makefile2:474: CMakeFiles/strawberry_msgs__rosidl_generator_py.dir/all] Interrupt
+    from setuptools import find_packages
+  File "/usr/lib/python3/dist-packages/setuptools/__init__.py", line 16, in <module>
+    import setuptools.version
+  File "/usr/lib/python3/dist-packages/setuptools/version.py", line 1, in <module>
+    import pkg_resources
+  File "/usr/lib/python3/dist-packages/pkg_resources/__init__.py", line 78, in <module>
+    __import__('pkg_resources.extern.packaging.requirements')
+  File "/usr/lib/python3/dist-packages/pkg_resources/_vendor/packaging/requirements.py", line 10, in <module>
+    from pkg_resources.extern.pyparsing import (  # noqa
+  File "<frozen importlib._bootstrap>", line 1027, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1006, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 674, in _load_unlocked
+  File "<frozen importlib._bootstrap>", line 571, in module_from_spec
+  File "/usr/lib/python3/dist-packages/pkg_resources/extern/__init__.py", line 52, in create_module
+    return self.load_module(spec.name)
+  File "/usr/lib/python3/dist-packages/pkg_resources/extern/__init__.py", line 37, in load_module
+    __import__(extant)
+  File "/usr/lib/python3/dist-packages/pkg_resources/_vendor/pyparsing.py", line 5361, in <module>
+    alphas8bit = srange(r"[\0xc0-\0xd6\0xd8-\0xf6\0xf8-\0xff]")
+  File "/usr/lib/python3/dist-packages/pkg_resources/_vendor/pyparsing.py", line 4783, in srange
+    return "".join(_expanded(part) for part in _reBracketExpr.parseString(s).body)
+  File "/usr/lib/python3/dist-packages/pkg_resources/_vendor/pyparsing.py", line 1644, in parseString
+    loc, tokens = self._parse( instring, 0 )
+  File "/usr/lib/python3/dist-packages/pkg_resources/_vendor/pyparsing.py", line 1402, in _parseNoCache
+    loc,tokens = self.parseImpl( instring, preloc, doActions )
+  File "/usr/lib/python3/dist-packages/pkg_resources/_vendor/pyparsing.py", line 3419, in parseImpl
+    resultlist += exprtokens
+  File "/usr/lib/python3/dist-packages/pkg_resources/_vendor/pyparsing.py", line 663, in __iadd__
+    def __iadd__( self, other ):
+KeyboardInterrupt
+gmake[2]: *** [CMakeFiles/ament_cmake_python_build_strawberry_msgs_egg.dir/build.make:70: CMakeFiles/ament_cmake_python_build_strawberry_msgs_egg] Interrupt
+gmake[1]: *** [CMakeFiles/Makefile2:447: CMakeFiles/ament_cmake_python_build_strawberry_msgs_egg.dir/all] Interrupt
+gmake: *** [Makefile:146: all] Interrupt

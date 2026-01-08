@@ -55,7 +55,7 @@ add_library(strawberry_msgs::strawberry_msgs__rosidl_generator_c SHARED IMPORTED
 
 set_target_properties(strawberry_msgs::strawberry_msgs__rosidl_generator_c PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include/strawberry_msgs"
-  INTERFACE_LINK_LIBRARIES "std_msgs::std_msgs__rosidl_generator_c;builtin_interfaces::builtin_interfaces__rosidl_generator_c;rosidl_runtime_c::rosidl_runtime_c;rosidl_typesupport_interface::rosidl_typesupport_interface;rcutils::rcutils"
+  INTERFACE_LINK_LIBRARIES "std_msgs::std_msgs__rosidl_generator_c;builtin_interfaces::builtin_interfaces__rosidl_generator_c;geometry_msgs::geometry_msgs__rosidl_generator_c;rosidl_runtime_c::rosidl_runtime_c;rosidl_typesupport_interface::rosidl_typesupport_interface;rcutils::rcutils"
 )
 
 if(CMAKE_VERSION VERSION_LESS 2.8.12)

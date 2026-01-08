@@ -11,7 +11,13 @@ Publishes:
   - /camera/frame_info (strawberry_msgs/FrameInfo) [optional]
     fallback if msg missing: /camera/frame_info_json (std_msgs/String)
 
-See your original header docstring for dataset modes (A/B) and pose notes.
+Dataset modes:
+  - Mode A: plants_root_dir + plant_* folders containing color_*.png and depth_*.png
+  - Mode B: rgb_dir/depth_dir flat folders
+
+Pose notes:
+  This version uses measured robot TRF/TCP poses (WRF=BRF) for view_id {0,1,2}
+  and converts robot Euler angles (XY'Z'' convention) into quaternions.
 """
 
 from __future__ import annotations
@@ -121,30 +127,64 @@ def rotation_matrix_to_quaternion(rot: np.ndarray) -> Tuple[float, float, float,
     return (float(qx / n), float(qy / n), float(qz / n), float(qw / n))
 
 
+def _rotx(a: float) -> np.ndarray:
+    c, s = math.cos(a), math.sin(a)
+    return np.array(
+        [[1.0, 0.0, 0.0], [0.0, c, -s], [0.0, s, c]],
+        dtype=np.float64,
+    )
+
+
+def _roty(a: float) -> np.ndarray:
+    c, s = math.cos(a), math.sin(a)
+    return np.array(
+        [[c, 0.0, s], [0.0, 1.0, 0.0], [-s, 0.0, c]],
+        dtype=np.float64,
+    )
+
+
+def _rotz(a: float) -> np.ndarray:
+    c, s = math.cos(a), math.sin(a)
+    return np.array(
+        [[c, -s, 0.0], [s, c, 0.0], [0.0, 0.0, 1.0]],
+        dtype=np.float64,
+    )
+
+
+def euler_xyprime_zdoubleprime_to_rot(rx_deg: float, ry_deg: float, rz_deg: float) -> np.ndarray:
+    """
+    Convert robot Euler angles in XY'Z'' convention to a rotation matrix.
+
+    We treat XY'Z'' as intrinsic XYZ:
+      R = Rx(rx) @ Ry(ry) @ Rz(rz)
+    """
+    rx = math.radians(rx_deg)
+    ry = math.radians(ry_deg)
+    rz = math.radians(rz_deg)
+    return _rotx(rx) @ _roty(ry) @ _rotz(rz)
+
+
 class CameraFolderNode(Node):
     """Replay RGB + depth frames and publish as ROS camera topics."""
 
-    _POSES = {
-        0: {
+    # Updated TRF/TCP poses (WRF=BRF) measured on robot:
+    # - translation in mm (t_mm)
+    # - orientation in degrees (r_deg) as (rx, ry, rz) in XY'Z'' convention
+    _POSES: Dict[int, Dict[str, Any]] = {
+        0: {  # links
             "name": "links",
-            "t_mm": (158.514, 76.569, 239.850),
-            "x_axis": (0.07540488, 0.56045421, -0.82474553),
-            "y_axis": (-0.34729051, 0.79007612, 0.50514258),
-            "z_axis": (0.93472103, 0.24833608, 0.25421603),
+            "t_mm": (188.205, 58.384, 249.002),
+            "r_deg": (63.286, 55.563, 127.337),
         },
-        1: {
+        1: {  # mitte
             "name": "mitte",
-            "t_mm": (112.567, 0.0, 283.585),
-            "x_axis": (6.123234e-17, 0.0, -1.0),
-            "y_axis": (0.707114186, -0.707099376, 4.32982562e-17),
-            "z_axis": (-0.707099376, -0.707114186, -4.32973494e-17),
+            "t_mm": (148.567, 0.0, 283.585),
+            "r_deg": (-180.0, 90.0, 0.0),
         },
-        2: {
+        2: {  # rechts
             "name": "rechts",
-            "t_mm": (167.500, -56.461, 236.505),
-            "x_axis": (-0.55041738, -0.32512835, -0.76898132),
-            "y_axis": (0.79085937, 0.0921187, -0.60502529),
-            "z_axis": (0.26754843, -0.94117251, 0.20642707),
+            "t_mm": (195.183, -34.680, 243.936),
+            "r_deg": (-71.161, 50.263, -104.430),
         },
     }
 
@@ -190,28 +230,41 @@ class CameraFolderNode(Node):
 
         # ---------------- Publishers ----------------
         self.pub_rgb = self.create_publisher(Image, "/camera/color/image_raw", 10)
-        self.pub_depth = self.create_publisher(Image, "/camera/aligned_depth_to_color/image_raw", 10)
+        self.pub_depth = self.create_publisher(
+            Image, "/camera/aligned_depth_to_color/image_raw", 10
+        )
         self.pub_info = self.create_publisher(CameraInfo, "/camera/color/camera_info", 10)
 
         self._publish_pose = self._param_bool("publish_pose", True)
         self._pose_topic = self._param_str("pose_topic", "/camera_pose_world")
         self._world_frame_id = self._param_str("world_frame_id", "world")
-        self.pub_pose = self.create_publisher(PoseStamped, self._pose_topic, 10) if self._publish_pose else None
+        self.pub_pose = (
+            self.create_publisher(PoseStamped, self._pose_topic, 10)
+            if self._publish_pose
+            else None
+        )
 
         self._publish_frame_info = self._param_bool("publish_frame_info", True)
         self._frame_info_topic = self._param_str("frame_info_topic", "/camera/frame_info")
-        self._frame_info_json_topic = self._param_str("frame_info_json_topic", "/camera/frame_info_json")
+        self._frame_info_json_topic = self._param_str(
+            "frame_info_json_topic", "/camera/frame_info_json"
+        )
 
         self.pub_frame_info = None
         self.pub_frame_info_json = None
         if self._publish_frame_info:
             if FrameInfo is not None:
-                self.pub_frame_info = self.create_publisher(FrameInfo, self._frame_info_topic, 10)
+                self.pub_frame_info = self.create_publisher(
+                    FrameInfo, self._frame_info_topic, 10
+                )
             else:
                 self.get_logger().warning(
-                    "FrameInfo msg not available. Falling back to JSON String on 'frame_info_json_topic'."
+                    "FrameInfo msg not available. Falling back to JSON String on "
+                    "'frame_info_json_topic'."
                 )
-                self.pub_frame_info_json = self.create_publisher(String, self._frame_info_json_topic, 10)
+                self.pub_frame_info_json = self.create_publisher(
+                    String, self._frame_info_json_topic, 10
+                )
 
         # ---------------- Load calibration (optional) ----------------
         self._calib: Optional[Dict[str, Any]] = None
@@ -288,7 +341,9 @@ class CameraFolderNode(Node):
             return fallback
 
     @staticmethod
-    def _as_float_list(values: Any, fallback: Sequence[float], length: int = 5) -> list[float]:
+    def _as_float_list(
+        values: Any, fallback: Sequence[float], length: int = 5
+    ) -> list[float]:
         out: list[float] = []
         if isinstance(values, (list, tuple)):
             for v in values:
@@ -316,10 +371,13 @@ class CameraFolderNode(Node):
         else:
             try:
                 share_dir = get_package_share_directory("strawberry_camera")
-                calib_path = str(Path(share_dir) / "config" / "realsense_d405_640x480_30fps.yml")
+                calib_path = str(
+                    Path(share_dir) / "config" / "realsense_d405_640x480_30fps.yml"
+                )
             except Exception as exc:  # noqa: BLE001
                 self.get_logger().warning(
-                    "Could not resolve 'strawberry_camera' share dir. Falling back to parameter intrinsics. "
+                    "Could not resolve 'strawberry_camera' share dir. "
+                    "Falling back to parameter intrinsics. "
                     f"({exc})"
                 )
                 return
@@ -338,11 +396,14 @@ class CameraFolderNode(Node):
                 raise ValueError("Calibration YAML root must be a mapping/dict.")
             self._calib = data
             source = self._param_str("camera_info_source", "color")
-            self.get_logger().info(f"Loaded calibration YAML: {calib_path} (camera_info_source={source})")
+            self.get_logger().info(
+                f"Loaded calibration YAML: {calib_path} (camera_info_source={source})"
+            )
         except Exception as exc:  # noqa: BLE001
             self._calib = None
             self.get_logger().warning(
-                f"Could not load calibration YAML '{calib_path}'. Falling back to parameter intrinsics. ({exc})"
+                f"Could not load calibration YAML '{calib_path}'. Falling back to "
+                f"parameter intrinsics. ({exc})"
             )
 
     # ------------------------------------------------------------------ #
@@ -359,7 +420,9 @@ class CameraFolderNode(Node):
         if use_plants_root and plants_root_dir:
             root = Path(plants_root_dir)
             if root.is_dir():
-                return self._collect_frames_plants_root(root, plant_glob, rgb_pattern, depth_pattern)
+                return self._collect_frames_plants_root(
+                    root, plant_glob, rgb_pattern, depth_pattern
+                )
 
             self.get_logger().warning(
                 f"use_plants_root=True but plants_root_dir is not a directory: {plants_root_dir}"
@@ -376,7 +439,11 @@ class CameraFolderNode(Node):
         )
 
     def _collect_frames_plants_root(
-        self, root: Path, plant_glob: str, rgb_pattern: str, depth_pattern: str
+        self,
+        root: Path,
+        plant_glob: str,
+        rgb_pattern: str,
+        depth_pattern: str,
     ) -> list[FrameItem]:
         plant_dirs = [p for p in root.glob(plant_glob) if p.is_dir()]
         plant_dirs.sort(key=lambda p: (extract_index(str(p)), p.name))
@@ -385,8 +452,14 @@ class CameraFolderNode(Node):
         frame_index = 0
 
         for plant_id, plant_dir in enumerate(plant_dirs):
-            rgb_files = sorted(glob.glob(str(plant_dir / rgb_pattern)), key=lambda s: (extract_index(s), s))
-            depth_files = sorted(glob.glob(str(plant_dir / depth_pattern)), key=lambda s: (extract_index(s), s))
+            rgb_files = sorted(
+                glob.glob(str(plant_dir / rgb_pattern)),
+                key=lambda s: (extract_index(s), s),
+            )
+            depth_files = sorted(
+                glob.glob(str(plant_dir / depth_pattern)),
+                key=lambda s: (extract_index(s), s),
+            )
 
             rgb_by_idx = {extract_index(p): p for p in rgb_files}
             depth_by_idx = {extract_index(p): p for p in depth_files}
@@ -413,7 +486,8 @@ class CameraFolderNode(Node):
 
         if frames:
             self.get_logger().info(
-                f"Collected {len(frames)} frames from plants_root_dir='{root}' (plants={len(plant_dirs)})"
+                f"Collected {len(frames)} frames from plants_root_dir='{root}' "
+                f"(plants={len(plant_dirs)})"
             )
         return frames
 
@@ -428,11 +502,17 @@ class CameraFolderNode(Node):
             self.get_logger().warning("rgb_dir is empty or not a directory (flat mode).")
             return []
 
-        rgb_paths = sorted(glob.glob(str(rgb_dir / rgb_pattern)), key=lambda s: (extract_index(s), s))
+        rgb_paths = sorted(
+            glob.glob(str(rgb_dir / rgb_pattern)),
+            key=lambda s: (extract_index(s), s),
+        )
 
         depth_paths: list[str] = []
         if depth_dir and depth_dir.is_dir():
-            depth_paths = sorted(glob.glob(str(depth_dir / depth_pattern)), key=lambda s: (extract_index(s), s))
+            depth_paths = sorted(
+                glob.glob(str(depth_dir / depth_pattern)),
+                key=lambda s: (extract_index(s), s),
+            )
 
         if not rgb_paths:
             return []
@@ -455,7 +535,9 @@ class CameraFolderNode(Node):
                     depth_path=depth_path,
                 )
             )
-        self.get_logger().info(f"Collected {len(frames)} frames from flat folders: rgb_dir='{rgb_dir}'")
+        self.get_logger().info(
+            f"Collected {len(frames)} frames from flat folders: rgb_dir='{rgb_dir}'"
+        )
         return frames
 
     # ------------------------------------------------------------------ #
@@ -482,7 +564,9 @@ class CameraFolderNode(Node):
         else:
             src = self._param_str("camera_info_source", "color").lower()
             if src not in ("color", "depth"):
-                self.get_logger().warning(f"camera_info_source='{src}' invalid. Using 'color'.")
+                self.get_logger().warning(
+                    f"camera_info_source='{src}' invalid. Using 'color'."
+                )
                 src = "color"
 
             intr_any = self._calib.get("intrinsics", {}).get(src, {})
@@ -512,14 +596,13 @@ class CameraFolderNode(Node):
     def _make_pose_msg(self, stamp, view_id: int) -> PoseStamped:
         pose_def = self._POSES.get(int(view_id), self._POSES[1])
 
-        t_mm = pose_def["t_mm"]
-        t_m = (float(t_mm[0]) / 1000.0, float(t_mm[1]) / 1000.0, float(t_mm[2]) / 1000.0)
+        # Translation (mm -> m)
+        x_mm, y_mm, z_mm = pose_def["t_mm"]
+        t_m = (float(x_mm) / 1000.0, float(y_mm) / 1000.0, float(z_mm) / 1000.0)
 
-        x_axis = np.array(pose_def["x_axis"], dtype=np.float64)
-        y_axis = np.array(pose_def["y_axis"], dtype=np.float64)
-        z_axis = np.array(pose_def["z_axis"], dtype=np.float64)
-
-        rot = np.column_stack((x_axis, y_axis, z_axis)).astype(np.float64)
+        # Rotation from robot Euler (degrees)
+        rx_deg, ry_deg, rz_deg = pose_def["r_deg"]
+        rot = euler_xyprime_zdoubleprime_to_rot(rx_deg, ry_deg, rz_deg)
 
         # Orthonormalize (robust)
         u, _, vt = np.linalg.svd(rot)
@@ -538,7 +621,13 @@ class CameraFolderNode(Node):
         msg.pose.orientation.w = qw
         return msg
 
-    def _publish_frame_info_msg(self, stamp, frame_id_for_info: str, item: FrameItem) -> None:
+    def _publish_frame_info_msg(
+        self,
+        stamp,
+        frame_id_for_info: str,
+        item: FrameItem,
+        pose_msg: Optional[PoseStamped],
+    ) -> None:
         if not self._publish_frame_info:
             return
 
@@ -551,17 +640,44 @@ class CameraFolderNode(Node):
             msg.view_id = int(item.view_id)
             msg.rgb_path = str(item.rgb_path)
             msg.depth_path = str(item.depth_path) if item.depth_path else ""
+
+            # NEW: hard-coupled pose (same stamp as images)
+            if pose_msg is not None:
+                msg.camera_pose_world = pose_msg.pose
+                msg.world_frame_id = str(self._world_frame_id)
+            else:
+                msg.world_frame_id = str(self._world_frame_id)
+
             self.pub_frame_info.publish(msg)
             return
 
         if self.pub_frame_info_json is not None:
-            payload = {
+            payload: Dict[str, Any] = {
                 "frame_index": int(item.frame_index),
                 "plant_id": int(item.plant_id),
                 "view_id": int(item.view_id),
                 "rgb_path": str(item.rgb_path),
                 "depth_path": str(item.depth_path) if item.depth_path else "",
             }
+
+            if pose_msg is not None:
+                payload["camera_pose_world"] = {
+                    "position": {
+                        "x": float(pose_msg.pose.position.x),
+                        "y": float(pose_msg.pose.position.y),
+                        "z": float(pose_msg.pose.position.z),
+                    },
+                    "orientation": {
+                        "x": float(pose_msg.pose.orientation.x),
+                        "y": float(pose_msg.pose.orientation.y),
+                        "z": float(pose_msg.pose.orientation.z),
+                        "w": float(pose_msg.pose.orientation.w),
+                    },
+                }
+                payload["world_frame_id"] = str(self._world_frame_id)
+            else:
+                payload["world_frame_id"] = str(self._world_frame_id)
+
             out = String()
             out.data = json.dumps(payload)
             self.pub_frame_info_json.publish(out)
@@ -618,21 +734,34 @@ class CameraFolderNode(Node):
                     depth_raw = cv2.cvtColor(depth_raw, cv2.COLOR_BGR2GRAY)
 
                 if depth_raw.dtype != np.uint16:
-                    depth_raw = (depth_raw.astype(np.float32) * 1000.0).clip(0, 65535).astype(np.uint16)
+                    depth_raw = (
+                        (depth_raw.astype(np.float32) * 1000.0)
+                        .clip(0, 65535)
+                        .astype(np.uint16)
+                    )
 
                 if depth_raw.shape[:2] != (height, width):
-                    depth_raw = cv2.resize(depth_raw, (width, height), interpolation=cv2.INTER_NEAREST)
+                    depth_raw = cv2.resize(
+                        depth_raw,
+                        (width, height),
+                        interpolation=cv2.INTER_NEAREST,
+                    )
 
                 depth_msg = to_image_msg_depth16(depth_raw, stamp, frame_depth)
 
         info_msg = self._make_camera_info(stamp, width, height)
 
-        # Pose in world (optional)
-        if self.pub_pose is not None:
-            self.pub_pose.publish(self._make_pose_msg(stamp, item.view_id))
+        # NEW: compute pose once (needed for pose topic AND FrameInfo)
+        pose_msg: Optional[PoseStamped] = None
+        if self._publish_pose or self._publish_frame_info:
+            pose_msg = self._make_pose_msg(stamp, item.view_id)
+
+        # Pose topic (optional)
+        if self.pub_pose is not None and pose_msg is not None:
+            self.pub_pose.publish(pose_msg)
 
         # FrameInfo should be aligned with image stamp and use camera frame_id
-        self._publish_frame_info_msg(stamp, frame_color, item)
+        self._publish_frame_info_msg(stamp, frame_color, item, pose_msg)
 
         # Publish streams
         self.pub_rgb.publish(rgb_msg)

@@ -1,0 +1,79 @@
+[0.000000] (-) TimerEvent: {}
+[0.000564] (meca500_ros2) JobQueued: {'identifier': 'meca500_ros2', 'dependencies': OrderedDict()}
+[0.000829] (strawberry_camera) JobQueued: {'identifier': 'strawberry_camera', 'dependencies': OrderedDict()}
+[0.000880] (strawberry_cluster) JobQueued: {'identifier': 'strawberry_cluster', 'dependencies': OrderedDict()}
+[0.000925] (strawberry_msgs) JobQueued: {'identifier': 'strawberry_msgs', 'dependencies': OrderedDict()}
+[0.000968] (strawberry_segmentation) JobQueued: {'identifier': 'strawberry_segmentation', 'dependencies': OrderedDict()}
+[0.001012] (strawberry_bringup) JobQueued: {'identifier': 'strawberry_bringup', 'dependencies': OrderedDict([('strawberry_camera', '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera'), ('strawberry_cluster', '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster'), ('strawberry_msgs', '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs'), ('strawberry_segmentation', '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation')])}
+[0.001064] (strawberry_camera) JobStarted: {'identifier': 'strawberry_camera'}
+[0.010966] (strawberry_cluster) JobStarted: {'identifier': 'strawberry_cluster'}
+[0.020952] (strawberry_msgs) JobStarted: {'identifier': 'strawberry_msgs'}
+[0.028678] (strawberry_segmentation) JobStarted: {'identifier': 'strawberry_segmentation'}
+[0.099475] (-) TimerEvent: {}
+[0.199889] (-) TimerEvent: {}
+[0.301626] (-) TimerEvent: {}
+[0.402640] (-) TimerEvent: {}
+[0.503264] (-) TimerEvent: {}
+[0.605277] (-) TimerEvent: {}
+[0.705715] (-) TimerEvent: {}
+[0.736731] (strawberry_msgs) JobProgress: {'identifier': 'strawberry_msgs', 'progress': 'cmake'}
+[0.737672] (strawberry_msgs) JobProgress: {'identifier': 'strawberry_msgs', 'progress': 'build'}
+[0.738512] (strawberry_msgs) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs', '--', '-j4', '-l4'], 'cwd': '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs', 'env': OrderedDict([('GJS_DEBUG_TOPICS', 'JS ERROR;JS LOG'), ('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'parallels'), ('XDG_SESSION_TYPE', 'wayland'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/parallels'), ('CONDA_SHLVL', '0'), ('OLDPWD', '/home/parallels'), ('DESKTOP_SESSION', 'ubuntu'), ('GIO_LAUNCHED_DESKTOP_FILE', '/usr/share/applications/terminator.desktop'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('MANAGERPID', '5451'), ('SYSTEMD_EXEC_PID', '5636'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('TERMINATOR_DBUS_NAME', 'net.tenshu.Terminator25ef4b219e3b005583550f2b0f9f990c3'), ('GIO_LAUNCHED_DESKTOP_FILE_PID', '10766'), ('IM_CONFIG_PHASE', '1'), ('WAYLAND_DISPLAY', 'wayland-0'), ('COLCON_PREFIX_PATH', '/home/parallels/Forschsemrep/strawberry_ws/install'), ('ROS_DISTRO', 'humble'), ('LOGNAME', 'parallels'), ('JOURNAL_STREAM', '8:27475'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'parallels'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/opt/ros/humble/bin:/home/parallels/.local/bin:/home/parallels/miniforge3/condabin:/home/parallels/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/home/parallels/.dotnet/tools:/opt/mssql-tools/bin'), ('SESSION_MANAGER', 'local/parallels-Parallels-Virtual-Platform:@/tmp/.ICE-unix/5606,unix/parallels-Parallels-Virtual-Platform:/tmp/.ICE-unix/5606'), ('INVOCATION_ID', '58507e0922744ceb91085aeb43b8ae20'), ('XDG_MENU_PREFIX', 'gnome-'), ('GNOME_SETUP_DISPLAY', ':1'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('MAMBA_ROOT_PREFIX', '/home/parallels/miniforge3'), ('DISPLAY', ':0'), ('TERMINATOR_DBUS_PATH', '/net/tenshu/Terminator2'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('DOTNET_BUNDLE_EXTRACT_BASE_DIR', '/home/parallels/.cache/dotnet_bundle_extract'), ('IBUS_DISABLE_SNOOPER', '1'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/.mutter-Xwaylandauth.M0PQI3'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera:/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2:/opt/ros/humble'), ('CONDA_PYTHON_EXE', '/home/parallels/miniforge3/bin/python'), ('SHELL', '/bin/bash'), ('TERMINATOR_UUID', 'urn:uuid:220f4fe3-eaf1-4af4-9528-7902d52e0ffb'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('GJS_DEBUG_OUTPUT', 'stderr'), ('MAMBA_EXE', '/home/parallels/miniforge3/bin/mamba'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('CONDA_EXE', '/home/parallels/miniforge3/bin/conda'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/lib/python3.10/site-packages:/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/lib/python3.10/site-packages:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages:/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/lib/python3.10/site-packages:/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/lib/python3.10/site-packages:/home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2:/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera:/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2:/opt/ros/humble')]), 'shell': False}
+[0.806507] (-) TimerEvent: {}
+[0.827749] (strawberry_msgs) StdoutLine: {'line': b'[ 10%] Built target strawberry_msgs__rosidl_generator_c\n'}
+[0.828039] (strawberry_msgs) StdoutLine: {'line': b'[ 12%] Built target strawberry_msgs__cpp\n'}
+[0.829943] (strawberry_msgs) StdoutLine: {'line': b'[ 12%] Built target ament_cmake_python_symlink_strawberry_msgs\n'}
+[0.876839] (strawberry_msgs) StdoutLine: {'line': b'[ 23%] Built target strawberry_msgs__rosidl_typesupport_introspection_c\n'}
+[0.892351] (strawberry_msgs) StdoutLine: {'line': b'[ 33%] Built target strawberry_msgs__rosidl_typesupport_fastrtps_c\n'}
+[0.894807] (strawberry_msgs) StdoutLine: {'line': b'[ 53%] Built target strawberry_msgs__rosidl_typesupport_c\n'}
+[0.896930] (strawberry_msgs) StdoutLine: {'line': b'[ 53%] Built target strawberry_msgs__rosidl_typesupport_fastrtps_cpp\n'}
+[0.909476] (-) TimerEvent: {}
+[0.927775] (strawberry_msgs) StdoutLine: {'line': b'[ 64%] Built target strawberry_msgs__rosidl_typesupport_introspection_cpp\n'}
+[0.939531] (strawberry_msgs) StdoutLine: {'line': b'[ 74%] Built target strawberry_msgs__rosidl_typesupport_cpp\n'}
+[0.977831] (strawberry_msgs) StdoutLine: {'line': b'[ 74%] Built target strawberry_msgs\n'}
+[1.011241] (-) TimerEvent: {}
+[1.021267] (strawberry_msgs) StdoutLine: {'line': b'[ 76%] Built target strawberry_msgs__py\n'}
+[1.042577] (strawberry_msgs) StderrLine: {'line': b'gmake[2]: *** [CMakeFiles/strawberry_msgs__rosidl_generator_py.dir/build.make:139: CMakeFiles/strawberry_msgs__rosidl_generator_py.dir/depend] Interrupt\n'}
+[1.042866] (strawberry_msgs) StderrLine: {'line': b'Traceback (most recent call last):\n'}
+[1.042939] (strawberry_msgs) StderrLine: {'line': b'  File "/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs/ament_cmake_python/strawberry_msgs/setup.py", line 1, in <module>\n'}
+[1.043014] (strawberry_msgs) StderrLine: {'line': b'gmake[1]: *** [CMakeFiles/Makefile2:474: CMakeFiles/strawberry_msgs__rosidl_generator_py.dir/all] Interrupt\n'}
+[1.043086] (strawberry_msgs) StderrLine: {'line': b'    from setuptools import find_packages\n'}
+[1.043140] (strawberry_msgs) StderrLine: {'line': b'  File "/usr/lib/python3/dist-packages/setuptools/__init__.py", line 16, in <module>\n'}
+[1.043245] (strawberry_msgs) StderrLine: {'line': b'    import setuptools.version\n'}
+[1.043360] (strawberry_msgs) StderrLine: {'line': b'  File "/usr/lib/python3/dist-packages/setuptools/version.py", line 1, in <module>\n'}
+[1.043479] (strawberry_msgs) StderrLine: {'line': b'    import pkg_resources\n'}
+[1.043546] (strawberry_msgs) StderrLine: {'line': b'  File "/usr/lib/python3/dist-packages/pkg_resources/__init__.py", line 78, in <module>\n'}
+[1.044049] (strawberry_msgs) StderrLine: {'line': b"    __import__('pkg_resources.extern.packaging.requirements')\n"}
+[1.044649] (strawberry_msgs) StderrLine: {'line': b'  File "/usr/lib/python3/dist-packages/pkg_resources/_vendor/packaging/requirements.py", line 10, in <module>\n'}
+[1.044835] (strawberry_segmentation) JobEnded: {'identifier': 'strawberry_segmentation', 'rc': 0}
+[1.046258] (strawberry_camera) JobEnded: {'identifier': 'strawberry_camera', 'rc': 'SIGINT'}
+[1.047009] (strawberry_cluster) JobEnded: {'identifier': 'strawberry_cluster', 'rc': 'SIGINT'}
+[1.047818] (strawberry_msgs) StderrLine: {'line': b'    from pkg_resources.extern.pyparsing import (  # noqa\n'}
+[1.047993] (strawberry_msgs) StderrLine: {'line': b'  File "<frozen importlib._bootstrap>", line 1027, in _find_and_load\n'}
+[1.048071] (strawberry_msgs) StderrLine: {'line': b'  File "<frozen importlib._bootstrap>", line 1006, in _find_and_load_unlocked\n'}
+[1.048153] (strawberry_msgs) StderrLine: {'line': b'  File "<frozen importlib._bootstrap>", line 674, in _load_unlocked\n'}
+[1.048348] (strawberry_msgs) StderrLine: {'line': b'  File "<frozen importlib._bootstrap>", line 571, in module_from_spec\n'}
+[1.048462] (strawberry_msgs) StderrLine: {'line': b'  File "/usr/lib/python3/dist-packages/pkg_resources/extern/__init__.py", line 52, in create_module\n'}
+[1.048537] (strawberry_msgs) StderrLine: {'line': b'    return self.load_module(spec.name)\n'}
+[1.048721] (strawberry_msgs) StderrLine: {'line': b'  File "/usr/lib/python3/dist-packages/pkg_resources/extern/__init__.py", line 37, in load_module\n'}
+[1.048780] (strawberry_msgs) StderrLine: {'line': b'    __import__(extant)\n'}
+[1.048950] (strawberry_msgs) StderrLine: {'line': b'  File "/usr/lib/python3/dist-packages/pkg_resources/_vendor/pyparsing.py", line 5361, in <module>\n'}
+[1.049015] (strawberry_msgs) StderrLine: {'line': b'    alphas8bit = srange(r"[\\0xc0-\\0xd6\\0xd8-\\0xf6\\0xf8-\\0xff]")\n'}
+[1.049069] (strawberry_msgs) StderrLine: {'line': b'  File "/usr/lib/python3/dist-packages/pkg_resources/_vendor/pyparsing.py", line 4783, in srange\n'}
+[1.049148] (strawberry_msgs) StderrLine: {'line': b'    return "".join(_expanded(part) for part in _reBracketExpr.parseString(s).body)\n'}
+[1.049205] (strawberry_msgs) StderrLine: {'line': b'  File "/usr/lib/python3/dist-packages/pkg_resources/_vendor/pyparsing.py", line 1644, in parseString\n'}
+[1.049258] (strawberry_msgs) StderrLine: {'line': b'    loc, tokens = self._parse( instring, 0 )\n'}
+[1.049371] (strawberry_msgs) StderrLine: {'line': b'  File "/usr/lib/python3/dist-packages/pkg_resources/_vendor/pyparsing.py", line 1402, in _parseNoCache\n'}
+[1.049746] (strawberry_msgs) StderrLine: {'line': b'    loc,tokens = self.parseImpl( instring, preloc, doActions )\n'}
+[1.049834] (strawberry_msgs) StderrLine: {'line': b'  File "/usr/lib/python3/dist-packages/pkg_resources/_vendor/pyparsing.py", line 3419, in parseImpl\n'}
+[1.049893] (strawberry_msgs) StderrLine: {'line': b'    resultlist += exprtokens\n'}
+[1.049949] (strawberry_msgs) StderrLine: {'line': b'  File "/usr/lib/python3/dist-packages/pkg_resources/_vendor/pyparsing.py", line 663, in __iadd__\n'}
+[1.050027] (strawberry_msgs) StderrLine: {'line': b'    def __iadd__( self, other ):\n'}
+[1.050150] (strawberry_msgs) StderrLine: {'line': b'KeyboardInterrupt\n'}
+[1.066988] (strawberry_msgs) StderrLine: {'line': b'gmake[2]: *** [CMakeFiles/ament_cmake_python_build_strawberry_msgs_egg.dir/build.make:70: CMakeFiles/ament_cmake_python_build_strawberry_msgs_egg] Interrupt\n'}
+[1.067244] (strawberry_msgs) StderrLine: {'line': b'gmake[1]: *** [CMakeFiles/Makefile2:447: CMakeFiles/ament_cmake_python_build_strawberry_msgs_egg.dir/all] Interrupt\n'}
+[1.067662] (strawberry_msgs) StderrLine: {'line': b'gmake: *** [Makefile:146: all] Interrupt\n'}
+[1.069341] (strawberry_msgs) JobEnded: {'identifier': 'strawberry_msgs', 'rc': 'SIGINT'}
+[1.080725] (meca500_ros2) JobSkipped: {'identifier': 'meca500_ros2'}
+[1.080860] (strawberry_bringup) JobSkipped: {'identifier': 'strawberry_bringup'}
+[1.080926] (-) EventReactorShutdown: {}

@@ -7,13 +7,16 @@ and export clustered point clouds to .ply.
 Synchronized inputs:
   - masked depth image (/seg/depth_masked)
   - instance label image (/seg/label_image)
-  - camera pose in world (/camera_pose_world) [geometry_msgs/PoseStamped]
-  - frame info (FrameInfo) aligned to depth stamp (recommended)
+  - frame info (FrameInfo) aligned to depth stamp
+
+IMPORTANT:
+  The camera pose is read from FrameInfo.camera_pose_world (geometry_msgs/Pose),
+  not from a separate /camera_pose_world topic.
 
 For each instance:
   - compute 3D points in camera frame (from depth + intrinsics)
   - compute centroid in camera frame
-  - transform centroid + points to world frame using PoseStamped
+  - transform centroid + points to world frame using FrameInfo.camera_pose_world
   - assign/update a cluster in world frame (per plant_id)
   - accumulate world points per cluster
 
@@ -36,7 +39,6 @@ import message_filters
 import numpy as np
 import rclpy
 from cv_bridge import CvBridge
-from geometry_msgs.msg import PoseStamped
 from rclpy.node import Node
 from rclpy.qos import QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicy
 from sensor_msgs.msg import CameraInfo, Image
@@ -49,7 +51,7 @@ class Cluster:
     """Per-plant cluster representation in world coordinates."""
 
     cluster_id: int
-    centroid_world: np.ndarray  # (3,)
+    centroid_world: np.ndarray  # shape (3,)
     num_points: int
     views_seen: set[int] = field(default_factory=set)
     last_frame_index: int = -1
@@ -58,12 +60,7 @@ class Cluster:
     )
 
 
-def quaternion_to_rotation_matrix(
-    qx: float,
-    qy: float,
-    qz: float,
-    qw: float,
-) -> np.ndarray:
+def quaternion_to_rotation_matrix(qx: float, qy: float, qz: float, qw: float) -> np.ndarray:
     """Convert quaternion (x,y,z,w) to 3x3 rotation matrix."""
     norm = math.sqrt(qx * qx + qy * qy + qz * qz + qw * qw)
     if norm <= 0.0:
@@ -103,13 +100,12 @@ class StrawberryClusterNode(Node):
         # ---------------- Parameters ----------------
         self.declare_parameter("depth_topic", "/seg/depth_masked")
         self.declare_parameter("label_topic", "/seg/label_image")
-        self.declare_parameter("camera_pose_topic", "/camera_pose_world")
         self.declare_parameter("frame_info_topic", "/seg/frame_info_depth_masked")
         self.declare_parameter("camera_info_topic", "/camera/color/camera_info")
 
         self.declare_parameter("downsample_step", 1)
         self.declare_parameter("min_points", 50)
-        self.declare_parameter("distance_threshold", 0.02)  # meters
+        self.declare_parameter("distance_threshold", 0.05)  # meters
         self.declare_parameter("max_clusters", 50)
         self.declare_parameter("profile", False)
 
@@ -141,10 +137,7 @@ class StrawberryClusterNode(Node):
 
         depth_topic = self._param_str("depth_topic", "/seg/depth_masked")
         label_topic = self._param_str("label_topic", "/seg/label_image")
-        pose_topic = self._param_str("camera_pose_topic", "/camera_pose_world")
-        frame_info_topic = self._param_str(
-            "frame_info_topic", "/seg/frame_info_depth_masked"
-        )
+        frame_info_topic = self._param_str("frame_info_topic", "/seg/frame_info_depth_masked")
         cam_info_topic = self._param_str("camera_info_topic", "/camera/color/camera_info")
 
         self._step = max(1, self._param_int("downsample_step", 1))
@@ -172,21 +165,16 @@ class StrawberryClusterNode(Node):
         if self._min_depth_m > self._max_depth_m:
             self._min_depth_m, self._max_depth_m = self._max_depth_m, self._min_depth_m
 
-        self._output_dir = Path(
-            self._param_str("output_dir", str(Path.home() / "strawberry_ply"))
-        )
+        self._output_dir = Path(self._param_str("output_dir", str(Path.home() / "strawberry_ply")))
         self._write_on_plant_change = self._param_bool("write_ply_on_plant_change", True)
         self._write_on_shutdown = self._param_bool("write_ply_on_shutdown", True)
-        self._max_points_per_cluster = max(
-            1000, self._param_int("max_points_per_cluster", 200000)
-        )
+        self._max_points_per_cluster = max(1000, self._param_int("max_points_per_cluster", 200000))
         self._ply_ascii = self._param_bool("ply_ascii", True)
 
         self.get_logger().info(
             "StrawberryClusterNode starting:\n"
             f"  depth_topic              = {depth_topic}\n"
             f"  label_topic              = {label_topic}\n"
-            f"  camera_pose_topic        = {pose_topic}\n"
             f"  frame_info_topic         = {frame_info_topic}\n"
             f"  camera_info_topic        = {cam_info_topic}\n"
             f"  downsample_step          = {self._step}\n"
@@ -218,6 +206,7 @@ class StrawberryClusterNode(Node):
 
         self._warned_no_intrinsics = False
         self._warned_bad_depth_unit = False
+        self._warned_missing_pose_in_frameinfo = False
 
         self.create_subscription(CameraInfo, cam_info_topic, self._camera_info_cb, 10)
 
@@ -233,21 +222,14 @@ class StrawberryClusterNode(Node):
             depth=10,
         )
 
-        self._sub_depth = message_filters.Subscriber(
-            self, Image, depth_topic, qos_profile=qos
-        )
-        self._sub_label = message_filters.Subscriber(
-            self, Image, label_topic, qos_profile=qos
-        )
-        self._sub_pose = message_filters.Subscriber(
-            self, PoseStamped, pose_topic, qos_profile=qos
-        )
+        self._sub_depth = message_filters.Subscriber(self, Image, depth_topic, qos_profile=qos)
+        self._sub_label = message_filters.Subscriber(self, Image, label_topic, qos_profile=qos)
         self._sub_frame_info = message_filters.Subscriber(
             self, FrameInfo, frame_info_topic, qos_profile=qos
         )
 
         self._ts = message_filters.ApproximateTimeSynchronizer(
-            [self._sub_depth, self._sub_label, self._sub_pose, self._sub_frame_info],
+            [self._sub_depth, self._sub_label, self._sub_frame_info],
             queue_size=self._sync_queue_size,
             slop=self._sync_slop,
         )
@@ -328,20 +310,12 @@ class StrawberryClusterNode(Node):
     # Core callback
     # ------------------------------------------------------------------ #
 
-    def _sync_cb(
-        self,
-        depth_msg: Image,
-        label_msg: Image,
-        pose_msg: PoseStamped,
-        frame_info_msg: FrameInfo,
-    ) -> None:
+    def _sync_cb(self, depth_msg: Image, label_msg: Image, frame_info_msg: FrameInfo) -> None:
         t0 = time.time()
 
         if self._fx is None or self._fy is None or self._cx is None or self._cy is None:
             if not self._warned_no_intrinsics:
-                self.get_logger().warning(
-                    "No CameraInfo received yet – cannot compute 3D points."
-                )
+                self.get_logger().warning("No CameraInfo received yet – cannot compute 3D points.")
                 self._warned_no_intrinsics = True
             return
 
@@ -410,8 +384,19 @@ class StrawberryClusterNode(Node):
         cx = float(self._cx)
         cy = float(self._cy)
 
-        pos = pose_msg.pose.position
-        ori = pose_msg.pose.orientation
+        # Pose from FrameInfo
+        try:
+            pos = frame_info_msg.camera_pose_world.position
+            ori = frame_info_msg.camera_pose_world.orientation
+        except Exception:  # noqa: BLE001
+            if not self._warned_missing_pose_in_frameinfo:
+                self.get_logger().error(
+                    "FrameInfo has no camera_pose_world. "
+                    "Update strawberry_msgs/FrameInfo.msg and the publisher."
+                )
+                self._warned_missing_pose_in_frameinfo = True
+            return
+
         r_world_cam = quaternion_to_rotation_matrix(ori.x, ori.y, ori.z, ori.w)
         t_world_cam = np.array([pos.x, pos.y, pos.z], dtype=np.float32)
 
@@ -503,7 +488,9 @@ class StrawberryClusterNode(Node):
                 True,
             )
 
-        dists = [float(np.linalg.norm(centroid_world - c.centroid_world)) for c in self._clusters]
+        dists = [
+            float(np.linalg.norm(centroid_world - c.centroid_world)) for c in self._clusters
+        ]
         min_idx = int(np.argmin(dists))
         min_dist = float(dists[min_idx])
         best = self._clusters[min_idx]
@@ -525,6 +512,7 @@ class StrawberryClusterNode(Node):
                 True,
             )
 
+        # if full: attach to nearest (even if far) but mark as not-new
         best.views_seen.add(int(view_id))
         best.last_frame_index = int(frame_index)
         return best.cluster_id, False
@@ -549,7 +537,6 @@ class StrawberryClusterNode(Node):
         self._clusters.append(c)
         self._cluster_by_id[cid] = c
 
-        # FIX: rclpy logger expects one message string → f-string
         self.get_logger().info(
             "Created cluster "
             f"{cid} at ({float(centroid_world[0]):.3f}, {float(centroid_world[1]):.3f}, "
@@ -618,7 +605,6 @@ class StrawberryClusterNode(Node):
                 "property float z\n"
                 "end_header\n"
             )
-            # (für sehr große Clouds nicht perfekt, aber ok bis ~200k)
             lines = [header]
             lines.extend([f"{p[0]:.6f} {p[1]:.6f} {p[2]:.6f}\n" for p in pts])
             path.write_text("".join(lines), encoding="utf-8")
@@ -638,7 +624,7 @@ class StrawberryClusterNode(Node):
             f.write(pts.astype("<f4", copy=False).tobytes())
 
     # ------------------------------------------------------------------ #
-    # Shutdown hook (FIX: no destroy_node override)
+    # Shutdown hook
     # ------------------------------------------------------------------ #
 
     def shutdown(self) -> None:

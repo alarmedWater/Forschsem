@@ -231,6 +231,8 @@ class StrawberrySelectedOverlayNode(Node):
             out_fi.view_id = int(frame_info.view_id)
             out_fi.rgb_path = str(frame_info.rgb_path)
             out_fi.depth_path = str(frame_info.depth_path)
+            out_fi.camera_pose_world = frame_info.camera_pose_world
+            out_fi.world_frame_id = str(frame_info.world_frame_id)
             self._pub_frame_info.publish(out_fi)
 
 

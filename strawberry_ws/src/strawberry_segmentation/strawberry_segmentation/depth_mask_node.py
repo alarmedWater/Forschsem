@@ -93,7 +93,7 @@ class DepthMaskNode(Node):
             self._sync_slop = 0.05
 
         self._profile = self._param_bool("profile", False)
-        self._debug_stamps_once = self._param_bool("debug_stamps_once", False)
+        self._debug_stamps_once = self._param_bool("debug_stamps_once", True)
         self._did_debug_stamps = False
 
         self._range_filter_enable = self._param_bool("range_filter_enable", True)
@@ -327,6 +327,8 @@ class DepthMaskNode(Node):
             out_fi.view_id = int(fi_msg.view_id)
             out_fi.rgb_path = str(fi_msg.rgb_path)
             out_fi.depth_path = str(fi_msg.depth_path)
+            out_fi.camera_pose_world = fi_msg.camera_pose_world
+            out_fi.world_frame_id = str(fi_msg.world_frame_id)
             self._pub_frame_info.publish(out_fi)
 
         if self._profile:

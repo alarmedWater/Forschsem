@@ -16,6 +16,8 @@
 
   <!-- Dependencies used inside .msg/.srv definitions -->
   <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+
 
   <!-- Required for interface packages -->
   <member_of_group>rosidl_interface_packages</member_of_group>

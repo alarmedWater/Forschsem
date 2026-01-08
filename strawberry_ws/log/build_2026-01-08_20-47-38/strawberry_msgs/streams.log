@@ -1,0 +1,49 @@
+[0.723s] Invoking command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera:/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2:/opt/ros/humble /usr/bin/cmake --build /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs -- -j4 -l4
+[0.807s] [ 10%] Built target strawberry_msgs__rosidl_generator_c
+[0.807s] [ 12%] Built target strawberry_msgs__cpp
+[0.809s] [ 12%] Built target ament_cmake_python_symlink_strawberry_msgs
+[0.856s] [ 23%] Built target strawberry_msgs__rosidl_typesupport_introspection_c
+[0.874s] [ 33%] Built target strawberry_msgs__rosidl_typesupport_fastrtps_c
+[0.874s] [ 53%] Built target strawberry_msgs__rosidl_typesupport_c
+[0.876s] [ 53%] Built target strawberry_msgs__rosidl_typesupport_fastrtps_cpp
+[0.907s] [ 64%] Built target strawberry_msgs__rosidl_typesupport_introspection_cpp
+[0.919s] [ 74%] Built target strawberry_msgs__rosidl_typesupport_cpp
+[0.957s] [ 74%] Built target strawberry_msgs
+[1.001s] [ 76%] Built target strawberry_msgs__py
+[1.022s] gmake[2]: *** [CMakeFiles/strawberry_msgs__rosidl_generator_py.dir/build.make:139: CMakeFiles/strawberry_msgs__rosidl_generator_py.dir/depend] Interrupt
+[1.022s] Traceback (most recent call last):
+[1.022s]   File "/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs/ament_cmake_python/strawberry_msgs/setup.py", line 1, in <module>
+[1.022s] gmake[1]: *** [CMakeFiles/Makefile2:474: CMakeFiles/strawberry_msgs__rosidl_generator_py.dir/all] Interrupt
+[1.022s]     from setuptools import find_packages
+[1.022s]   File "/usr/lib/python3/dist-packages/setuptools/__init__.py", line 16, in <module>
+[1.022s]     import setuptools.version
+[1.022s]   File "/usr/lib/python3/dist-packages/setuptools/version.py", line 1, in <module>
+[1.023s]     import pkg_resources
+[1.023s]   File "/usr/lib/python3/dist-packages/pkg_resources/__init__.py", line 78, in <module>
+[1.024s]     __import__('pkg_resources.extern.packaging.requirements')
+[1.024s]   File "/usr/lib/python3/dist-packages/pkg_resources/_vendor/packaging/requirements.py", line 10, in <module>
+[1.027s]     from pkg_resources.extern.pyparsing import (  # noqa
+[1.027s]   File "<frozen importlib._bootstrap>", line 1027, in _find_and_load
+[1.027s]   File "<frozen importlib._bootstrap>", line 1006, in _find_and_load_unlocked
+[1.027s]   File "<frozen importlib._bootstrap>", line 674, in _load_unlocked
+[1.027s]   File "<frozen importlib._bootstrap>", line 571, in module_from_spec
+[1.027s]   File "/usr/lib/python3/dist-packages/pkg_resources/extern/__init__.py", line 52, in create_module
+[1.028s]     return self.load_module(spec.name)
+[1.028s]   File "/usr/lib/python3/dist-packages/pkg_resources/extern/__init__.py", line 37, in load_module
+[1.028s]     __import__(extant)
+[1.028s]   File "/usr/lib/python3/dist-packages/pkg_resources/_vendor/pyparsing.py", line 5361, in <module>
+[1.028s]     alphas8bit = srange(r"[\0xc0-\0xd6\0xd8-\0xf6\0xf8-\0xff]")
+[1.028s]   File "/usr/lib/python3/dist-packages/pkg_resources/_vendor/pyparsing.py", line 4783, in srange
+[1.028s]     return "".join(_expanded(part) for part in _reBracketExpr.parseString(s).body)
+[1.028s]   File "/usr/lib/python3/dist-packages/pkg_resources/_vendor/pyparsing.py", line 1644, in parseString
+[1.028s]     loc, tokens = self._parse( instring, 0 )
+[1.029s]   File "/usr/lib/python3/dist-packages/pkg_resources/_vendor/pyparsing.py", line 1402, in _parseNoCache
+[1.029s]     loc,tokens = self.parseImpl( instring, preloc, doActions )
+[1.029s]   File "/usr/lib/python3/dist-packages/pkg_resources/_vendor/pyparsing.py", line 3419, in parseImpl
+[1.029s]     resultlist += exprtokens
+[1.029s]   File "/usr/lib/python3/dist-packages/pkg_resources/_vendor/pyparsing.py", line 663, in __iadd__
+[1.029s]     def __iadd__( self, other ):
+[1.029s] KeyboardInterrupt
+[1.046s] gmake[2]: *** [CMakeFiles/ament_cmake_python_build_strawberry_msgs_egg.dir/build.make:70: CMakeFiles/ament_cmake_python_build_strawberry_msgs_egg] Interrupt
+[1.046s] gmake[1]: *** [CMakeFiles/Makefile2:447: CMakeFiles/ament_cmake_python_build_strawberry_msgs_egg.dir/all] Interrupt
+[1.047s] gmake: *** [Makefile:146: all] Interrupt

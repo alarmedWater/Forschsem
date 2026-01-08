@@ -313,6 +313,8 @@ class YoloSegUltralyticsNode(Node):
         out.view_id = int(src.view_id)
         out.rgb_path = str(src.rgb_path)
         out.depth_path = str(src.depth_path)
+        out.camera_pose_world = src.camera_pose_world
+        out.world_frame_id = str(src.world_frame_id)
         return out
 
     # ------------------------------------------------------------------ #

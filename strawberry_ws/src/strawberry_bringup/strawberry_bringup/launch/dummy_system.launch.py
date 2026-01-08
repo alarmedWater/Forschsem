@@ -17,10 +17,11 @@ from launch.actions import DeclareLaunchArgument
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description() -> LaunchDescription:
-    # ---------------- Launch arguments ----------------
+    # ---------------- Launch arguments (raw) ----------------
     plants_root_dir = LaunchConfiguration("plants_root_dir")
     plant_glob = LaunchConfiguration("plant_glob")
     use_plants_root = LaunchConfiguration("use_plants_root")
@@ -56,8 +57,27 @@ def generate_launch_description() -> LaunchDescription:
     enable_selected_overlay = LaunchConfiguration("enable_selected_overlay")
     enable_cluster = LaunchConfiguration("enable_cluster")
 
+    # ---------------- Typed launch configs (IMPORTANT) ----------------
+    use_plants_root_t = ParameterValue(use_plants_root, value_type=bool)
+
+    fps_t = ParameterValue(fps, value_type=float)
+    loop_t = ParameterValue(loop, value_type=bool)
+
+    publish_depth_t = ParameterValue(publish_depth, value_type=bool)
+    publish_pose_t = ParameterValue(publish_pose, value_type=bool)
+
+    publish_frame_info_t = ParameterValue(publish_frame_info, value_type=bool)
+    publish_overlay_t = ParameterValue(publish_overlay, value_type=bool)
+
+    sync_queue_size_t = ParameterValue(sync_queue_size, value_type=int)
+    sync_slop_t = ParameterValue(sync_slop, value_type=float)
+
+    depth_scale_t = ParameterValue(depth_scale_m_per_unit, value_type=float)
+    selected_instance_id_t = ParameterValue(selected_instance_id, value_type=int)
+
     return LaunchDescription(
         [
+            # ---------------- Declare launch arguments ----------------
             DeclareLaunchArgument(
                 "plants_root_dir",
                 default_value="/home/parallels/Forschsemrep/strawberry_ws/data/plant_views",
@@ -187,20 +207,22 @@ def generate_launch_description() -> LaunchDescription:
                 output="screen",
                 parameters=[
                     {
-                        "use_plants_root": use_plants_root,
+                        "use_plants_root": use_plants_root_t,
                         "plants_root_dir": plants_root_dir,
+                        # IMPORTANT: do NOT hardcode unless you really want it:
+                        # "plant_glob": "plant_000",
                         "plant_glob": plant_glob,
                         "rgb_pattern": rgb_pattern,
                         "depth_pattern": depth_pattern,
                         "rgb_dir": rgb_dir,
                         "depth_dir": depth_dir,
-                        "fps": fps,
-                        "loop": loop,
-                        "publish_depth": publish_depth,
-                        "publish_pose": publish_pose,
+                        "fps": fps_t,
+                        "loop": loop_t,
+                        "publish_depth": publish_depth_t,
+                        "publish_pose": publish_pose_t,
                         "pose_topic": pose_topic,
                         "world_frame_id": world_frame_id,
-                        "publish_frame_info": publish_frame_info,
+                        "publish_frame_info": publish_frame_info_t,
                         "frame_info_topic": frame_info_topic,
                     }
                 ],
@@ -217,11 +239,11 @@ def generate_launch_description() -> LaunchDescription:
                         "model_path": model_path,
                         "topic_in": "/camera/color/image_raw",
                         "frame_info_topic": frame_info_topic,
-                        "publish_frame_info": True,
+                        "publish_frame_info": publish_frame_info_t,
                         "frame_info_out_topic": "/seg/frame_info",
-                        "publish_overlay": publish_overlay,
-                        "sync_queue_size": sync_queue_size,
-                        "sync_slop": sync_slop,
+                        "publish_overlay": publish_overlay_t,
+                        "sync_queue_size": sync_queue_size_t,
+                        "sync_slop": sync_slop_t,
                     }
                 ],
             ),
@@ -238,17 +260,17 @@ def generate_launch_description() -> LaunchDescription:
                         "label_topic": "/seg/label_image",
                         "output_topic": "/seg/depth_masked",
                         "frame_info_topic": "/seg/frame_info",
-                        "publish_frame_info": True,
+                        "publish_frame_info": publish_frame_info_t,
                         "frame_info_out_topic": "/seg/frame_info_depth_masked",
-                        "sync_queue_size": sync_queue_size,
-                        "sync_slop": sync_slop,
+                        "sync_queue_size": sync_queue_size_t,
+                        "sync_slop": sync_slop_t,
                         "zero_background": True,
 
-                        # --- WICHTIG für realsense_units + range gating ---
+                        # --- IMPORTANT for realsense_units + range gating ---
                         "depth_unit": depth_unit,
-                        "depth_scale_m_per_unit": depth_scale_m_per_unit,
+                        "depth_scale_m_per_unit": depth_scale_t,
 
-                        # optional (wenn du meinen Nahbereichsfilter eingebaut hast)
+                        # Optional range filter (only if your node supports it)
                         "range_filter_enable": True,
                         "min_depth_m": 0.05,
                         "max_depth_m": 0.60,
@@ -256,7 +278,6 @@ def generate_launch_description() -> LaunchDescription:
                     }
                 ],
             ),
-
 
             # ---------------- Features + point clouds ----------------
             Node(
@@ -274,15 +295,15 @@ def generate_launch_description() -> LaunchDescription:
                         "min_points": 50,
                         "profile": False,
                         "depth_unit": depth_unit,
-                        "depth_scale_m_per_unit": depth_scale_m_per_unit,
+                        "depth_scale_m_per_unit": depth_scale_t,
                         "publish_all_cloud": True,
                         "cloud_topic_all": "/seg/strawberry_cloud",
                         "publish_selected_cloud": True,
                         "cloud_topic_selected": "/seg/strawberry_cloud_selected",
-                        "selected_instance_id": selected_instance_id,
+                        "selected_instance_id": selected_instance_id_t,
                         "log_features": True,
-                        "sync_queue_size": sync_queue_size,
-                        "sync_slop": sync_slop,
+                        "sync_queue_size": sync_queue_size_t,
+                        "sync_slop": sync_slop_t,
                     }
                 ],
             ),
@@ -300,15 +321,14 @@ def generate_launch_description() -> LaunchDescription:
                         "label_topic": "/seg/label_image",
                         "output_topic": "/seg/selected_overlay",
                         "frame_info_topic": "/seg/frame_info",
-                        "publish_frame_info": True,
+                        "publish_frame_info": publish_frame_info_t,
                         "frame_info_out_topic": "/seg/frame_info_selected_overlay",
-                        "selected_instance_id": selected_instance_id,
+                        "selected_instance_id": selected_instance_id_t,
                         "min_pixels": 50,
                         "darken_factor": 0.3,
                         "draw_bbox": True,
-                        "sync_queue_size": sync_queue_size,
-                        "sync_slop": sync_slop,
-
+                        "sync_queue_size": sync_queue_size_t,
+                        "sync_slop": sync_slop_t,
                     }
                 ],
             ),
@@ -328,9 +348,9 @@ def generate_launch_description() -> LaunchDescription:
                         "frame_info_topic": "/seg/frame_info_depth_masked",
                         "camera_info_topic": "/camera/color/camera_info",
                         "depth_unit": depth_unit,
-                        "depth_scale_m_per_unit": depth_scale_m_per_unit,
-                        "sync_queue_size": sync_queue_size,
-                        "sync_slop": sync_slop,
+                        "depth_scale_m_per_unit": depth_scale_t,
+                        "sync_queue_size": sync_queue_size_t,
+                        "sync_slop": sync_slop_t,
                         "reset_on_new_plant": True,
                         "log_assignments": True,
                     }
