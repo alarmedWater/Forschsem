@@ -30,6 +30,8 @@ setup(
             # strawberry_cluster_node.py: main()
             "strawberry_cluster = "
             "strawberry_cluster.strawberry_cluster_node:main",
+            "cluster_diagnostic = strawberry_cluster.cluster_diagnostic:main",
+            "raw_cloud_saver = strawberry_cluster.raw_cloud_saver:main",
         ],
     },
 )

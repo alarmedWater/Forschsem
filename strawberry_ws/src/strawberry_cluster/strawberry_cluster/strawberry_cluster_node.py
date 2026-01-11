@@ -9,22 +9,10 @@ Synchronized inputs:
   - instance label image (/seg/label_image)
   - frame info (FrameInfo) aligned to depth stamp
 
-IMPORTANT:
-  The camera pose is read from FrameInfo.camera_pose_world (geometry_msgs/Pose),
-  not from a separate /camera_pose_world topic.
-
-For each instance:
-  - compute 3D points in camera frame (from depth + intrinsics)
-  - compute centroid in camera frame
-  - transform centroid + points to world frame using FrameInfo.camera_pose_world
-  - assign/update a cluster in world frame (per plant_id)
-  - accumulate world points per cluster
+Pose comes from FrameInfo.camera_pose_world.
 
 Exports:
-  - on plant change (or shutdown): writes one PLY per cluster + summary txt
-
-Assumes "3 views per plant":
-  view_id: 0=links, 1=mitte, 2=rechts
+  - on plant change (or shutdown): writes one PLY per cluster + summary.txt
 """
 
 from __future__ import annotations
@@ -48,20 +36,15 @@ from strawberry_msgs.msg import FrameInfo
 
 @dataclass
 class Cluster:
-    """Per-plant cluster representation in world coordinates."""
-
     cluster_id: int
-    centroid_world: np.ndarray  # shape (3,)
+    centroid_world: np.ndarray
     num_points: int
     views_seen: set[int] = field(default_factory=set)
     last_frame_index: int = -1
-    points_world: np.ndarray = field(
-        default_factory=lambda: np.zeros((0, 3), dtype=np.float32)
-    )
+    points_world: np.ndarray = field(default_factory=lambda: np.zeros((0, 3), dtype=np.float32))
 
 
 def quaternion_to_rotation_matrix(qx: float, qy: float, qz: float, qw: float) -> np.ndarray:
-    """Convert quaternion (x,y,z,w) to 3x3 rotation matrix."""
     norm = math.sqrt(qx * qx + qy * qy + qz * qz + qw * qw)
     if norm <= 0.0:
         return np.eye(3, dtype=np.float32)
@@ -92,8 +75,6 @@ def quaternion_to_rotation_matrix(qx: float, qy: float, qz: float, qw: float) ->
 
 
 class StrawberryClusterNode(Node):
-    """Cluster strawberry instances across multiple views in world coordinates."""
-
     def __init__(self) -> None:
         super().__init__("strawberry_cluster")
 
@@ -105,34 +86,27 @@ class StrawberryClusterNode(Node):
 
         self.declare_parameter("downsample_step", 1)
         self.declare_parameter("min_points", 50)
-        self.declare_parameter("distance_threshold", 0.05)  # meters
+        self.declare_parameter("distance_threshold", 0.05)
         self.declare_parameter("max_clusters", 50)
         self.declare_parameter("profile", False)
 
-        # Sync tuning
         self.declare_parameter("sync_queue_size", 200)
         self.declare_parameter("sync_slop", 0.2)
 
-        # Depth scaling
         self.declare_parameter("depth_unit", "mm")  # "mm" or "realsense_units"
         self.declare_parameter("depth_scale_m_per_unit", 9.999999747378752e-05)
 
-        # Practical: reset clusters when plant_id changes
         self.declare_parameter("reset_on_new_plant", True)
-
-        # Logging control
         self.declare_parameter("log_assignments", True)
 
-        # -------- Optional range filter --------
         self.declare_parameter("range_filter_enable", True)
         self.declare_parameter("min_depth_m", 0.05)
         self.declare_parameter("max_depth_m", 0.60)
 
-        # -------- PLY export --------
         self.declare_parameter("output_dir", str(Path.home() / "strawberry_ply"))
         self.declare_parameter("write_ply_on_plant_change", True)
         self.declare_parameter("write_ply_on_shutdown", True)
-        self.declare_parameter("max_points_per_cluster", 200000)  # safety
+        self.declare_parameter("max_points_per_cluster", 200000)
         self.declare_parameter("ply_ascii", True)
 
         depth_topic = self._param_str("depth_topic", "/seg/depth_masked")
@@ -142,7 +116,7 @@ class StrawberryClusterNode(Node):
 
         self._step = max(1, self._param_int("downsample_step", 1))
         self._min_points = max(0, self._param_int("min_points", 50))
-        self._dist_thresh = float(self._param_float("distance_threshold", 0.02))
+        self._dist_thresh = float(self._param_float("distance_threshold", 0.05))
         self._max_clusters = max(1, self._param_int("max_clusters", 50))
         self._profile = self._param_bool("profile", False)
 
@@ -152,9 +126,7 @@ class StrawberryClusterNode(Node):
             self._sync_slop = 0.05
 
         self._depth_unit = self._param_str("depth_unit", "mm").strip().lower()
-        self._depth_scale = float(
-            self._param_float("depth_scale_m_per_unit", 9.999999747378752e-05)
-        )
+        self._depth_scale = float(self._param_float("depth_scale_m_per_unit", 9.999999747378752e-05))
 
         self._reset_on_new_plant = self._param_bool("reset_on_new_plant", True)
         self._log_assignments = self._param_bool("log_assignments", True)
@@ -198,7 +170,7 @@ class StrawberryClusterNode(Node):
 
         self._bridge = CvBridge()
 
-        # ---------------- Intrinsics ----------------
+        # Intrinsics
         self._fx: Optional[float] = None
         self._fy: Optional[float] = None
         self._cx: Optional[float] = None
@@ -210,7 +182,7 @@ class StrawberryClusterNode(Node):
 
         self.create_subscription(CameraInfo, cam_info_topic, self._camera_info_cb, 10)
 
-        # ---------------- Clusters (per current plant) ----------------
+        # Clusters
         self._active_plant_id: Optional[int] = None
         self._clusters: List[Cluster] = []
         self._cluster_by_id: Dict[int, Cluster] = {}
@@ -224,9 +196,7 @@ class StrawberryClusterNode(Node):
 
         self._sub_depth = message_filters.Subscriber(self, Image, depth_topic, qos_profile=qos)
         self._sub_label = message_filters.Subscriber(self, Image, label_topic, qos_profile=qos)
-        self._sub_frame_info = message_filters.Subscriber(
-            self, FrameInfo, frame_info_topic, qos_profile=qos
-        )
+        self._sub_frame_info = message_filters.Subscriber(self, FrameInfo, frame_info_topic, qos_profile=qos)
 
         self._ts = message_filters.ApproximateTimeSynchronizer(
             [self._sub_depth, self._sub_label, self._sub_frame_info],
@@ -235,9 +205,7 @@ class StrawberryClusterNode(Node):
         )
         self._ts.registerCallback(self._sync_cb)
 
-    # ------------------------------------------------------------------ #
-    # Param helpers
-    # ------------------------------------------------------------------ #
+    # ---------------- Param helpers ----------------
 
     def _param_str(self, name: str, default: str) -> str:
         val: Any = self.get_parameter(name).value
@@ -276,9 +244,7 @@ class StrawberryClusterNode(Node):
         except Exception:  # noqa: BLE001
             return default
 
-    # ------------------------------------------------------------------ #
-    # Intrinsics callback
-    # ------------------------------------------------------------------ #
+    # ---------------- Intrinsics ----------------
 
     def _camera_info_cb(self, msg: CameraInfo) -> None:
         self._fx = float(msg.k[0])
@@ -286,9 +252,7 @@ class StrawberryClusterNode(Node):
         self._cx = float(msg.k[2])
         self._cy = float(msg.k[5])
 
-    # ------------------------------------------------------------------ #
-    # Depth conversion
-    # ------------------------------------------------------------------ #
+    # ---------------- Depth conversion ----------------
 
     def _depth_to_meters(self, depth: np.ndarray) -> np.ndarray:
         if depth.dtype == np.uint16:
@@ -306,9 +270,7 @@ class StrawberryClusterNode(Node):
 
         return depth.astype(np.float32)
 
-    # ------------------------------------------------------------------ #
-    # Core callback
-    # ------------------------------------------------------------------ #
+    # ---------------- Core callback ----------------
 
     def _sync_cb(self, depth_msg: Image, label_msg: Image, frame_info_msg: FrameInfo) -> None:
         t0 = time.time()
@@ -429,7 +391,6 @@ class StrawberryClusterNode(Node):
                 frame_index=frame_index,
             )
 
-            # accumulate points in world frame
             pts_w = (r_world_cam @ points_cam.T).T + t_world_cam
             self._append_points_to_cluster(cid, pts_w)
 
@@ -446,13 +407,9 @@ class StrawberryClusterNode(Node):
 
         if self._profile:
             dt_ms = (time.time() - t0) * 1000.0
-            self.get_logger().info(
-                f"Cluster callback: {dt_ms:.2f} ms | clusters={len(self._clusters)}"
-            )
+            self.get_logger().info(f"Cluster callback: {dt_ms:.2f} ms | clusters={len(self._clusters)}")
 
-    # ------------------------------------------------------------------ #
-    # Cluster management
-    # ------------------------------------------------------------------ #
+    # ---------------- Cluster management ----------------
 
     def _append_points_to_cluster(self, cluster_id: int, pts_world: np.ndarray) -> None:
         c = self._cluster_by_id.get(int(cluster_id))
@@ -466,7 +423,6 @@ class StrawberryClusterNode(Node):
         else:
             c.points_world = np.vstack([c.points_world, pts_world])
 
-        # safety cap
         if c.points_world.shape[0] > self._max_points_per_cluster:
             idx = np.random.choice(
                 c.points_world.shape[0],
@@ -483,14 +439,9 @@ class StrawberryClusterNode(Node):
         frame_index: int,
     ) -> Tuple[int, bool]:
         if not self._clusters:
-            return (
-                self._create_cluster(centroid_world, num_points, view_id, frame_index),
-                True,
-            )
+            return self._create_cluster(centroid_world, num_points, view_id, frame_index), True
 
-        dists = [
-            float(np.linalg.norm(centroid_world - c.centroid_world)) for c in self._clusters
-        ]
+        dists = [float(np.linalg.norm(centroid_world - c.centroid_world)) for c in self._clusters]
         min_idx = int(np.argmin(dists))
         min_dist = float(dists[min_idx])
         best = self._clusters[min_idx]
@@ -507,12 +458,8 @@ class StrawberryClusterNode(Node):
             return best.cluster_id, True
 
         if len(self._clusters) < self._max_clusters:
-            return (
-                self._create_cluster(centroid_world, num_points, view_id, frame_index),
-                True,
-            )
+            return self._create_cluster(centroid_world, num_points, view_id, frame_index), True
 
-        # if full: attach to nearest (even if far) but mark as not-new
         best.views_seen.add(int(view_id))
         best.last_frame_index = int(frame_index)
         return best.cluster_id, False
@@ -545,9 +492,7 @@ class StrawberryClusterNode(Node):
         )
         return cid
 
-    # ------------------------------------------------------------------ #
-    # Export
-    # ------------------------------------------------------------------ #
+    # ---------------- Export clusters per plant ----------------
 
     def _export_current_plant(self) -> None:
         plant_id = self._active_plant_id
@@ -586,9 +531,7 @@ class StrawberryClusterNode(Node):
             summary_lines.append("")
 
         (out_dir / "summary.txt").write_text("\n".join(summary_lines), encoding="utf-8")
-        self.get_logger().info(
-            f"Exported {exported} PLY file(s) for plant {plant_id} to: {out_dir}"
-        )
+        self.get_logger().info(f"Exported {exported} PLY file(s) for plant {plant_id} to: {out_dir}")
 
     @staticmethod
     def _write_ply(path: Path, points_xyz: np.ndarray, ascii_mode: bool = True) -> None:
@@ -623,12 +566,9 @@ class StrawberryClusterNode(Node):
             f.write(header)
             f.write(pts.astype("<f4", copy=False).tobytes())
 
-    # ------------------------------------------------------------------ #
-    # Shutdown hook
-    # ------------------------------------------------------------------ #
+    # ---------------- Shutdown hook ----------------
 
     def shutdown(self) -> None:
-        """Call this from main() before destroy_node()."""
         if not self._write_on_shutdown:
             return
         try:

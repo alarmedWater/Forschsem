@@ -1,0 +1,22 @@
+running develop
+running egg_info
+creating strawberry_tools.egg-info
+writing strawberry_tools.egg-info/PKG-INFO
+writing dependency_links to strawberry_tools.egg-info/dependency_links.txt
+writing entry points to strawberry_tools.egg-info/entry_points.txt
+writing requirements to strawberry_tools.egg-info/requires.txt
+writing top-level names to strawberry_tools.egg-info/top_level.txt
+writing manifest file 'strawberry_tools.egg-info/SOURCES.txt'
+reading manifest file 'strawberry_tools.egg-info/SOURCES.txt'
+writing manifest file 'strawberry_tools.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/lib/python3.10/site-packages/strawberry-tools.egg-link (link to .)
+Installing sync_audit script to /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/lib/strawberry_tools
+
+Installed /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_tools
+running symlink_data
+creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/share/ament_index
+creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/share/ament_index/resource_index
+creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/share/ament_index/resource_index/packages
+symbolically linking /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_tools/resource/strawberry_tools -> /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/share/ament_index/resource_index/packages
+symbolically linking /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_tools/package.xml -> /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/share/strawberry_tools

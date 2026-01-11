@@ -62,7 +62,7 @@ class DepthMaskNode(Node):
 
         # Profiling / debug
         self.declare_parameter("profile", False)
-        self.declare_parameter("debug_stamps_once", False)
+        self.declare_parameter("debug_stamps_once", True)
 
         # -------- Depth range gating --------
         self.declare_parameter("range_filter_enable", True)

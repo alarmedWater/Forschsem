@@ -8,9 +8,18 @@ Nodes:
 - seg_ultra: YOLOv8 instance segmentation on RGB images + FrameInfo passthrough
 - depth_mask: applies instance mask to depth image + FrameInfo passthrough
 - strawberry_features: per-instance 3D features + point clouds
-- strawberry_selected_overlay: highlights one selected instance in RGB image (optional)
-- strawberry_cluster: clusters instances across views using pose (optional)
+
+Optional:
+- strawberry_selected_overlay: highlights one selected instance in RGB image
+
+Always-on (default):
+- raw_cloud_saver: saves per-plant raw clouds (per view) BEFORE clustering
+- strawberry_cluster: clusters instances across views and exports cluster PLYs
 """
+
+from __future__ import annotations
+
+import os
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
@@ -21,6 +30,8 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description() -> LaunchDescription:
+    home = os.path.expanduser("~")
+
     # ---------------- Launch arguments (raw) ----------------
     plants_root_dir = LaunchConfiguration("plants_root_dir")
     plant_glob = LaunchConfiguration("plant_glob")
@@ -53,9 +64,18 @@ def generate_launch_description() -> LaunchDescription:
     depth_scale_m_per_unit = LaunchConfiguration("depth_scale_m_per_unit")
 
     selected_instance_id = LaunchConfiguration("selected_instance_id")
-
     enable_selected_overlay = LaunchConfiguration("enable_selected_overlay")
-    enable_cluster = LaunchConfiguration("enable_cluster")
+
+    # NEW: output dirs
+    cluster_output_dir = LaunchConfiguration("cluster_output_dir")
+    raw_output_dir = LaunchConfiguration("raw_output_dir")
+
+    # NEW: raw_cloud_saver behavior
+    raw_save_once_per_view = LaunchConfiguration("raw_save_once_per_view")
+    raw_overwrite = LaunchConfiguration("raw_overwrite")
+    raw_assume_cloud_in = LaunchConfiguration("raw_assume_cloud_in")   # "camera"|"world"
+    raw_export_cloud_in = LaunchConfiguration("raw_export_cloud_in")   # "world"|"camera"
+    raw_ply_ascii = LaunchConfiguration("raw_ply_ascii")
 
     # ---------------- Typed launch configs (IMPORTANT) ----------------
     use_plants_root_t = ParameterValue(use_plants_root, value_type=bool)
@@ -74,6 +94,10 @@ def generate_launch_description() -> LaunchDescription:
 
     depth_scale_t = ParameterValue(depth_scale_m_per_unit, value_type=float)
     selected_instance_id_t = ParameterValue(selected_instance_id, value_type=int)
+
+    raw_save_once_per_view_t = ParameterValue(raw_save_once_per_view, value_type=bool)
+    raw_overwrite_t = ParameterValue(raw_overwrite, value_type=bool)
+    raw_ply_ascii_t = ParameterValue(raw_ply_ascii, value_type=bool)
 
     return LaunchDescription(
         [
@@ -115,7 +139,7 @@ def generate_launch_description() -> LaunchDescription:
             ),
             DeclareLaunchArgument(
                 "fps",
-                default_value="2.0",
+                default_value="0.2",
                 description="Playback FPS for camera_folder.",
             ),
             DeclareLaunchArgument(
@@ -193,10 +217,44 @@ def generate_launch_description() -> LaunchDescription:
                 default_value="true",
                 description="Enable strawberry_selected_overlay node (true/false).",
             ),
+
+            # NEW: output dirs
             DeclareLaunchArgument(
-                "enable_cluster",
+                "cluster_output_dir",
+                default_value=os.path.join(home, "strawberry_ply"),
+                description="Output root for clustered PLYs (plant_XXX/cluster_YYY.ply).",
+            ),
+            DeclareLaunchArgument(
+                "raw_output_dir",
+                default_value=os.path.join(home, "strawberry_raw_ply"),
+                description="Output root for raw per-view PLYs (plant_XXX/cloud_{view}.ply).",
+            ),
+
+            # NEW: raw_cloud_saver params
+            DeclareLaunchArgument(
+                "raw_save_once_per_view",
                 default_value="true",
-                description="Enable strawberry_cluster node (true/false).",
+                description="Save exactly one raw cloud per (plant_id, view_id).",
+            ),
+            DeclareLaunchArgument(
+                "raw_overwrite",
+                default_value="false",
+                description="Overwrite raw cloud files if they already exist.",
+            ),
+            DeclareLaunchArgument(
+                "raw_assume_cloud_in",
+                default_value="camera",
+                description="Interpret incoming cloud coordinates as 'camera' or 'world'.",
+            ),
+            DeclareLaunchArgument(
+                "raw_export_cloud_in",
+                default_value="world",
+                description="Export raw clouds in 'world' or 'camera' coordinates.",
+            ),
+            DeclareLaunchArgument(
+                "raw_ply_ascii",
+                default_value="true",
+                description="Write raw PLY in ASCII (true) or binary (false).",
             ),
 
             # ---------------- Camera from folder ----------------
@@ -209,8 +267,6 @@ def generate_launch_description() -> LaunchDescription:
                     {
                         "use_plants_root": use_plants_root_t,
                         "plants_root_dir": plants_root_dir,
-                        # IMPORTANT: do NOT hardcode unless you really want it:
-                        # "plant_glob": "plant_000",
                         "plant_glob": plant_glob,
                         "rgb_pattern": rgb_pattern,
                         "depth_pattern": depth_pattern,
@@ -265,12 +321,8 @@ def generate_launch_description() -> LaunchDescription:
                         "sync_queue_size": sync_queue_size_t,
                         "sync_slop": sync_slop_t,
                         "zero_background": True,
-
-                        # --- IMPORTANT for realsense_units + range gating ---
                         "depth_unit": depth_unit,
                         "depth_scale_m_per_unit": depth_scale_t,
-
-                        # Optional range filter (only if your node supports it)
                         "range_filter_enable": True,
                         "min_depth_m": 0.05,
                         "max_depth_m": 0.60,
@@ -333,18 +385,36 @@ def generate_launch_description() -> LaunchDescription:
                 ],
             ),
 
-            # ---------------- Cluster node (optional) ----------------
+            # ---------------- Raw cloud saver (ALWAYS ON) ----------------
+            Node(
+                package="strawberry_cluster",
+                executable="raw_cloud_saver",
+                name="raw_cloud_saver",
+                output="screen",
+                parameters=[
+                    {
+                        "cloud_topic": "/seg/strawberry_cloud",
+                        "frame_info_topic": "/seg/frame_info_depth_masked",
+                        "output_dir": raw_output_dir,
+                        "save_once_per_view": raw_save_once_per_view_t,
+                        "overwrite": raw_overwrite_t,
+                        "assume_cloud_in": raw_assume_cloud_in,
+                        "export_cloud_in": raw_export_cloud_in,
+                        "ply_ascii": raw_ply_ascii_t,
+                    }
+                ],
+            ),
+
+            # ---------------- Cluster node (ALWAYS ON) ----------------
             Node(
                 package="strawberry_cluster",
                 executable="strawberry_cluster",
                 name="strawberry_cluster",
                 output="screen",
-                condition=IfCondition(enable_cluster),
                 parameters=[
                     {
                         "depth_topic": "/seg/depth_masked",
                         "label_topic": "/seg/label_image",
-                        "camera_pose_topic": pose_topic,
                         "frame_info_topic": "/seg/frame_info_depth_masked",
                         "camera_info_topic": "/camera/color/camera_info",
                         "depth_unit": depth_unit,
@@ -353,6 +423,10 @@ def generate_launch_description() -> LaunchDescription:
                         "sync_slop": sync_slop_t,
                         "reset_on_new_plant": True,
                         "log_assignments": True,
+                        "output_dir": cluster_output_dir,
+                        "write_ply_on_plant_change": True,
+                        "write_ply_on_shutdown": True,
+                        "ply_ascii": True,
                     }
                 ],
             ),

@@ -1,0 +1,18 @@
+[4.029s] Invoking command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster': PYTHONPATH=/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/build --no-deps symlink_data
+[4.963s] running develop
+[5.590s] running egg_info
+[5.590s] writing strawberry_cluster.egg-info/PKG-INFO
+[5.597s] writing dependency_links to strawberry_cluster.egg-info/dependency_links.txt
+[5.598s] writing entry points to strawberry_cluster.egg-info/entry_points.txt
+[5.598s] writing requirements to strawberry_cluster.egg-info/requires.txt
+[5.598s] writing top-level names to strawberry_cluster.egg-info/top_level.txt
+[5.602s] reading manifest file 'strawberry_cluster.egg-info/SOURCES.txt'
+[5.615s] writing manifest file 'strawberry_cluster.egg-info/SOURCES.txt'
+[5.621s] running build_ext
+[5.627s] Creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/lib/python3.10/site-packages/strawberry-cluster.egg-link (link to .)
+[5.627s] Installing cluster_diagnostic script to /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/lib/strawberry_cluster
+[5.627s] Installing strawberry_cluster script to /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/lib/strawberry_cluster
+[5.627s] 
+[5.627s] Installed /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster
+[5.629s] running symlink_data
+[5.744s] Invoked command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster' returned '0': PYTHONPATH=/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/build --no-deps symlink_data
