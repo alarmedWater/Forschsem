@@ -4,38 +4,27 @@
 """
 Depth masking node (ROS 2).
 
-Applies instance label masks to the aligned depth image and optionally gates depth
-to a known working range (e.g., strawberries are within 0.05..0.60 m).
-
-Inputs (synchronized):
-  - depth_topic: depth image (typically 16UC1) aligned to color
-  - label_topic: instance label image (mono16), 0=background, >0 instance ids
-  - frame_info_topic: strawberry_msgs/FrameInfo aligned to label stamp
-
-Outputs:
-  - output_topic: masked depth (same type as input; outside -> 0)
-  - frame_info_out_topic: FrameInfo passthrough aligned to output stamp
-
-Key idea:
-  Run YOLO on RGB first, then apply depth constraints AFTERWARDS to avoid
-  distribution shift.
+Konvention:
+- QoS: qos_profile_sensor_data (BEST_EFFORT)
+- Sync: TimeSynchronizer (exakt gleiche stamps)
+- Token stamp: FrameInfo.source_stamp (fallback: FrameInfo.header.stamp)
+- Outputs übernehmen immer token_stamp
 """
 
 from __future__ import annotations
 
 import time
-from typing import Any, Optional
+from typing import Any
 
 import message_filters
 import numpy as np
 import rclpy
 from cv_bridge import CvBridge
 from rclpy.node import Node
-from rclpy.qos import QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicy
+from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import Image
 from std_msgs.msg import Header
 
-# If Pylance complains but runtime is fine, you can keep this ignore:
 from strawberry_msgs.msg import FrameInfo  # type: ignore
 
 
@@ -56,9 +45,9 @@ class DepthMaskNode(Node):
 
         self.declare_parameter("zero_background", True)
 
-        # Sync tuning
+        # Sync tuning (queue only; slop is deprecated under exact sync)
         self.declare_parameter("sync_queue_size", 200)
-        self.declare_parameter("sync_slop", 0.2)
+        self.declare_parameter("sync_slop", 0.2)  # kept for backward compat / unused
 
         # Profiling / debug
         self.declare_parameter("profile", False)
@@ -88,9 +77,6 @@ class DepthMaskNode(Node):
         self._zero_background = self._param_bool("zero_background", True)
 
         self._sync_queue_size = max(1, self._param_int("sync_queue_size", 200))
-        self._sync_slop = float(self._param_float("sync_slop", 0.2))
-        if self._sync_slop <= 0.0:
-            self._sync_slop = 0.05
 
         self._profile = self._param_bool("profile", False)
         self._debug_stamps_once = self._param_bool("debug_stamps_once", True)
@@ -127,37 +113,33 @@ class DepthMaskNode(Node):
             f"  depth_unit           = {self._depth_unit}\n"
             f"  depth_scale          = {self._depth_scale:.3e} m/unit\n"
             f"  sync_queue_size      = {self._sync_queue_size}\n"
-            f"  sync_slop            = {self._sync_slop}\n"
             f"  debug_stamps_once    = {self._debug_stamps_once}\n"
             f"  profile              = {self._profile}"
         )
 
         self._bridge = CvBridge()
 
-        qos = QoSProfile(
-            reliability=QoSReliabilityPolicy.BEST_EFFORT,
-            history=QoSHistoryPolicy.KEEP_LAST,
-            depth=10,
+        # ---------------- Subscribers (exact sync) ----------------
+        self._sub_depth = message_filters.Subscriber(
+            self, Image, depth_topic, qos_profile=qos_profile_sensor_data
         )
-
-        # ---------------- Subscribers (synced) ----------------
-        self._sub_depth = message_filters.Subscriber(self, Image, depth_topic, qos_profile=qos)
-        self._sub_label = message_filters.Subscriber(self, Image, label_topic, qos_profile=qos)
+        self._sub_label = message_filters.Subscriber(
+            self, Image, label_topic, qos_profile=qos_profile_sensor_data
+        )
         self._sub_frame_info = message_filters.Subscriber(
-            self, FrameInfo, frame_info_topic, qos_profile=qos
+            self, FrameInfo, frame_info_topic, qos_profile=qos_profile_sensor_data
         )
 
-        self._ts = message_filters.ApproximateTimeSynchronizer(
+        self._ts = message_filters.TimeSynchronizer(
             [self._sub_depth, self._sub_label, self._sub_frame_info],
             queue_size=self._sync_queue_size,
-            slop=self._sync_slop,
         )
         self._ts.registerCallback(self._sync_cb)
 
         # ---------------- Publishers ----------------
-        self._pub_depth = self.create_publisher(Image, output_topic, 10)
+        self._pub_depth = self.create_publisher(Image, output_topic, qos_profile_sensor_data)
         self._pub_frame_info = (
-            self.create_publisher(FrameInfo, self._frame_info_out_topic, 10)
+            self.create_publisher(FrameInfo, self._frame_info_out_topic, qos_profile_sensor_data)
             if self._publish_frame_info
             else None
         )
@@ -205,6 +187,36 @@ class DepthMaskNode(Node):
             return float(val)
         except Exception:  # noqa: BLE001
             return default
+
+    # ------------------------------------------------------------------ #
+    # FrameInfo helpers (copy token fields if present)
+    # ------------------------------------------------------------------ #
+
+    @staticmethod
+    def _token_stamp(fi: FrameInfo):
+        return getattr(fi, "source_stamp", fi.header.stamp)
+
+    @staticmethod
+    def _copy_frame_info(src: FrameInfo, token_stamp) -> FrameInfo:
+        out = FrameInfo()
+        out.header = Header(stamp=token_stamp, frame_id=src.header.frame_id)
+        out.frame_index = int(src.frame_index)
+        out.plant_id = int(src.plant_id)
+        out.view_id = int(src.view_id)
+        out.rgb_path = str(src.rgb_path)
+        out.depth_path = str(src.depth_path)
+        out.camera_pose_world = src.camera_pose_world
+        out.world_frame_id = str(src.world_frame_id)
+
+        # Optional new fields
+        if hasattr(src, "source_stamp"):
+            out.source_stamp = src.source_stamp
+        if hasattr(src, "frame_uid"):
+            out.frame_uid = src.frame_uid
+        if hasattr(src, "pipeline_version"):
+            out.pipeline_version = src.pipeline_version
+
+        return out
 
     # ------------------------------------------------------------------ #
     # Depth range mask (fast, in raw units)
@@ -260,10 +272,23 @@ class DepthMaskNode(Node):
     def _sync_cb(self, depth_msg: Image, label_msg: Image, fi_msg: FrameInfo) -> None:
         t0 = time.time()
 
+        token_stamp = self._token_stamp(fi_msg)
+        uid = getattr(fi_msg, "frame_uid", "")
+
+        # Hard stamp guards (deterministic pipeline)
+        if depth_msg.header.stamp != token_stamp or label_msg.header.stamp != token_stamp:
+            self.get_logger().warning(
+                "DROP stamp_mismatch "
+                f"uid={uid} idx={int(fi_msg.frame_index)} "
+                f"depth={depth_msg.header.stamp.sec}.{depth_msg.header.stamp.nanosec:09d} "
+                f"label={label_msg.header.stamp.sec}.{label_msg.header.stamp.nanosec:09d} "
+                f"token={token_stamp.sec}.{token_stamp.nanosec:09d}"
+            )
+            return
+
         depth = self._bridge.imgmsg_to_cv2(depth_msg, desired_encoding="passthrough")
         label = self._bridge.imgmsg_to_cv2(label_msg, desired_encoding="mono16")
 
-        # Guard (rare but prevents hard crashes)
         if depth is None or label is None:
             self.get_logger().warning("cv_bridge returned None for depth or label.")
             return
@@ -274,32 +299,28 @@ class DepthMaskNode(Node):
             )
             return
 
-        # FIX (important): rclpy logger expects a single string message
         if self._debug_stamps_once and not self._did_debug_stamps:
             self._did_debug_stamps = True
             self.get_logger().info(
                 "Stamps (sec.nanosec): "
                 f"depth={depth_msg.header.stamp.sec}.{depth_msg.header.stamp.nanosec:09d} "
                 f"label={label_msg.header.stamp.sec}.{label_msg.header.stamp.nanosec:09d} "
-                f"frame_info={fi_msg.header.stamp.sec}.{fi_msg.header.stamp.nanosec:09d}"
+                f"token={token_stamp.sec}.{token_stamp.nanosec:09d} "
+                f"uid={uid}"
             )
 
-        # We primarily support uint16 depth (RealSense / PNG dumps)
-        if depth.dtype != np.uint16:
-            if not self._warned_depth_dtype:
-                self._warned_depth_dtype = True
-                self.get_logger().warning(
-                    f"Depth dtype is {depth.dtype}, expected uint16. "
-                    "Proceeding, but range gating may be disabled."
-                )
+        if depth.dtype != np.uint16 and not self._warned_depth_dtype:
+            self._warned_depth_dtype = True
+            self.get_logger().warning(
+                f"Depth dtype is {depth.dtype}, expected uint16. "
+                "Proceeding, but range gating may be disabled."
+            )
 
         depth_out = depth.copy()
 
-        # Valid depth mask (range-gated if enabled)
         if depth_out.dtype == np.uint16:
             range_ok = self._compute_range_mask_u16(depth_out)
         else:
-            # Fallback for float depths: compute in meters (assumes meters already)
             range_ok = np.isfinite(depth_out) & (depth_out > 0.0)
             if self._range_filter_enable:
                 range_ok &= (depth_out >= self._min_depth_m) & (depth_out <= self._max_depth_m)
@@ -308,28 +329,14 @@ class DepthMaskNode(Node):
             keep = (label > 0) & range_ok
             depth_out[~keep] = 0
         else:
-            # Only apply range gating (keep labels untouched)
             depth_out[~range_ok] = 0
 
-        out_msg = self._bridge.cv2_to_imgmsg(
-            depth_out, encoding=self._encoding_for_depth(depth_out)
-        )
-        out_msg.header = depth_msg.header
+        out_msg = self._bridge.cv2_to_imgmsg(depth_out, encoding=self._encoding_for_depth(depth_out))
+        out_msg.header = Header(stamp=token_stamp, frame_id=depth_msg.header.frame_id)
         self._pub_depth.publish(out_msg)
 
         if self._pub_frame_info is not None:
-            out_fi = FrameInfo()
-            out_fi.header = Header(
-                stamp=depth_msg.header.stamp, frame_id=fi_msg.header.frame_id
-            )
-            out_fi.frame_index = int(fi_msg.frame_index)
-            out_fi.plant_id = int(fi_msg.plant_id)
-            out_fi.view_id = int(fi_msg.view_id)
-            out_fi.rgb_path = str(fi_msg.rgb_path)
-            out_fi.depth_path = str(fi_msg.depth_path)
-            out_fi.camera_pose_world = fi_msg.camera_pose_world
-            out_fi.world_frame_id = str(fi_msg.world_frame_id)
-            self._pub_frame_info.publish(out_fi)
+            self._pub_frame_info.publish(self._copy_frame_info(fi_msg, token_stamp))
 
         if self._profile:
             dt_ms = (time.time() - t0) * 1000.0

@@ -1,1 +1,1 @@
-/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup/strawberry_bringup/launch/dummy_system.launch.py
+/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup/launch/dummy_system.launch.py

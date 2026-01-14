@@ -3,19 +3,11 @@
 """
 Strawberry features and point cloud node (ROS 2).
 
-Computes per-instance 3D point clouds and simple 3D features from:
-  - masked depth image (/seg/depth_masked)
-  - instance label image (/seg/label_image)
-  - camera intrinsics (/camera/color/camera_info)
-
-Additionally consumes:
-  - frame info (FrameInfo) aligned to depth stamp
-
-Depth scaling:
-- If depth is RealSense raw units (uint16): depth_unit="realsense_units"
-      z_m = depth_u16 * depth_scale_m_per_unit
-- If depth is millimeters (uint16): depth_unit="mm"
-      z_m = depth_u16 / 1000.0
+Konvention:
+- QoS: qos_profile_sensor_data (BEST_EFFORT)
+- Sync: TimeSynchronizer (exakt gleiche stamps)
+- Token stamp: FrameInfo.source_stamp (fallback: FrameInfo.header.stamp)
+- Outputs übernehmen immer token_stamp (PointCloud2.header.stamp)
 """
 
 from __future__ import annotations
@@ -28,7 +20,7 @@ import numpy as np
 import rclpy
 from cv_bridge import CvBridge
 from rclpy.node import Node
-from rclpy.qos import QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicy
+from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import CameraInfo, Image, PointCloud2
 from sensor_msgs_py import point_cloud2
 from std_msgs.msg import Header
@@ -57,7 +49,7 @@ class StrawberryFeaturesNode(Node):
         self.declare_parameter("depth_scale_m_per_unit", 9.999999747378752e-05)
 
         self.declare_parameter("sync_queue_size", 200)
-        self.declare_parameter("sync_slop", 0.2)
+        self.declare_parameter("sync_slop", 0.2)  # deprecated/unused now
 
         self.declare_parameter("selected_instance_id", 1)
         self.declare_parameter("publish_selected_cloud", True)
@@ -68,7 +60,6 @@ class StrawberryFeaturesNode(Node):
 
         self.declare_parameter("log_features", True)
 
-        # -------- NEW (guard): optional range filter --------
         self.declare_parameter("range_filter_enable", False)
         self.declare_parameter("min_depth_m", 0.05)
         self.declare_parameter("max_depth_m", 0.60)
@@ -88,9 +79,6 @@ class StrawberryFeaturesNode(Node):
         self._depth_scale = float(self._param_float("depth_scale_m_per_unit", 9.999999747378752e-05))
 
         self._sync_queue_size = max(1, self._param_int("sync_queue_size", 200))
-        self._sync_slop = float(self._param_float("sync_slop", 0.2))
-        if self._sync_slop <= 0.0:
-            self._sync_slop = 0.05
 
         self._selected_instance_id = self._param_int("selected_instance_id", 1)
         self._publish_selected_cloud = self._param_bool("publish_selected_cloud", True)
@@ -123,7 +111,6 @@ class StrawberryFeaturesNode(Node):
             f"  min_depth_m           = {self._min_depth_m:.3f}\n"
             f"  max_depth_m           = {self._max_depth_m:.3f}\n"
             f"  sync_queue_size       = {self._sync_queue_size}\n"
-            f"  sync_slop             = {self._sync_slop}\n"
             f"  selected_instance     = {self._selected_instance_id}\n"
             f"  publish_selected      = {self._publish_selected_cloud}\n"
             f"  publish_all_cloud     = {self._publish_all_cloud}\n"
@@ -146,36 +133,32 @@ class StrawberryFeaturesNode(Node):
         self._warned_no_intrinsics = False
         self._warned_bad_depth_unit = False
 
-        # ---------------- QoS ----------------
-        qos = QoSProfile(
-            reliability=QoSReliabilityPolicy.BEST_EFFORT,
-            history=QoSHistoryPolicy.KEEP_LAST,
-            depth=10,
+        # ---------------- Subscribers (exact sync) ----------------
+        self._sub_depth = message_filters.Subscriber(
+            self, Image, depth_topic, qos_profile=qos_profile_sensor_data
         )
-
-        # ---------------- Subscribers (sync) ----------------
-        self._sub_depth = message_filters.Subscriber(self, Image, depth_topic, qos_profile=qos)
-        self._sub_label = message_filters.Subscriber(self, Image, label_topic, qos_profile=qos)
+        self._sub_label = message_filters.Subscriber(
+            self, Image, label_topic, qos_profile=qos_profile_sensor_data
+        )
         self._sub_frame_info = message_filters.Subscriber(
-            self, FrameInfo, frame_info_topic, qos_profile=qos
+            self, FrameInfo, frame_info_topic, qos_profile=qos_profile_sensor_data
         )
 
-        self._ts = message_filters.ApproximateTimeSynchronizer(
+        self._ts = message_filters.TimeSynchronizer(
             [self._sub_depth, self._sub_label, self._sub_frame_info],
             queue_size=self._sync_queue_size,
-            slop=self._sync_slop,
         )
         self._ts.registerCallback(self._sync_cb)
 
         # ---------------- CameraInfo (async) ----------------
         self._sub_info = self.create_subscription(
-            CameraInfo, cam_info_topic, self._camera_info_cb, 10
+            CameraInfo, cam_info_topic, self._camera_info_cb, qos_profile_sensor_data
         )
 
         # ---------------- Publishers ----------------
-        self._pub_cloud_all = self.create_publisher(PointCloud2, self._cloud_topic_all, 10)
+        self._pub_cloud_all = self.create_publisher(PointCloud2, self._cloud_topic_all, qos_profile_sensor_data)
         self._pub_cloud_selected = self.create_publisher(
-            PointCloud2, self._cloud_topic_selected, 10
+            PointCloud2, self._cloud_topic_selected, qos_profile_sensor_data
         )
 
     # ------------------------------------------------------------------ #
@@ -220,6 +203,14 @@ class StrawberryFeaturesNode(Node):
             return default
 
     # ------------------------------------------------------------------ #
+    # Token helpers
+    # ------------------------------------------------------------------ #
+
+    @staticmethod
+    def _token_stamp(fi: FrameInfo):
+        return getattr(fi, "source_stamp", fi.header.stamp)
+
+    # ------------------------------------------------------------------ #
     # CameraInfo callback
     # ------------------------------------------------------------------ #
 
@@ -245,8 +236,7 @@ class StrawberryFeaturesNode(Node):
 
             if not self._warned_bad_depth_unit:
                 self.get_logger().warning(
-                    f"Unknown depth_unit='{self._depth_unit}'. Falling back to "
-                    f"'mm'."
+                    f"Unknown depth_unit='{self._depth_unit}'. Falling back to 'mm'."
                 )
                 self._warned_bad_depth_unit = True
             return depth.astype(np.float32) / 1000.0
@@ -264,6 +254,20 @@ class StrawberryFeaturesNode(Node):
             if not self._warned_no_intrinsics:
                 self.get_logger().warning("No CameraInfo received yet – cannot compute features.")
                 self._warned_no_intrinsics = True
+            return
+
+        token_stamp = self._token_stamp(info_msg)
+        uid = getattr(info_msg, "frame_uid", "")
+
+        # Hard stamp guards
+        if depth_msg.header.stamp != token_stamp or label_msg.header.stamp != token_stamp:
+            self.get_logger().warning(
+                "DROP stamp_mismatch "
+                f"uid={uid} idx={int(info_msg.frame_index)} "
+                f"depth={depth_msg.header.stamp.sec}.{depth_msg.header.stamp.nanosec:09d} "
+                f"label={label_msg.header.stamp.sec}.{label_msg.header.stamp.nanosec:09d} "
+                f"token={token_stamp.sec}.{token_stamp.nanosec:09d}"
+            )
             return
 
         plant_id = int(info_msg.plant_id)
@@ -338,7 +342,7 @@ class StrawberryFeaturesNode(Node):
         if self._log_features:
             inst_list = sorted(current_clouds.keys())
             lines: List[str] = [
-                f"Frame {frame_index} | plant {plant_id} | view {view_id} | instances={inst_list}"
+                f"Frame {frame_index} | plant {plant_id} | view {view_id} | uid={uid} | instances={inst_list}"
             ]
             for inst_id in inst_list:
                 pts = current_clouds[inst_id]
@@ -366,7 +370,7 @@ class StrawberryFeaturesNode(Node):
             self.get_logger().info("\n".join(lines))
 
         header = Header()
-        header.stamp = depth_msg.header.stamp
+        header.stamp = token_stamp
         header.frame_id = self._frame_id if self._frame_id else depth_msg.header.frame_id
 
         if self._publish_all_cloud and self._pub_cloud_all.get_subscription_count() > 0:
@@ -377,7 +381,9 @@ class StrawberryFeaturesNode(Node):
             self._pub_cloud_all.publish(cloud_all_msg)
 
         if self._publish_selected_cloud and self._pub_cloud_selected.get_subscription_count() > 0:
-            self._selected_instance_id = self._param_int("selected_instance_id", self._selected_instance_id)
+            self._selected_instance_id = self._param_int(
+                "selected_instance_id", self._selected_instance_id
+            )
             pts_sel = current_clouds.get(int(self._selected_instance_id))
             cloud_sel_msg = point_cloud2.create_cloud_xyz32(
                 header,

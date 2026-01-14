@@ -145,7 +145,7 @@ def generate_launch_description() -> LaunchDescription:
             ),
             DeclareLaunchArgument(
                 "fps",
-                default_value="0.2",
+                default_value="0.05",
                 description="Playback FPS for camera_folder.",
             ),
             DeclareLaunchArgument(

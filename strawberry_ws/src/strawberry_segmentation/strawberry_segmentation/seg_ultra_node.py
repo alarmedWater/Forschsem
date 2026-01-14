@@ -3,22 +3,18 @@
 """
 ROS 2 node: Ultralytics YOLOv8 segmentation (.pt).
 
-Subscribes (synchronized):
-  - topic_in         (sensor_msgs/Image, rgb8)
-  - frame_info_topic (strawberry_msgs/FrameInfo)
-
-Publishes:
-  - /seg/label_image       (sensor_msgs/Image, mono16): instance IDs (0 = BG, 1..N)
-  - /seg/label_image_vis   (sensor_msgs/Image, mono8):  debug mask (0/255)
-  - /seg/overlay           (sensor_msgs/Image, rgb8):   YOLO overlay (optional)
-  - frame_info_out_topic   (strawberry_msgs/FrameInfo): passthrough for downstream sync
+Konvention:
+- QoS: qos_profile_sensor_data (BEST_EFFORT)
+- Sync: TimeSynchronizer (exakt gleiche stamps)
+- Token stamp: FrameInfo.source_stamp (fallback: FrameInfo.header.stamp)
+- Outputs übernehmen immer token_stamp
 """
 
 from __future__ import annotations
 
 import os
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 import cv2
 import message_filters
@@ -30,11 +26,11 @@ from cv_bridge import CvBridge
 from rcl_interfaces.msg import ParameterDescriptor
 from rcl_interfaces.msg import ParameterType as PT
 from rclpy.node import Node
-from rclpy.qos import QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicy
+from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import Image
 from std_msgs.msg import Header
 
-from strawberry_msgs.msg import FrameInfo
+from strawberry_msgs.msg import FrameInfo  # type: ignore
 
 try:
     from ultralytics.yolo.engine.model import YOLO  # type: ignore
@@ -53,12 +49,17 @@ class YoloSegUltralyticsNode(Node):
         self.declare_parameter("topic_in", "/camera/color/image_raw")
         self.declare_parameter("publish_overlay", True)
 
+        # Output topics (defaults keep backward compatibility)
+        self.declare_parameter("label_topic", "/seg/label_image")
+        self.declare_parameter("label_vis_topic", "/seg/label_image_vis")
+        self.declare_parameter("overlay_topic", "/seg/overlay")
+
         self.declare_parameter("frame_info_topic", "/camera/frame_info")
         self.declare_parameter("publish_frame_info", True)
         self.declare_parameter("frame_info_out_topic", "/seg/frame_info")
 
         self.declare_parameter("sync_queue_size", 200)
-        self.declare_parameter("sync_slop", 0.2)
+        self.declare_parameter("sync_slop", 0.2)  # deprecated/unused under exact sync
 
         self.declare_parameter("device", "auto")  # auto|cpu|cuda:0
         self.declare_parameter("imgsz", 640)
@@ -81,20 +82,21 @@ class YoloSegUltralyticsNode(Node):
         topic_in = self._param_str("topic_in", "/camera/color/image_raw")
         self._publish_overlay = self._param_bool("publish_overlay", True)
 
+        label_topic = self._param_str("label_topic", "/seg/label_image")
+        label_vis_topic = self._param_str("label_vis_topic", "/seg/label_image_vis")
+        overlay_topic = self._param_str("overlay_topic", "/seg/overlay")
+
         frame_info_topic = self._param_str("frame_info_topic", "/camera/frame_info")
         self._publish_frame_info = self._param_bool("publish_frame_info", True)
         frame_info_out_topic = self._param_str("frame_info_out_topic", "/seg/frame_info")
 
         self._sync_queue_size = max(1, self._param_int("sync_queue_size", 200))
-        self._sync_slop = self._param_float("sync_slop", 0.2)
-        if self._sync_slop <= 0.0:
-            self._sync_slop = 0.05
 
-        self._imgsz = self._param_int("imgsz", 640)
-        self._conf = self._param_float("conf_thres", 0.65)
-        self._iou = self._param_float("iou_thres", 0.50)
-        self._max_det = self._param_int("max_det", 100)
-        self._min_area = self._param_int("min_mask_area_px", 1500)
+        self._imgsz = max(32, self._param_int("imgsz", 640))
+        self._conf = float(np.clip(self._param_float("conf_thres", 0.65), 0.0, 1.0))
+        self._iou = float(np.clip(self._param_float("iou_thres", 0.50), 0.0, 1.0))
+        self._max_det = max(1, self._param_int("max_det", 100))
+        self._min_area = max(0, self._param_int("min_mask_area_px", 1500))
         self._profile = self._param_bool("profile", False)
         self._classes = self._param_int_list("classes")
 
@@ -107,8 +109,10 @@ class YoloSegUltralyticsNode(Node):
             f"  frame_info_topic     = {frame_info_topic}\n"
             f"  publish_frame_info   = {self._publish_frame_info}\n"
             f"  frame_info_out_topic = {frame_info_out_topic}\n"
+            f"  label_topic          = {label_topic}\n"
+            f"  label_vis_topic      = {label_vis_topic}\n"
+            f"  overlay_topic        = {overlay_topic}\n"
             f"  sync_queue_size      = {self._sync_queue_size}\n"
-            f"  sync_slop            = {self._sync_slop}\n"
             f"  publish_overlay      = {self._publish_overlay}\n"
             f"  device               = {self._device}\n"
             f"  half                 = {self._half}\n"
@@ -124,34 +128,30 @@ class YoloSegUltralyticsNode(Node):
         # ---------------- ROS I/O ----------------
         self._bridge = CvBridge()
 
-        self._pub_label = self.create_publisher(Image, "/seg/label_image", 10)
-        self._pub_label_vis = self.create_publisher(Image, "/seg/label_image_vis", 10)
+        self._pub_label = self.create_publisher(Image, label_topic, qos_profile_sensor_data)
+        self._pub_label_vis = self.create_publisher(Image, label_vis_topic, qos_profile_sensor_data)
+
         self._pub_overlay = (
-            self.create_publisher(Image, "/seg/overlay", 10)
+            self.create_publisher(Image, overlay_topic, qos_profile_sensor_data)
             if self._publish_overlay
             else None
         )
         self._pub_frame_info = (
-            self.create_publisher(FrameInfo, frame_info_out_topic, 10)
+            self.create_publisher(FrameInfo, frame_info_out_topic, qos_profile_sensor_data)
             if self._publish_frame_info
             else None
         )
 
-        qos = QoSProfile(
-            reliability=QoSReliabilityPolicy.BEST_EFFORT,
-            history=QoSHistoryPolicy.KEEP_LAST,
-            depth=10,
+        self._sub_rgb = message_filters.Subscriber(
+            self, Image, topic_in, qos_profile=qos_profile_sensor_data
         )
-
-        self._sub_rgb = message_filters.Subscriber(self, Image, topic_in, qos_profile=qos)
         self._sub_frame_info = message_filters.Subscriber(
-            self, FrameInfo, frame_info_topic, qos_profile=qos
+            self, FrameInfo, frame_info_topic, qos_profile=qos_profile_sensor_data
         )
 
-        self._ts = message_filters.ApproximateTimeSynchronizer(
+        self._ts = message_filters.TimeSynchronizer(
             [self._sub_rgb, self._sub_frame_info],
             queue_size=self._sync_queue_size,
-            slop=self._sync_slop,
         )
         self._ts.registerCallback(self._sync_cb)
 
@@ -162,6 +162,8 @@ class YoloSegUltralyticsNode(Node):
             f"YOLO loaded in {time.time() - t0:.2f}s | model={model_path} "
             f"| device={self._device} half={self._half}"
         )
+
+        self._warned_bad_overlay_plot = False
 
     # ------------------------------------------------------------------ #
     # Param helpers
@@ -217,6 +219,35 @@ class YoloSegUltralyticsNode(Node):
         return out
 
     # ------------------------------------------------------------------ #
+    # Token helpers
+    # ------------------------------------------------------------------ #
+
+    @staticmethod
+    def _token_stamp(fi: FrameInfo):
+        return getattr(fi, "source_stamp", fi.header.stamp)
+
+    @staticmethod
+    def _copy_frame_info(src: FrameInfo, token_stamp) -> FrameInfo:
+        out = FrameInfo()
+        out.header = Header(stamp=token_stamp, frame_id=src.header.frame_id)
+        out.frame_index = int(src.frame_index)
+        out.plant_id = int(src.plant_id)
+        out.view_id = int(src.view_id)
+        out.rgb_path = str(src.rgb_path)
+        out.depth_path = str(src.depth_path)
+        out.camera_pose_world = src.camera_pose_world
+        out.world_frame_id = str(src.world_frame_id)
+
+        if hasattr(src, "source_stamp"):
+            out.source_stamp = src.source_stamp
+        if hasattr(src, "frame_uid"):
+            out.frame_uid = src.frame_uid
+        if hasattr(src, "pipeline_version"):
+            out.pipeline_version = src.pipeline_version
+
+        return out
+
+    # ------------------------------------------------------------------ #
     # Helpers
     # ------------------------------------------------------------------ #
 
@@ -238,14 +269,17 @@ class YoloSegUltralyticsNode(Node):
         )
 
     def _resolve_device(self) -> Tuple[str, bool]:
-        device_param = self._param_str("device", "auto").lower()
+        device_param = self._param_str("device", "auto").lower().strip()
         if device_param == "auto":
             device = "cuda:0" if torch.cuda.is_available() else "cpu"
         else:
             device = device_param
-        return device, device.startswith("cuda")
+
+        use_half = device.startswith("cuda")
+        return device, use_half
 
     def _masks_to_numpy_u8(self, res: Any, h0: int, w0: int) -> Optional[np.ndarray]:
+        """Return masks as uint8 array [N,H,W] with values 0/1, resized to (h0,w0) if needed."""
         if res is None or getattr(res, "masks", None) is None:
             return None
         if getattr(res.masks, "data", None) is None:
@@ -263,20 +297,17 @@ class YoloSegUltralyticsNode(Node):
         if masks.ndim != 3:
             return None
 
-        masks = masks.astype(np.uint8)
-        hm, wm = int(masks.shape[1]), int(masks.shape[2])
+        # Many ultralytics outputs are float masks in [0..1]; we binarize safely.
+        masks = (masks > 0.5).astype(np.uint8)
 
+        hm, wm = int(masks.shape[1]), int(masks.shape[2])
         if (hm, wm) != (h0, w0):
             resized = np.zeros((masks.shape[0], h0, w0), dtype=np.uint8)
             for i in range(masks.shape[0]):
-                resized[i] = (
-                    cv2.resize(
-                        masks[i] * 255,
-                        (w0, h0),
-                        interpolation=cv2.INTER_NEAREST,
-                    )
-                    // 255
-                ).astype(np.uint8)
+                # cv2.resize expects a valid ndarray; masks[i] is guaranteed ndarray here
+                mi = masks[i].astype(np.uint8) * 255
+                ri = cv2.resize(mi, (w0, h0), interpolation=cv2.INTER_NEAREST)
+                resized[i] = (ri > 127).astype(np.uint8)
             masks = resized
 
         return masks
@@ -300,22 +331,10 @@ class YoloSegUltralyticsNode(Node):
         try:
             return self._model.predict(**kwargs)
         except TypeError:
+            # Compatibility fallback for older ultralytics versions
             for k in ("classes", "retina_masks", "agnostic_nms", "half"):
                 kwargs.pop(k, None)
             return self._model.predict(**kwargs)
-
-    @staticmethod
-    def _copy_frame_info(src: FrameInfo, stamp) -> FrameInfo:
-        out = FrameInfo()
-        out.header = Header(stamp=stamp, frame_id=src.header.frame_id)
-        out.frame_index = int(src.frame_index)
-        out.plant_id = int(src.plant_id)
-        out.view_id = int(src.view_id)
-        out.rgb_path = str(src.rgb_path)
-        out.depth_path = str(src.depth_path)
-        out.camera_pose_world = src.camera_pose_world
-        out.world_frame_id = str(src.world_frame_id)
-        return out
 
     # ------------------------------------------------------------------ #
     # Sync callback
@@ -324,14 +343,50 @@ class YoloSegUltralyticsNode(Node):
     def _sync_cb(self, img_msg: Image, frame_info: FrameInfo) -> None:
         t_all0 = time.time()
 
+        token_stamp = self._token_stamp(frame_info)
+        uid = getattr(frame_info, "frame_uid", "")
+
+        # Hard stamp guard (deterministic pipeline)
+        if img_msg.header.stamp != token_stamp:
+            self.get_logger().warning(
+                "DROP stamp_mismatch "
+                f"uid={uid} idx={int(frame_info.frame_index)} "
+                f"img={img_msg.header.stamp.sec}.{img_msg.header.stamp.nanosec:09d} "
+                f"token={token_stamp.sec}.{token_stamp.nanosec:09d}"
+            )
+            return
+
+        # cv_bridge -> np.ndarray (MUSS: None-guard vor .shape)
         img_rgb = self._bridge.imgmsg_to_cv2(img_msg, desired_encoding="rgb8")
-        img_bgr = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR)
+        if img_rgb is None:
+            self.get_logger().warning("cv_bridge returned None for rgb image.")
+            return
+        if not isinstance(img_rgb, np.ndarray):
+            self.get_logger().warning(f"cv_bridge returned non-ndarray: {type(img_rgb)}")
+            return
+
+        # Ensure shape is valid
+        if img_rgb.ndim < 2:
+            self.get_logger().warning(f"Unexpected rgb ndim={img_rgb.ndim}")
+            return
+
         h0, w0 = img_rgb.shape[:2]
+        if h0 <= 0 or w0 <= 0:
+            self.get_logger().warning(f"Invalid rgb shape: {img_rgb.shape}")
+            return
+
+        # YOLO expects BGR by default
+        try:
+            img_bgr = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR)
+        except Exception as exc:  # noqa: BLE001
+            self.get_logger().warning(f"cv2.cvtColor failed: {exc}")
+            return
 
         t_inf0 = time.time()
         results = self._predict(img_bgr)
         t_inf_s = time.time() - t_inf0
 
+        # Build mono16 instance-label image
         label = np.zeros((h0, w0), dtype=np.uint16)
 
         if results:
@@ -339,12 +394,13 @@ class YoloSegUltralyticsNode(Node):
             masks_np = self._masks_to_numpy_u8(res, h0, w0)
 
             if masks_np is not None and masks_np.shape[0] > 0:
-                order = np.arange(masks_np.shape[0])
+                order = np.arange(masks_np.shape[0], dtype=np.int32)
 
+                # Prefer highest confidence first (if available)
                 boxes = getattr(res, "boxes", None)
                 conf = getattr(boxes, "conf", None) if boxes is not None else None
-                if isinstance(conf, torch.Tensor) and conf.numel() == masks_np.shape[0]:
-                    order = torch.argsort(conf).detach().cpu().numpy()[::-1]
+                if isinstance(conf, torch.Tensor) and int(conf.numel()) == int(masks_np.shape[0]):
+                    order = cast(np.ndarray, torch.argsort(conf).detach().cpu().numpy()[::-1])
 
                 k_out = 0
                 for k in order:
@@ -355,15 +411,36 @@ class YoloSegUltralyticsNode(Node):
                     newpix = (mask == 1) & (label == 0)
                     label[newpix] = k_out
 
-        # Overlay nur berechnen, wenn wirklich abonniert
+        # Optional overlay (MUSS: niemals resize(None))
         overlay_rgb: Optional[np.ndarray] = None
-        if results and self._pub_overlay is not None and self._pub_overlay.get_subscription_count() > 0:
-            overlay_bgr = results[0].plot()
-            overlay_rgb = cv2.cvtColor(overlay_bgr, cv2.COLOR_BGR2RGB)
-            if overlay_rgb.shape[:2] != (h0, w0):
-                overlay_rgb = cv2.resize(overlay_rgb, (w0, h0), interpolation=cv2.INTER_LINEAR)
+        if (
+            results
+            and self._pub_overlay is not None
+            and self._pub_overlay.get_subscription_count() > 0
+        ):
+            try:
+                overlay_bgr = results[0].plot()
+                if isinstance(overlay_bgr, np.ndarray):
+                    overlay_rgb = cv2.cvtColor(overlay_bgr, cv2.COLOR_BGR2RGB)
 
-        self._publish(img_msg, frame_info, label, overlay_rgb)
+                    # If plot output size differs, resize safely
+                    if overlay_rgb is not None and overlay_rgb.shape[:2] != (h0, w0):
+                        overlay_rgb = cv2.resize(
+                            overlay_rgb, (w0, h0), interpolation=cv2.INTER_LINEAR
+                        )
+                else:
+                    if not self._warned_bad_overlay_plot:
+                        self._warned_bad_overlay_plot = True
+                        self.get_logger().warning(
+                            f"results[0].plot() returned {type(overlay_bgr)} (expected ndarray). "
+                            "Overlay disabled for this session."
+                        )
+            except Exception as exc:  # noqa: BLE001
+                if not self._warned_bad_overlay_plot:
+                    self._warned_bad_overlay_plot = True
+                    self.get_logger().warning(f"Overlay plot failed once: {exc}")
+
+        self._publish(img_msg, frame_info, token_stamp, label, overlay_rgb)
 
         if self._profile:
             t_all_ms = (time.time() - t_all0) * 1000.0
@@ -378,22 +455,24 @@ class YoloSegUltralyticsNode(Node):
         self,
         src_msg: Image,
         frame_info: FrameInfo,
+        token_stamp,
         label_u16: np.ndarray,
         overlay_rgb: Optional[np.ndarray],
     ) -> None:
-        stamp = src_msg.header.stamp
-
+        # FrameInfo passthrough aligned to token_stamp
         if self._pub_frame_info is not None:
-            self._pub_frame_info.publish(self._copy_frame_info(frame_info, stamp))
+            self._pub_frame_info.publish(self._copy_frame_info(frame_info, token_stamp))
 
+        # Overlay
         if overlay_rgb is not None and self._pub_overlay is not None:
             ov_msg = self._bridge.cv2_to_imgmsg(overlay_rgb, encoding="rgb8")
-            ov_msg.header = Header(stamp=stamp, frame_id=src_msg.header.frame_id)
+            ov_msg.header = Header(stamp=token_stamp, frame_id=src_msg.header.frame_id)
             self._pub_overlay.publish(ov_msg)
 
+        # Label mono16 (instance ids)
         height, width = label_u16.shape
         lbl = Image()
-        lbl.header = Header(stamp=stamp, frame_id=src_msg.header.frame_id)
+        lbl.header = Header(stamp=token_stamp, frame_id=src_msg.header.frame_id)
         lbl.height = int(height)
         lbl.width = int(width)
         lbl.encoding = "mono16"
@@ -402,6 +481,7 @@ class YoloSegUltralyticsNode(Node):
         lbl.data = label_u16.tobytes()
         self._pub_label.publish(lbl)
 
+        # Visualization label (mono8): foreground=255
         if self._pub_label_vis.get_subscription_count() > 0:
             label_vis = (label_u16 > 0).astype(np.uint8) * 255
             lbl_vis_msg = self._bridge.cv2_to_imgmsg(label_vis, encoding="mono8")

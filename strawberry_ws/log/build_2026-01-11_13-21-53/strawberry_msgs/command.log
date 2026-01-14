@@ -1,4 +1,0 @@
-Invoking command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs -- -j4 -l4
-Invoked command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs -- -j4 -l4
-Invoking command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --install /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs
-Invoked command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --install /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs

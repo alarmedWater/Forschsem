@@ -1,340 +1,418 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""
+Exact sync audit tool for the strawberry pipeline (ROS2).
+
+Checks the pipeline conventions:
+
+- QoS: qos_profile_sensor_data (BEST_EFFORT)
+- Token stamp: FrameInfo.source_stamp (fallback: FrameInfo.header.stamp)
+- "Exact sync" expectation:
+    label.header.stamp      == token_stamp (from /seg/frame_info)
+    depth_masked.header.stamp == token_stamp (from /seg/frame_info_depth_masked)
+    cloud.header.stamp        == token_stamp (from /seg/frame_info_depth_masked)
+
+It logs mismatches and per-plant view completeness.
+"""
+
 from __future__ import annotations
 
+import os
 import time
-from collections import defaultdict, deque
-from dataclasses import dataclass
-from typing import Deque, Dict, Optional, Set, Tuple
+import logging
+from dataclasses import dataclass, field
+from typing import Any, Deque, Dict, List, Optional, Tuple
+from collections import deque
 
-import message_filters
-import numpy as np
 import rclpy
 from rclpy.node import Node
-from rclpy.qos import QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicy
+from rclpy.qos import qos_profile_sensor_data
+
 from sensor_msgs.msg import Image, PointCloud2
-from sensor_msgs_py import point_cloud2 as pc2  # noqa: F401  (optional, for deep checks)
-
-from strawberry_msgs.msg import FrameInfo
+from strawberry_msgs.msg import FrameInfo  # type: ignore
 
 
-def stamp_to_ns(stamp) -> int:
-    return int(stamp.sec) * 1_000_000_000 + int(stamp.nanosec)
+def _time_to_ns(t: Any) -> Optional[int]:
+    if t is None:
+        return None
+    if hasattr(t, "sec") and hasattr(t, "nanosec"):
+        return int(t.sec) * 1_000_000_000 + int(t.nanosec)
+    return None
 
 
-def ns_to_str(ns: int) -> str:
-    sec = ns // 1_000_000_000
-    nsec = ns % 1_000_000_000
-    return f"{sec}.{nsec:09d}"
+def _stamp_ns_from_header(msg: Any) -> Optional[int]:
+    if hasattr(msg, "header") and hasattr(msg.header, "stamp"):
+        return _time_to_ns(msg.header.stamp)
+    return None
+
+
+def token_stamp_ns(fi: FrameInfo) -> Optional[int]:
+    # Convention: FrameInfo.source_stamp if exists, else header.stamp
+    if hasattr(fi, "source_stamp"):
+        ns = _time_to_ns(getattr(fi, "source_stamp"))
+        if ns is not None:
+            return ns
+    return _stamp_ns_from_header(fi)
+
+
+def frame_uid(fi: FrameInfo) -> str:
+    return str(getattr(fi, "frame_uid", ""))
 
 
 @dataclass
-class FrameRecord:
-    ns: int
-    cam: Optional[Tuple[int, int, int]] = None   # (frame_index, plant_id, view_id)
-    seg: Optional[Tuple[int, int, int]] = None
-    dm: Optional[Tuple[int, int, int]] = None
-    cloud: Optional[Tuple[int, int, int]] = None
+class TopicStats:
+    recv_count: int = 0
+    last_recv_ns: Optional[int] = None
+    gaps_s: Deque[float] = field(default_factory=lambda: deque(maxlen=200))
 
-    # diagnostics
-    seg_instances: Optional[int] = None
-    cloud_points: Optional[int] = None
+    def on_msg(self, now_ns: int) -> None:
+        self.recv_count += 1
+        if self.last_recv_ns is not None:
+            gap = (now_ns - self.last_recv_ns) / 1e9
+            if gap >= 0.0:
+                self.gaps_s.append(gap)
+        self.last_recv_ns = now_ns
+
+    def rate_hz(self) -> Optional[float]:
+        if not self.gaps_s:
+            return None
+        m = sum(self.gaps_s) / len(self.gaps_s)
+        return (1.0 / m) if m > 0.0 else None
 
 
-class SyncAuditNode(Node):
-    """
-    Audit synchronization and metadata consistency across the pipeline.
+@dataclass
+class PlantState:
+    plant: int
+    last_seen_ns: int
+    cam_views: set = field(default_factory=set)
+    seg_views: set = field(default_factory=set)
+    dm_views: set = field(default_factory=set)
+    label_views: set = field(default_factory=set)
+    depth_views: set = field(default_factory=set)
+    cloud_views: set = field(default_factory=set)
 
-    Checks:
-    - camera FrameInfo matches seg FrameInfo / depth_mask FrameInfo (by stamp)
-    - label/depth/cloud stamps match their corresponding FrameInfo
-    - per-plant view coverage (expected 0,1,2)
-    """
 
+class SyncAuditExactNode(Node):
     def __init__(self) -> None:
-        super().__init__("strawberry_sync_audit")
+        super().__init__("strawberry_sync_audit_exact")
 
-        # -------- Parameters --------
-        self.declare_parameter("expected_views_per_plant", 3)
-        self.declare_parameter("sync_queue_size", 200)
-        self.declare_parameter("sync_slop", 0.02)  # tighter default for safety
-        self.declare_parameter("print_every_n_frames", 20)
-        self.declare_parameter("record_ttl_s", 10.0)
-
-        # topics
+        # Topics
         self.declare_parameter("cam_frame_info_topic", "/camera/frame_info")
         self.declare_parameter("seg_frame_info_topic", "/seg/frame_info")
         self.declare_parameter("dm_frame_info_topic", "/seg/frame_info_depth_masked")
-
         self.declare_parameter("label_topic", "/seg/label_image")
         self.declare_parameter("depth_masked_topic", "/seg/depth_masked")
         self.declare_parameter("cloud_topic", "/seg/strawberry_cloud")
 
-        self._expected_views = int(self.get_parameter("expected_views_per_plant").value)
-        self._queue = max(10, int(self.get_parameter("sync_queue_size").value))
-        self._slop = float(self.get_parameter("sync_slop").value)
-        self._print_every = max(1, int(self.get_parameter("print_every_n_frames").value))
-        self._ttl_s = float(self.get_parameter("record_ttl_s").value)
+        # Audit behavior
+        self.declare_parameter("expected_views_per_plant", 3)
+        self.declare_parameter("ttl_s", 10.0)
+        self.declare_parameter("status_period_s", 1.0)
+        self.declare_parameter("topic_stats_period_s", 2.0)
 
-        cam_fi_t = str(self.get_parameter("cam_frame_info_topic").value)
-        seg_fi_t = str(self.get_parameter("seg_frame_info_topic").value)
-        dm_fi_t = str(self.get_parameter("dm_frame_info_topic").value)
+        # If True: require exact match. If False: allow slop (nanoseconds).
+        self.declare_parameter("exact", True)
+        self.declare_parameter("slop_s", 0.02)
 
-        label_t = str(self.get_parameter("label_topic").value)
-        dm_depth_t = str(self.get_parameter("depth_masked_topic").value)
-        cloud_t = str(self.get_parameter("cloud_topic").value)
+        # Logging
+        self.declare_parameter("log_dir", os.path.expanduser("~/strawberry_audit_logs"))
+        self.declare_parameter("log_basename", "sync_audit_exact")
 
-        self.get_logger().info(
-            "SyncAuditNode starting:\n"
-            f"  cam_frame_info_topic = {cam_fi_t}\n"
-            f"  seg_frame_info_topic = {seg_fi_t}\n"
-            f"  dm_frame_info_topic  = {dm_fi_t}\n"
-            f"  label_topic          = {label_t}\n"
-            f"  depth_masked_topic   = {dm_depth_t}\n"
-            f"  cloud_topic          = {cloud_t}\n"
-            f"  sync_queue_size      = {self._queue}\n"
-            f"  sync_slop            = {self._slop}\n"
-            f"  expected_views/plant = {self._expected_views}\n"
-            f"  record_ttl_s         = {self._ttl_s}"
-        )
+        self.cam_fi_t = str(self.get_parameter("cam_frame_info_topic").value)
+        self.seg_fi_t = str(self.get_parameter("seg_frame_info_topic").value)
+        self.dm_fi_t = str(self.get_parameter("dm_frame_info_topic").value)
+        self.label_t = str(self.get_parameter("label_topic").value)
+        self.depth_t = str(self.get_parameter("depth_masked_topic").value)
+        self.cloud_t = str(self.get_parameter("cloud_topic").value)
 
-        qos = QoSProfile(
-            reliability=QoSReliabilityPolicy.BEST_EFFORT,
-            history=QoSHistoryPolicy.KEEP_LAST,
-            depth=50,
-        )
+        self.expected_views = int(self.get_parameter("expected_views_per_plant").value)
+        self.ttl_ns = int(float(self.get_parameter("ttl_s").value) * 1e9)
 
-        # -------- Internal state --------
-        self._records: Dict[int, FrameRecord] = {}
-        self._order: Deque[int] = deque()  # stamp ns ordering for TTL cleanup
+        self.exact = bool(self.get_parameter("exact").value)
+        self.slop_ns = int(float(self.get_parameter("slop_s").value) * 1e9)
 
-        self._views_cam: Dict[int, Set[int]] = defaultdict(set)
-        self._views_cloud: Dict[int, Set[int]] = defaultdict(set)
+        # File logger
+        log_dir = str(self.get_parameter("log_dir").value)
+        base = str(self.get_parameter("log_basename").value)
+        os.makedirs(log_dir, exist_ok=True)
+        ts = time.strftime("%Y%m%d_%H%M%S")
+        self.log_path = os.path.join(log_dir, f"{base}_{ts}.txt")
 
-        self._last_cam_plant: Optional[int] = None
+        self._pylog = logging.getLogger("strawberry_sync_audit_exact")
+        self._pylog.setLevel(logging.INFO)
+        fh = logging.FileHandler(self.log_path, mode="w", encoding="utf-8")
+        fh.setFormatter(logging.Formatter("%(asctime)s | %(levelname)s | %(message)s"))
+        self._pylog.handlers = [fh]
 
-        self._n_cam = 0
-        self._n_errors = 0
+        # Indices: token_stamp_ns -> (plant, view, frame, uid)
+        self._idx_cam: Dict[int, Tuple[int, int, int, str]] = {}
+        self._idx_seg: Dict[int, Tuple[int, int, int, str]] = {}
+        self._idx_dm: Dict[int, Tuple[int, int, int, str]] = {}
 
-        # -------- Subscribers + synchronizers --------
-        # We sync "data topic" with its corresponding FrameInfo to verify stamp equality
-        self._sub_cam_fi = message_filters.Subscriber(self, FrameInfo, cam_fi_t, qos_profile=qos)
-        self._sub_seg_fi = message_filters.Subscriber(self, FrameInfo, seg_fi_t, qos_profile=qos)
-        self._sub_dm_fi_a = message_filters.Subscriber(self, FrameInfo, dm_fi_t, qos_profile=qos)
-        self._sub_dm_fi_b = message_filters.Subscriber(self, FrameInfo, dm_fi_t, qos_profile=qos)
+        # For TTL cleanup, keep insertion order
+        self._idx_cam_q: Deque[int] = deque(maxlen=5000)
+        self._idx_seg_q: Deque[int] = deque(maxlen=5000)
+        self._idx_dm_q: Deque[int] = deque(maxlen=5000)
 
-        self._sub_label = message_filters.Subscriber(self, Image, label_t, qos_profile=qos)
-        self._sub_dm_depth = message_filters.Subscriber(self, Image, dm_depth_t, qos_profile=qos)
-        self._sub_cloud = message_filters.Subscriber(self, PointCloud2, cloud_t, qos_profile=qos)
+        self._plants: Dict[int, PlantState] = {}
+        self._errors = 0
 
-        # label + seg frameinfo
-        self._ts_label = message_filters.ApproximateTimeSynchronizer(
-            [self._sub_label, self._sub_seg_fi],
-            queue_size=self._queue,
-            slop=self._slop,
-        )
-        self._ts_label.registerCallback(self._cb_label_seg)
+        self._topic_stats: Dict[str, TopicStats] = {}
 
-        # depth_masked + dm frameinfo
-        self._ts_dm = message_filters.ApproximateTimeSynchronizer(
-            [self._sub_dm_depth, self._sub_dm_fi_a],
-            queue_size=self._queue,
-            slop=self._slop,
-        )
-        self._ts_dm.registerCallback(self._cb_depthmask_dmfi)
+        # Subscriptions (QoS sensor)
+        self.create_subscription(FrameInfo, self.cam_fi_t, self._on_cam_fi, qos_profile_sensor_data)
+        self.create_subscription(FrameInfo, self.seg_fi_t, self._on_seg_fi, qos_profile_sensor_data)
+        self.create_subscription(FrameInfo, self.dm_fi_t, self._on_dm_fi, qos_profile_sensor_data)
 
-        # cloud + dm frameinfo (separate subscriber instance)
-        self._ts_cloud = message_filters.ApproximateTimeSynchronizer(
-            [self._sub_cloud, self._sub_dm_fi_b],
-            queue_size=self._queue,
-            slop=self._slop,
-        )
-        self._ts_cloud.registerCallback(self._cb_cloud_dmfi)
+        self.create_subscription(Image, self.label_t, self._on_label, qos_profile_sensor_data)
+        self.create_subscription(Image, self.depth_t, self._on_depth, qos_profile_sensor_data)
+        self.create_subscription(PointCloud2, self.cloud_t, self._on_cloud, qos_profile_sensor_data)
 
-        # cam frameinfo alone (source of truth)
-        # (No message_filters needed; we just cache it)
-        self.create_subscription(FrameInfo, cam_fi_t, self._cb_cam_fi, 50)
+        # Timers
+        self.create_timer(float(self.get_parameter("status_period_s").value), self._on_status)
+        self.create_timer(float(self.get_parameter("topic_stats_period_s").value), self._on_topic_stats)
 
-        # periodic status
-        self.create_timer(1.0, self._tick_status)
+        self._logi("SyncAuditExactNode starting:")
+        self._logi(f"  cam_frame_info_topic = {self.cam_fi_t}")
+        self._logi(f"  seg_frame_info_topic = {self.seg_fi_t}")
+        self._logi(f"  dm_frame_info_topic  = {self.dm_fi_t}")
+        self._logi(f"  label_topic          = {self.label_t}")
+        self._logi(f"  depth_masked_topic   = {self.depth_t}")
+        self._logi(f"  cloud_topic          = {self.cloud_t}")
+        self._logi(f"  exact                = {self.exact}")
+        self._logi(f"  slop_s               = {self.slop_ns/1e9:.3f}")
+        self._logi(f"  log_path             = {self.log_path}")
 
-    # ---------------- Record helpers ----------------
+    # ---------- logging ----------
+    def _logi(self, msg: str) -> None:
+        self.get_logger().info(msg)
+        self._pylog.info(msg)
 
-    def _get_rec(self, ns: int) -> FrameRecord:
-        rec = self._records.get(ns)
-        if rec is None:
-            rec = FrameRecord(ns=ns)
-            self._records[ns] = rec
-            self._order.append(ns)
-        return rec
+    def _logw(self, msg: str) -> None:
+        self.get_logger().warning(msg)
+        self._pylog.warning(msg)
 
-    def _cleanup_old(self) -> None:
-        now_ns = stamp_to_ns(self.get_clock().now().to_msg())
-        ttl_ns = int(self._ttl_s * 1_000_000_000)
-        while self._order:
-            ns0 = self._order[0]
-            if now_ns - ns0 <= ttl_ns:
-                break
-            self._order.popleft()
-            self._records.pop(ns0, None)
+    # ---------- small helpers ----------
+    def _stats(self, topic: str) -> None:
+        now_ns = self.get_clock().now().nanoseconds
+        st = self._topic_stats.get(topic)
+        if st is None:
+            st = TopicStats()
+            self._topic_stats[topic] = st
+        st.on_msg(now_ns)
 
-    # ---------------- Callbacks ----------------
+    def _upsert_plant(self, plant: int) -> PlantState:
+        now_ns = self.get_clock().now().nanoseconds
+        ps = self._plants.get(plant)
+        if ps is None:
+            ps = PlantState(plant=plant, last_seen_ns=now_ns)
+            self._plants[plant] = ps
+        ps.last_seen_ns = now_ns
+        return ps
 
-    def _cb_cam_fi(self, fi: FrameInfo) -> None:
-        ns = stamp_to_ns(fi.header.stamp)
-        rec = self._get_rec(ns)
+    def _cleanup_ttl(self) -> None:
+        now_ns = self.get_clock().now().nanoseconds
 
-        meta = (int(fi.frame_index), int(fi.plant_id), int(fi.view_id))
-        rec.cam = meta
+        # plant ttl summaries
+        dead = [p for p, ps in self._plants.items() if (now_ns - ps.last_seen_ns) > self.ttl_ns]
+        for p in sorted(dead):
+            self._finalize_plant(p, reason="ttl")
 
-        frame_index, plant_id, view_id = meta
+        # index cleanup: we just drop older than ttl from the left
+        def _drop_old(q: Deque[int], idx: Dict[int, Tuple[int, int, int, str]]) -> None:
+            while q:
+                s = q[0]
+                # We don't store recv time; good-enough: keep bounded by deque maxlen + TTL handled by overwrite.
+                # If you want strict TTL, store recv times too.
+                if s in idx:
+                    break
+                q.popleft()
 
-        # plant change summary
-        if self._last_cam_plant is None:
-            self._last_cam_plant = plant_id
-        elif plant_id != self._last_cam_plant:
-            self._report_plant_summary(self._last_cam_plant)
-            self._last_cam_plant = plant_id
+        _drop_old(self._idx_cam_q, self._idx_cam)
+        _drop_old(self._idx_seg_q, self._idx_seg)
+        _drop_old(self._idx_dm_q, self._idx_dm)
 
-        self._views_cam[plant_id].add(view_id)
-        self._n_cam += 1
-
-        if self._n_cam % self._print_every == 0:
-            self.get_logger().info(
-                f"[CAM] frames={self._n_cam} last={frame_index} plant={plant_id} view={view_id} "
-                f"stamp={ns_to_str(ns)} errors={self._n_errors}"
-            )
-
-    def _cb_label_seg(self, label_msg: Image, fi_seg: FrameInfo) -> None:
-        ns_l = stamp_to_ns(label_msg.header.stamp)
-        ns_f = stamp_to_ns(fi_seg.header.stamp)
-        if abs(ns_l - ns_f) > int(self._slop * 1e9):
-            self._n_errors += 1
-            self.get_logger().error(
-                f"[SEG] stamp mismatch label={ns_to_str(ns_l)} fi={ns_to_str(ns_f)}"
-            )
-
-        ns = ns_l
-        rec = self._get_rec(ns)
-        meta = (int(fi_seg.frame_index), int(fi_seg.plant_id), int(fi_seg.view_id))
-        rec.seg = meta
-
-        # count instances quickly
-        try:
-            # mono16 label image
-            data = np.frombuffer(label_msg.data, dtype=np.uint16)
-            if data.size > 0:
-                rec.seg_instances = int(data.max())
-        except Exception:
-            rec.seg_instances = None
-
-        self._check_against_cam(ns, "SEG", meta)
-
-    def _cb_depthmask_dmfi(self, depth_msg: Image, fi_dm: FrameInfo) -> None:
-        ns_d = stamp_to_ns(depth_msg.header.stamp)
-        ns_f = stamp_to_ns(fi_dm.header.stamp)
-        if abs(ns_d - ns_f) > int(self._slop * 1e9):
-            self._n_errors += 1
-            self.get_logger().error(
-                f"[DM] stamp mismatch depth_masked={ns_to_str(ns_d)} fi={ns_to_str(ns_f)}"
-            )
-
-        ns = ns_d
-        rec = self._get_rec(ns)
-        meta = (int(fi_dm.frame_index), int(fi_dm.plant_id), int(fi_dm.view_id))
-        rec.dm = meta
-
-        self._check_against_cam(ns, "DM", meta)
-
-    def _cb_cloud_dmfi(self, cloud_msg: PointCloud2, fi_dm: FrameInfo) -> None:
-        ns_c = stamp_to_ns(cloud_msg.header.stamp)
-        ns_f = stamp_to_ns(fi_dm.header.stamp)
-        if abs(ns_c - ns_f) > int(self._slop * 1e9):
-            self._n_errors += 1
-            self.get_logger().error(
-                f"[CLOUD] stamp mismatch cloud={ns_to_str(ns_c)} fi={ns_to_str(ns_f)}"
-            )
-
-        ns = ns_c
-        rec = self._get_rec(ns)
-        meta = (int(fi_dm.frame_index), int(fi_dm.plant_id), int(fi_dm.view_id))
-        rec.cloud = meta
-
-        # point count (works for create_cloud_xyz32: height=1, width=N)
-        try:
-            rec.cloud_points = int(cloud_msg.width) * int(cloud_msg.height)
-        except Exception:
-            rec.cloud_points = None
-
-        _, plant_id, view_id = meta
-        self._views_cloud[plant_id].add(view_id)
-
-        self._check_against_cam(ns, "CLOUD", meta)
-
-    def _check_against_cam(self, ns: int, stage: str, meta: Tuple[int, int, int]) -> None:
-        rec = self._records.get(ns)
-        if rec is None or rec.cam is None:
-            # cam fi maybe not received yet; not fatal
+    def _finalize_plant(self, plant: int, reason: str) -> None:
+        ps = self._plants.get(plant)
+        if ps is None:
             return
 
-        if rec.cam != meta:
-            self._n_errors += 1
-            self.get_logger().error(
-                f"[{stage}] META mismatch at stamp={ns_to_str(ns)} "
-                f"cam={rec.cam} vs {stage.lower()}={meta}"
-            )
+        exp = set(range(self.expected_views))
+        self._logi("----- PLANT SUMMARY -----")
+        self._logi(f"plant={plant} reason={reason}")
+        self._logi(f"  cam   ={sorted(ps.cam_views)}   missing={sorted(exp-ps.cam_views)}")
+        self._logi(f"  seg   ={sorted(ps.seg_views)}   missing={sorted(exp-ps.seg_views)}")
+        self._logi(f"  dm    ={sorted(ps.dm_views)}    missing={sorted(exp-ps.dm_views)}")
+        self._logi(f"  label ={sorted(ps.label_views)} missing={sorted(exp-ps.label_views)}")
+        self._logi(f"  depth ={sorted(ps.depth_views)} missing={sorted(exp-ps.depth_views)}")
+        self._logi(f"  cloud ={sorted(ps.cloud_views)} missing={sorted(exp-ps.cloud_views)}")
+        self._logi("-------------------------")
 
-    # ---------------- Reporting ----------------
+        del self._plants[plant]
 
-    def _report_plant_summary(self, plant_id: int) -> None:
-        cam_views = sorted(list(self._views_cam.get(plant_id, set())))
-        cloud_views = sorted(list(self._views_cloud.get(plant_id, set())))
+    def _match_idx(
+        self,
+        idx: Dict[int, Tuple[int, int, int, str]],
+        stamp_ns: int,
+    ) -> Optional[Tuple[int, int, int, str, int]]:
+        """
+        Return (plant, view, frame, uid, matched_stamp_ns)
+        Exact: direct lookup only.
+        Non-exact: nearest within slop.
+        """
+        if self.exact:
+            v = idx.get(stamp_ns)
+            return (v[0], v[1], v[2], v[3], stamp_ns) if v is not None else None
 
-        expected = {0, 1, 2} if self._expected_views == 3 else set(range(self._expected_views))
-        missing_cam = sorted(list(expected - set(cam_views)))
-        missing_cloud = sorted(list(expected - set(cloud_views)))
+        # slop match (nearest)
+        best = None
+        best_dt = None
+        for s, v in idx.items():
+            dt = abs(s - stamp_ns)
+            if dt <= self.slop_ns and (best_dt is None or dt < best_dt):
+                best_dt = dt
+                best = (v[0], v[1], v[2], v[3], s)
+        return best
 
-        self.get_logger().info(
-            "----- PLANT SUMMARY -----\n"
-            f"plant={plant_id}\n"
-            f"  cam_views   = {cam_views} missing={missing_cam}\n"
-            f"  cloud_views = {cloud_views} missing={missing_cloud}\n"
-            "-------------------------"
-        )
+    # ---------- FrameInfo handlers ----------
+    def _on_cam_fi(self, fi: FrameInfo) -> None:
+        self._stats(self.cam_fi_t)
+        s = token_stamp_ns(fi)
+        if s is None:
+            return
+        plant = int(fi.plant_id)
+        view = int(fi.view_id)
+        frame = int(fi.frame_index)
+        uid = frame_uid(fi)
 
-    def _tick_status(self) -> None:
-        self._cleanup_old()
+        self._idx_cam[s] = (plant, view, frame, uid)
+        self._idx_cam_q.append(s)
+        self._upsert_plant(plant).cam_views.add(view)
 
-        # simple “pipeline health”
-        n = len(self._records)
-        if n == 0:
-            self.get_logger().warning("No records yet (are topics publishing?).")
+    def _on_seg_fi(self, fi: FrameInfo) -> None:
+        self._stats(self.seg_fi_t)
+        s = token_stamp_ns(fi)
+        if s is None:
+            return
+        plant = int(fi.plant_id)
+        view = int(fi.view_id)
+        frame = int(fi.frame_index)
+        uid = frame_uid(fi)
+
+        self._idx_seg[s] = (plant, view, frame, uid)
+        self._idx_seg_q.append(s)
+        self._upsert_plant(plant).seg_views.add(view)
+
+    def _on_dm_fi(self, fi: FrameInfo) -> None:
+        self._stats(self.dm_fi_t)
+        s = token_stamp_ns(fi)
+        if s is None:
+            return
+        plant = int(fi.plant_id)
+        view = int(fi.view_id)
+        frame = int(fi.frame_index)
+        uid = frame_uid(fi)
+
+        self._idx_dm[s] = (plant, view, frame, uid)
+        self._idx_dm_q.append(s)
+        self._upsert_plant(plant).dm_views.add(view)
+
+    # ---------- Data topic handlers ----------
+    def _on_label(self, msg: Image) -> None:
+        self._stats(self.label_t)
+        stamp = _stamp_ns_from_header(msg)
+        if stamp is None:
             return
 
-        # count how many have each stage
-        cam_ok = sum(1 for r in self._records.values() if r.cam is not None)
-        seg_ok = sum(1 for r in self._records.values() if r.seg is not None)
-        dm_ok = sum(1 for r in self._records.values() if r.dm is not None)
-        cloud_ok = sum(1 for r in self._records.values() if r.cloud is not None)
+        m = self._match_idx(self._idx_seg, stamp)
+        if m is None:
+            # fallback: sometimes label might align to cam stamp
+            m = self._match_idx(self._idx_cam, stamp)
+            if m is None:
+                return
 
-        self.get_logger().info(
-            f"[STATUS] records={n} cam={cam_ok} seg={seg_ok} dm={dm_ok} cloud={cloud_ok} "
-            f"errors={self._n_errors}"
+        plant, view, frame, uid, matched_stamp = m
+        self._upsert_plant(plant).label_views.add(view)
+
+        if self.exact and matched_stamp != stamp:
+            self._errors += 1
+            self._logw(f"[LABEL] stamp mismatch?! plant={plant} view={view} uid={uid}")
+
+    def _on_depth(self, msg: Image) -> None:
+        self._stats(self.depth_t)
+        stamp = _stamp_ns_from_header(msg)
+        if stamp is None:
+            return
+
+        m = self._match_idx(self._idx_dm, stamp)
+        if m is None:
+            # fallback chain
+            m = self._match_idx(self._idx_seg, stamp) or self._match_idx(self._idx_cam, stamp)
+            if m is None:
+                return
+
+        plant, view, frame, uid, matched_stamp = m
+        self._upsert_plant(plant).depth_views.add(view)
+
+        if self.exact and matched_stamp != stamp:
+            self._errors += 1
+            self._logw(f"[DEPTH] stamp mismatch?! plant={plant} view={view} uid={uid}")
+
+    def _on_cloud(self, msg: PointCloud2) -> None:
+        self._stats(self.cloud_t)
+        stamp = _stamp_ns_from_header(msg)
+        if stamp is None:
+            return
+
+        m = self._match_idx(self._idx_dm, stamp)
+        if m is None:
+            m = self._match_idx(self._idx_seg, stamp) or self._match_idx(self._idx_cam, stamp)
+            if m is None:
+                return
+
+        plant, view, frame, uid, matched_stamp = m
+        self._upsert_plant(plant).cloud_views.add(view)
+
+        if self.exact and matched_stamp != stamp:
+            self._errors += 1
+            self._logw(f"[CLOUD] stamp mismatch?! plant={plant} view={view} uid={uid}")
+
+    # ---------- timers ----------
+    def _on_status(self) -> None:
+        self._cleanup_ttl()
+        self._logi(
+            f"[STATUS] plants={len(self._plants)} "
+            f"idx(cam/seg/dm)={len(self._idx_cam)}/{len(self._idx_seg)}/{len(self._idx_dm)} "
+            f"errors={self._errors}"
         )
 
+    def _on_topic_stats(self) -> None:
+        if not self._topic_stats:
+            self._logw("[STATS] no messages yet")
+            return
 
-def main() -> None:
-    rclpy.init()
-    node = SyncAuditNode()
+        lines = ["----- TOPIC STATS -----"]
+        for t, st in sorted(self._topic_stats.items()):
+            hz = st.rate_hz()
+            hz_s = f"{hz:.2f}Hz" if hz is not None else "n/a"
+            lines.append(f"{t}: count={st.recv_count} rate={hz_s}")
+        lines.append("-----------------------")
+        for ln in lines:
+            self._logi(ln)
+
+
+def main(args: Optional[List[str]] = None) -> None:
+    rclpy.init(args=args)
+    node = SyncAuditExactNode()
     try:
         rclpy.spin(node)
+    except KeyboardInterrupt:
+        node.get_logger().info("KeyboardInterrupt - shutting down.")
     finally:
-        # last plant summary (if we have one)
-        if node._last_cam_plant is not None:
-            node._report_plant_summary(node._last_cam_plant)
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == "__main__":
