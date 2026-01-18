@@ -271,7 +271,7 @@ def generate_launch_description() -> LaunchDescription:
             ),
             DeclareLaunchArgument(
                 "enable_cluster",
-                default_value="false",
+                default_value="true",
                 description="Enable strawberry_cluster (true/false).",
             ),
 
@@ -423,14 +423,14 @@ def generate_launch_description() -> LaunchDescription:
                     {
                         "cloud_topic": "/seg/strawberry_cloud",
                         "frame_info_topic": "/seg/frame_info_depth_masked",
-                        "output_dir": raw_output_dir,
+                        "output_dir_raw": raw_output_dir,   # <-- FIX (war output_dir)
                         "save_once_per_view": raw_save_once_per_view_t,
                         "overwrite": raw_overwrite_t,
                         "assume_cloud_in": raw_assume_cloud_in,
                         "export_cloud_in": raw_export_cloud_in,
                         "ply_ascii": raw_ply_ascii_t,
                     }
-                ],
+                    ],
             ),
 
             # ---------------- Cluster node (optional, default OFF) ----------------
@@ -456,6 +456,8 @@ def generate_launch_description() -> LaunchDescription:
                         "write_ply_on_plant_change": True,
                         "write_ply_on_shutdown": True,
                         "ply_ascii": True,
+                        "export_fused_plant_cloud": True,
+                        "fused_filename": "plant_fused.ply",
                     }
                 ],
             ),

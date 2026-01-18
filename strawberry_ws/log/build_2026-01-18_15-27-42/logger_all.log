@@ -1,0 +1,865 @@
+[0.343s] [34mcolcon[0m [1;30mDEBUG[0m [32mCommand line arguments: ['/usr/bin/colcon', 'build', '--symlink-install'][0m
+[0.343s] [34mcolcon[0m [1;30mDEBUG[0m [32mParsed command line arguments: Namespace(log_base=None, log_level=None, verb_name='build', build_base='build', install_base='install', merge_install=False, symlink_install=True, test_result_base=None, continue_on_error=False, executor='parallel', parallel_workers=4, event_handlers=None, ignore_user_meta=False, metas=['./colcon.meta'], base_paths=['.'], packages_ignore=None, packages_ignore_regex=None, paths=None, packages_up_to=None, packages_up_to_regex=None, packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_select_by_dep=None, packages_skip_by_dep=None, packages_skip_up_to=None, packages_select_build_failed=False, packages_skip_build_finished=False, packages_select_test_failures=False, packages_skip_test_passed=False, packages_select=None, packages_skip=None, packages_select_regex=None, packages_skip_regex=None, packages_start=None, packages_end=None, allow_overriding=[], cmake_args=None, cmake_target=None, cmake_target_skip_unavailable=False, cmake_clean_cache=False, cmake_clean_first=False, cmake_force_configure=False, ament_cmake_args=None, catkin_cmake_args=None, catkin_skip_building_tests=False, mixin_files=None, mixin=None, verb_parser=<colcon_mixin.mixin.mixin_argument.MixinArgumentDecorator object at 0x764232ec3c10>, verb_extension=<colcon_core.verb.build.BuildVerb object at 0x76423300cc70>, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0x76423300cc70>>, mixin_verb=('build',))[0m
+[0.887s] [34mcolcon.colcon_core.package_discovery[0m [1;30mLevel 1[0m discover_packages(colcon_meta) check parameters
+[0.887s] [34mcolcon.colcon_core.package_discovery[0m [1;30mLevel 1[0m discover_packages(recursive) check parameters
+[0.887s] [34mcolcon.colcon_core.package_discovery[0m [1;30mLevel 1[0m discover_packages(ignore) check parameters
+[0.887s] [34mcolcon.colcon_core.package_discovery[0m [1;30mLevel 1[0m discover_packages(path) check parameters
+[0.887s] [34mcolcon.colcon_core.package_discovery[0m [1;30mLevel 1[0m discover_packages(colcon_meta) discover
+[0.888s] [34mcolcon.colcon_core.package_discovery[0m [1;30mLevel 1[0m discover_packages(recursive) discover
+[0.888s] [34mcolcon.colcon_core.package_discovery[0m [1;30mINFO[0m Crawling recursively for packages in '/home/parallels/Forschsemrep/strawberry_ws'
+[0.888s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(.) by extensions ['ignore', 'ignore_ament_install']
+[0.888s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(.) by extension 'ignore'
+[0.888s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(.) by extension 'ignore_ament_install'
+[0.888s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(.) by extensions ['colcon_pkg']
+[0.888s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(.) by extension 'colcon_pkg'
+[0.888s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(.) by extensions ['colcon_meta']
+[0.888s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(.) by extension 'colcon_meta'
+[0.888s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(.) by extensions ['ros']
+[0.888s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(.) by extension 'ros'
+[0.932s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(.) by extensions ['cmake', 'python']
+[0.932s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(.) by extension 'cmake'
+[0.932s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(.) by extension 'python'
+[0.932s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(.) by extensions ['python_setup_py']
+[0.932s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(.) by extension 'python_setup_py'
+[0.932s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(build) by extensions ['ignore', 'ignore_ament_install']
+[0.932s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(build) by extension 'ignore'
+[0.932s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(build) ignored
+[0.933s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data) by extensions ['ignore', 'ignore_ament_install']
+[0.933s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data) by extension 'ignore'
+[0.933s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data) by extension 'ignore_ament_install'
+[0.933s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data) by extensions ['colcon_pkg']
+[0.933s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data) by extension 'colcon_pkg'
+[0.933s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data) by extensions ['colcon_meta']
+[0.933s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data) by extension 'colcon_meta'
+[0.933s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data) by extensions ['ros']
+[0.933s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data) by extension 'ros'
+[0.934s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data) by extensions ['cmake', 'python']
+[0.934s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data) by extension 'cmake'
+[0.934s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data) by extension 'python'
+[0.934s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data) by extensions ['python_setup_py']
+[0.934s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data) by extension 'python_setup_py'
+[0.934s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/backup) by extensions ['ignore', 'ignore_ament_install']
+[0.935s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/backup) by extension 'ignore'
+[0.935s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/backup) by extension 'ignore_ament_install'
+[0.935s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/backup) by extensions ['colcon_pkg']
+[0.935s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/backup) by extension 'colcon_pkg'
+[0.935s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/backup) by extensions ['colcon_meta']
+[0.935s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/backup) by extension 'colcon_meta'
+[0.935s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/backup) by extensions ['ros']
+[0.935s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/backup) by extension 'ros'
+[0.935s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/backup) by extensions ['cmake', 'python']
+[0.935s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/backup) by extension 'cmake'
+[0.935s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/backup) by extension 'python'
+[0.935s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/backup) by extensions ['python_setup_py']
+[0.935s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/backup) by extension 'python_setup_py'
+[0.936s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views) by extensions ['ignore', 'ignore_ament_install']
+[0.936s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views) by extension 'ignore'
+[0.936s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views) by extension 'ignore_ament_install'
+[0.936s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views) by extensions ['colcon_pkg']
+[0.936s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views) by extension 'colcon_pkg'
+[0.936s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views) by extensions ['colcon_meta']
+[0.936s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views) by extension 'colcon_meta'
+[0.937s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views) by extensions ['ros']
+[0.937s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views) by extension 'ros'
+[0.937s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views) by extensions ['cmake', 'python']
+[0.937s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views) by extension 'cmake'
+[0.937s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views) by extension 'python'
+[0.937s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views) by extensions ['python_setup_py']
+[0.937s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views) by extension 'python_setup_py'
+[0.938s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_000) by extensions ['ignore', 'ignore_ament_install']
+[0.938s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_000) by extension 'ignore'
+[0.938s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_000) by extension 'ignore_ament_install'
+[0.938s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_000) by extensions ['colcon_pkg']
+[0.938s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_000) by extension 'colcon_pkg'
+[0.938s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_000) by extensions ['colcon_meta']
+[0.938s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_000) by extension 'colcon_meta'
+[0.938s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_000) by extensions ['ros']
+[0.939s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_000) by extension 'ros'
+[0.939s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_000) by extensions ['cmake', 'python']
+[0.939s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_000) by extension 'cmake'
+[0.939s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_000) by extension 'python'
+[0.939s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_000) by extensions ['python_setup_py']
+[0.939s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_000) by extension 'python_setup_py'
+[0.939s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_001) by extensions ['ignore', 'ignore_ament_install']
+[0.940s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_001) by extension 'ignore'
+[0.940s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_001) by extension 'ignore_ament_install'
+[0.940s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_001) by extensions ['colcon_pkg']
+[0.940s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_001) by extension 'colcon_pkg'
+[0.940s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_001) by extensions ['colcon_meta']
+[0.940s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_001) by extension 'colcon_meta'
+[0.940s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_001) by extensions ['ros']
+[0.941s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_001) by extension 'ros'
+[0.941s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_001) by extensions ['cmake', 'python']
+[0.941s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_001) by extension 'cmake'
+[0.941s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_001) by extension 'python'
+[0.941s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_001) by extensions ['python_setup_py']
+[0.941s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_001) by extension 'python_setup_py'
+[0.941s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_002) by extensions ['ignore', 'ignore_ament_install']
+[0.941s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_002) by extension 'ignore'
+[0.941s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_002) by extension 'ignore_ament_install'
+[0.942s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_002) by extensions ['colcon_pkg']
+[0.942s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_002) by extension 'colcon_pkg'
+[0.942s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_002) by extensions ['colcon_meta']
+[0.942s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_002) by extension 'colcon_meta'
+[0.942s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_002) by extensions ['ros']
+[0.942s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_002) by extension 'ros'
+[0.942s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_002) by extensions ['cmake', 'python']
+[0.942s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_002) by extension 'cmake'
+[0.942s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_002) by extension 'python'
+[0.943s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_002) by extensions ['python_setup_py']
+[0.943s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_002) by extension 'python_setup_py'
+[0.943s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_003) by extensions ['ignore', 'ignore_ament_install']
+[0.944s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_003) by extension 'ignore'
+[0.944s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_003) by extension 'ignore_ament_install'
+[0.944s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_003) by extensions ['colcon_pkg']
+[0.944s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_003) by extension 'colcon_pkg'
+[0.944s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_003) by extensions ['colcon_meta']
+[0.945s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_003) by extension 'colcon_meta'
+[0.945s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_003) by extensions ['ros']
+[0.945s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_003) by extension 'ros'
+[0.945s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_003) by extensions ['cmake', 'python']
+[0.945s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_003) by extension 'cmake'
+[0.945s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_003) by extension 'python'
+[0.945s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_003) by extensions ['python_setup_py']
+[0.945s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_003) by extension 'python_setup_py'
+[0.946s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_004) by extensions ['ignore', 'ignore_ament_install']
+[0.946s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_004) by extension 'ignore'
+[0.946s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_004) by extension 'ignore_ament_install'
+[0.946s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_004) by extensions ['colcon_pkg']
+[0.946s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_004) by extension 'colcon_pkg'
+[0.946s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_004) by extensions ['colcon_meta']
+[0.946s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_004) by extension 'colcon_meta'
+[0.946s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_004) by extensions ['ros']
+[0.946s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_004) by extension 'ros'
+[0.947s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_004) by extensions ['cmake', 'python']
+[0.947s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_004) by extension 'cmake'
+[0.947s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_004) by extension 'python'
+[0.947s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_004) by extensions ['python_setup_py']
+[0.947s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_004) by extension 'python_setup_py'
+[0.947s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_005) by extensions ['ignore', 'ignore_ament_install']
+[0.947s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_005) by extension 'ignore'
+[0.948s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_005) by extension 'ignore_ament_install'
+[0.948s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_005) by extensions ['colcon_pkg']
+[0.948s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_005) by extension 'colcon_pkg'
+[0.948s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_005) by extensions ['colcon_meta']
+[0.948s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_005) by extension 'colcon_meta'
+[0.948s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_005) by extensions ['ros']
+[0.948s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_005) by extension 'ros'
+[0.948s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_005) by extensions ['cmake', 'python']
+[0.949s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_005) by extension 'cmake'
+[0.949s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_005) by extension 'python'
+[0.949s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_005) by extensions ['python_setup_py']
+[0.949s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_005) by extension 'python_setup_py'
+[0.949s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_006) by extensions ['ignore', 'ignore_ament_install']
+[0.949s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_006) by extension 'ignore'
+[0.949s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_006) by extension 'ignore_ament_install'
+[0.950s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_006) by extensions ['colcon_pkg']
+[0.950s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_006) by extension 'colcon_pkg'
+[0.950s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_006) by extensions ['colcon_meta']
+[0.950s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_006) by extension 'colcon_meta'
+[0.950s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_006) by extensions ['ros']
+[0.950s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_006) by extension 'ros'
+[0.950s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_006) by extensions ['cmake', 'python']
+[0.950s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_006) by extension 'cmake'
+[0.950s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_006) by extension 'python'
+[0.951s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_006) by extensions ['python_setup_py']
+[0.951s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_006) by extension 'python_setup_py'
+[0.951s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_007) by extensions ['ignore', 'ignore_ament_install']
+[0.951s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_007) by extension 'ignore'
+[0.952s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_007) by extension 'ignore_ament_install'
+[0.952s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_007) by extensions ['colcon_pkg']
+[0.952s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_007) by extension 'colcon_pkg'
+[0.952s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_007) by extensions ['colcon_meta']
+[0.952s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_007) by extension 'colcon_meta'
+[0.952s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_007) by extensions ['ros']
+[0.952s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_007) by extension 'ros'
+[0.952s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_007) by extensions ['cmake', 'python']
+[0.952s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_007) by extension 'cmake'
+[0.952s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_007) by extension 'python'
+[0.952s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_007) by extensions ['python_setup_py']
+[0.952s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_007) by extension 'python_setup_py'
+[0.953s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_008) by extensions ['ignore', 'ignore_ament_install']
+[0.953s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_008) by extension 'ignore'
+[0.953s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_008) by extension 'ignore_ament_install'
+[0.953s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_008) by extensions ['colcon_pkg']
+[0.953s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_008) by extension 'colcon_pkg'
+[0.953s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_008) by extensions ['colcon_meta']
+[0.953s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_008) by extension 'colcon_meta'
+[0.953s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_008) by extensions ['ros']
+[0.953s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_008) by extension 'ros'
+[0.954s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_008) by extensions ['cmake', 'python']
+[0.954s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_008) by extension 'cmake'
+[0.954s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_008) by extension 'python'
+[0.954s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_008) by extensions ['python_setup_py']
+[0.954s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_008) by extension 'python_setup_py'
+[0.954s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_009) by extensions ['ignore', 'ignore_ament_install']
+[0.954s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_009) by extension 'ignore'
+[0.955s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_009) by extension 'ignore_ament_install'
+[0.955s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_009) by extensions ['colcon_pkg']
+[0.955s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_009) by extension 'colcon_pkg'
+[0.955s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_009) by extensions ['colcon_meta']
+[0.955s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_009) by extension 'colcon_meta'
+[0.955s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_009) by extensions ['ros']
+[0.956s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_009) by extension 'ros'
+[0.956s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_009) by extensions ['cmake', 'python']
+[0.956s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_009) by extension 'cmake'
+[0.956s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_009) by extension 'python'
+[0.956s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_009) by extensions ['python_setup_py']
+[0.956s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_009) by extension 'python_setup_py'
+[0.956s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_010) by extensions ['ignore', 'ignore_ament_install']
+[0.957s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_010) by extension 'ignore'
+[0.957s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_010) by extension 'ignore_ament_install'
+[0.957s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_010) by extensions ['colcon_pkg']
+[0.957s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_010) by extension 'colcon_pkg'
+[0.957s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_010) by extensions ['colcon_meta']
+[0.957s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_010) by extension 'colcon_meta'
+[0.957s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_010) by extensions ['ros']
+[0.957s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_010) by extension 'ros'
+[0.957s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_010) by extensions ['cmake', 'python']
+[0.957s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_010) by extension 'cmake'
+[0.957s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_010) by extension 'python'
+[0.957s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_010) by extensions ['python_setup_py']
+[0.957s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_010) by extension 'python_setup_py'
+[0.958s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_011) by extensions ['ignore', 'ignore_ament_install']
+[0.958s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_011) by extension 'ignore'
+[0.958s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_011) by extension 'ignore_ament_install'
+[0.958s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_011) by extensions ['colcon_pkg']
+[0.958s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_011) by extension 'colcon_pkg'
+[0.958s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_011) by extensions ['colcon_meta']
+[0.958s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_011) by extension 'colcon_meta'
+[0.958s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_011) by extensions ['ros']
+[0.958s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_011) by extension 'ros'
+[0.958s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_011) by extensions ['cmake', 'python']
+[0.958s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_011) by extension 'cmake'
+[0.959s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_011) by extension 'python'
+[0.959s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_011) by extensions ['python_setup_py']
+[0.959s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_011) by extension 'python_setup_py'
+[0.959s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_012) by extensions ['ignore', 'ignore_ament_install']
+[0.960s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_012) by extension 'ignore'
+[0.960s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_012) by extension 'ignore_ament_install'
+[0.961s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_012) by extensions ['colcon_pkg']
+[0.961s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_012) by extension 'colcon_pkg'
+[0.961s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_012) by extensions ['colcon_meta']
+[0.961s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_012) by extension 'colcon_meta'
+[0.961s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_012) by extensions ['ros']
+[0.961s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_012) by extension 'ros'
+[0.962s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_012) by extensions ['cmake', 'python']
+[0.962s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_012) by extension 'cmake'
+[0.962s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_012) by extension 'python'
+[0.962s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_012) by extensions ['python_setup_py']
+[0.962s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_012) by extension 'python_setup_py'
+[0.962s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_013) by extensions ['ignore', 'ignore_ament_install']
+[0.963s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_013) by extension 'ignore'
+[0.963s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_013) by extension 'ignore_ament_install'
+[0.963s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_013) by extensions ['colcon_pkg']
+[0.963s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_013) by extension 'colcon_pkg'
+[0.963s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_013) by extensions ['colcon_meta']
+[0.963s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_013) by extension 'colcon_meta'
+[0.963s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_013) by extensions ['ros']
+[0.963s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_013) by extension 'ros'
+[0.963s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_013) by extensions ['cmake', 'python']
+[0.963s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_013) by extension 'cmake'
+[0.963s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_013) by extension 'python'
+[0.964s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_013) by extensions ['python_setup_py']
+[0.964s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_013) by extension 'python_setup_py'
+[0.964s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_014) by extensions ['ignore', 'ignore_ament_install']
+[0.964s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_014) by extension 'ignore'
+[0.964s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_014) by extension 'ignore_ament_install'
+[0.964s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_014) by extensions ['colcon_pkg']
+[0.965s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_014) by extension 'colcon_pkg'
+[0.965s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_014) by extensions ['colcon_meta']
+[0.965s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_014) by extension 'colcon_meta'
+[0.965s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_014) by extensions ['ros']
+[0.965s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_014) by extension 'ros'
+[0.965s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_014) by extensions ['cmake', 'python']
+[0.965s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_014) by extension 'cmake'
+[0.965s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_014) by extension 'python'
+[0.965s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_014) by extensions ['python_setup_py']
+[0.965s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_014) by extension 'python_setup_py'
+[0.965s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_015) by extensions ['ignore', 'ignore_ament_install']
+[0.966s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_015) by extension 'ignore'
+[0.966s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_015) by extension 'ignore_ament_install'
+[0.966s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_015) by extensions ['colcon_pkg']
+[0.966s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_015) by extension 'colcon_pkg'
+[0.966s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_015) by extensions ['colcon_meta']
+[0.966s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_015) by extension 'colcon_meta'
+[0.966s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_015) by extensions ['ros']
+[0.966s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_015) by extension 'ros'
+[0.966s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_015) by extensions ['cmake', 'python']
+[0.966s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_015) by extension 'cmake'
+[0.967s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_015) by extension 'python'
+[0.967s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_015) by extensions ['python_setup_py']
+[0.967s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_015) by extension 'python_setup_py'
+[0.967s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_016) by extensions ['ignore', 'ignore_ament_install']
+[0.967s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_016) by extension 'ignore'
+[0.967s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_016) by extension 'ignore_ament_install'
+[0.967s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_016) by extensions ['colcon_pkg']
+[0.967s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_016) by extension 'colcon_pkg'
+[0.967s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_016) by extensions ['colcon_meta']
+[0.968s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_016) by extension 'colcon_meta'
+[0.968s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_016) by extensions ['ros']
+[0.968s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_016) by extension 'ros'
+[0.968s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_016) by extensions ['cmake', 'python']
+[0.968s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_016) by extension 'cmake'
+[0.968s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_016) by extension 'python'
+[0.968s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_016) by extensions ['python_setup_py']
+[0.968s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_016) by extension 'python_setup_py'
+[0.968s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_017) by extensions ['ignore', 'ignore_ament_install']
+[0.969s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_017) by extension 'ignore'
+[0.969s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_017) by extension 'ignore_ament_install'
+[0.969s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_017) by extensions ['colcon_pkg']
+[0.969s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_017) by extension 'colcon_pkg'
+[0.969s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_017) by extensions ['colcon_meta']
+[0.969s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_017) by extension 'colcon_meta'
+[0.969s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_017) by extensions ['ros']
+[0.969s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_017) by extension 'ros'
+[0.969s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_017) by extensions ['cmake', 'python']
+[0.970s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_017) by extension 'cmake'
+[0.970s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_017) by extension 'python'
+[0.970s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_017) by extensions ['python_setup_py']
+[0.970s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_017) by extension 'python_setup_py'
+[0.970s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_018) by extensions ['ignore', 'ignore_ament_install']
+[0.971s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_018) by extension 'ignore'
+[0.971s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_018) by extension 'ignore_ament_install'
+[0.971s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_018) by extensions ['colcon_pkg']
+[0.971s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_018) by extension 'colcon_pkg'
+[0.971s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_018) by extensions ['colcon_meta']
+[0.971s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_018) by extension 'colcon_meta'
+[0.971s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_018) by extensions ['ros']
+[0.971s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_018) by extension 'ros'
+[0.971s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_018) by extensions ['cmake', 'python']
+[0.971s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_018) by extension 'cmake'
+[0.971s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_018) by extension 'python'
+[0.971s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_018) by extensions ['python_setup_py']
+[0.971s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_018) by extension 'python_setup_py'
+[0.971s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_019) by extensions ['ignore', 'ignore_ament_install']
+[0.972s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_019) by extension 'ignore'
+[0.972s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_019) by extension 'ignore_ament_install'
+[0.972s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_019) by extensions ['colcon_pkg']
+[0.972s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_019) by extension 'colcon_pkg'
+[0.972s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_019) by extensions ['colcon_meta']
+[0.972s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_019) by extension 'colcon_meta'
+[0.972s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_019) by extensions ['ros']
+[0.972s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_019) by extension 'ros'
+[0.973s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_019) by extensions ['cmake', 'python']
+[0.973s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_019) by extension 'cmake'
+[0.973s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_019) by extension 'python'
+[0.973s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_019) by extensions ['python_setup_py']
+[0.973s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_019) by extension 'python_setup_py'
+[0.973s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_020) by extensions ['ignore', 'ignore_ament_install']
+[0.974s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_020) by extension 'ignore'
+[0.974s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_020) by extension 'ignore_ament_install'
+[0.974s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_020) by extensions ['colcon_pkg']
+[0.974s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_020) by extension 'colcon_pkg'
+[0.974s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_020) by extensions ['colcon_meta']
+[0.974s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_020) by extension 'colcon_meta'
+[0.975s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_020) by extensions ['ros']
+[0.975s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_020) by extension 'ros'
+[0.975s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_020) by extensions ['cmake', 'python']
+[0.975s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_020) by extension 'cmake'
+[0.975s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_020) by extension 'python'
+[0.975s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_020) by extensions ['python_setup_py']
+[0.975s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/plant_views/plant_020) by extension 'python_setup_py'
+[0.975s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/test_depth) by extensions ['ignore', 'ignore_ament_install']
+[0.976s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/test_depth) by extension 'ignore'
+[0.976s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/test_depth) by extension 'ignore_ament_install'
+[0.976s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/test_depth) by extensions ['colcon_pkg']
+[0.976s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/test_depth) by extension 'colcon_pkg'
+[0.976s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/test_depth) by extensions ['colcon_meta']
+[0.976s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/test_depth) by extension 'colcon_meta'
+[0.977s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/test_depth) by extensions ['ros']
+[0.977s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/test_depth) by extension 'ros'
+[0.977s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/test_depth) by extensions ['cmake', 'python']
+[0.977s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/test_depth) by extension 'cmake'
+[0.978s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/test_depth) by extension 'python'
+[0.978s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/test_depth) by extensions ['python_setup_py']
+[0.978s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/test_depth) by extension 'python_setup_py'
+[0.978s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/test_rgb) by extensions ['ignore', 'ignore_ament_install']
+[0.979s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/test_rgb) by extension 'ignore'
+[0.979s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/test_rgb) by extension 'ignore_ament_install'
+[0.979s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/test_rgb) by extensions ['colcon_pkg']
+[0.979s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/test_rgb) by extension 'colcon_pkg'
+[0.979s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/test_rgb) by extensions ['colcon_meta']
+[0.979s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/test_rgb) by extension 'colcon_meta'
+[0.979s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/test_rgb) by extensions ['ros']
+[0.979s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/test_rgb) by extension 'ros'
+[0.979s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/test_rgb) by extensions ['cmake', 'python']
+[0.979s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/test_rgb) by extension 'cmake'
+[0.979s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/test_rgb) by extension 'python'
+[0.980s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/test_rgb) by extensions ['python_setup_py']
+[0.980s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/test_rgb) by extension 'python_setup_py'
+[0.980s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/tools) by extensions ['ignore', 'ignore_ament_install']
+[0.980s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/tools) by extension 'ignore'
+[0.980s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/tools) by extension 'ignore_ament_install'
+[0.980s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/tools) by extensions ['colcon_pkg']
+[0.980s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/tools) by extension 'colcon_pkg'
+[0.981s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/tools) by extensions ['colcon_meta']
+[0.981s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/tools) by extension 'colcon_meta'
+[0.981s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/tools) by extensions ['ros']
+[0.981s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/tools) by extension 'ros'
+[0.981s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/tools) by extensions ['cmake', 'python']
+[0.981s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/tools) by extension 'cmake'
+[0.981s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/tools) by extension 'python'
+[0.981s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/tools) by extensions ['python_setup_py']
+[0.981s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(data/tools) by extension 'python_setup_py'
+[0.981s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(env) by extensions ['ignore', 'ignore_ament_install']
+[0.981s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(env) by extension 'ignore'
+[0.981s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(env) by extension 'ignore_ament_install'
+[0.982s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(env) by extensions ['colcon_pkg']
+[0.982s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(env) by extension 'colcon_pkg'
+[0.982s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(env) by extensions ['colcon_meta']
+[0.982s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(env) by extension 'colcon_meta'
+[0.982s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(env) by extensions ['ros']
+[0.982s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(env) by extension 'ros'
+[0.982s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(env) by extensions ['cmake', 'python']
+[0.982s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(env) by extension 'cmake'
+[0.982s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(env) by extension 'python'
+[0.982s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(env) by extensions ['python_setup_py']
+[0.982s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(env) by extension 'python_setup_py'
+[0.982s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(install) by extensions ['ignore', 'ignore_ament_install']
+[0.982s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(install) by extension 'ignore'
+[0.983s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(install) ignored
+[0.983s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(log) by extensions ['ignore', 'ignore_ament_install']
+[0.983s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(log) by extension 'ignore'
+[0.983s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(log) ignored
+[0.983s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src) by extensions ['ignore', 'ignore_ament_install']
+[0.983s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src) by extension 'ignore'
+[0.984s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src) by extension 'ignore_ament_install'
+[0.984s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src) by extensions ['colcon_pkg']
+[0.984s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src) by extension 'colcon_pkg'
+[0.984s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src) by extensions ['colcon_meta']
+[0.984s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src) by extension 'colcon_meta'
+[0.984s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src) by extensions ['ros']
+[0.984s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src) by extension 'ros'
+[0.984s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src) by extensions ['cmake', 'python']
+[0.984s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src) by extension 'cmake'
+[0.984s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src) by extension 'python'
+[0.984s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src) by extensions ['python_setup_py']
+[0.984s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src) by extension 'python_setup_py'
+[0.985s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/meca500_ros2) by extensions ['ignore', 'ignore_ament_install']
+[0.985s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/meca500_ros2) by extension 'ignore'
+[0.985s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/meca500_ros2) by extension 'ignore_ament_install'
+[0.985s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/meca500_ros2) by extensions ['colcon_pkg']
+[0.985s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/meca500_ros2) by extension 'colcon_pkg'
+[0.985s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/meca500_ros2) by extensions ['colcon_meta']
+[0.985s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/meca500_ros2) by extension 'colcon_meta'
+[0.985s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/meca500_ros2) by extensions ['ros']
+[0.985s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/meca500_ros2) by extension 'ros'
+[0.993s] [34mcolcon.colcon_core.package_identification[0m [1;30mDEBUG[0m [32mPackage 'src/meca500_ros2' with type 'ros.ament_python' and name 'meca500_ros2'[0m
+[0.994s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_bringup) by extensions ['ignore', 'ignore_ament_install']
+[0.994s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_bringup) by extension 'ignore'
+[0.994s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_bringup) by extension 'ignore_ament_install'
+[0.995s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_bringup) by extensions ['colcon_pkg']
+[0.995s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_bringup) by extension 'colcon_pkg'
+[0.995s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_bringup) by extensions ['colcon_meta']
+[0.995s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_bringup) by extension 'colcon_meta'
+[0.995s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_bringup) by extensions ['ros']
+[0.995s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_bringup) by extension 'ros'
+[0.996s] [34mcolcon.colcon_core.package_identification[0m [1;30mDEBUG[0m [32mPackage 'src/strawberry_bringup' with type 'ros.ament_python' and name 'strawberry_bringup'[0m
+[0.997s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_camera) by extensions ['ignore', 'ignore_ament_install']
+[0.997s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_camera) by extension 'ignore'
+[0.997s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_camera) by extension 'ignore_ament_install'
+[0.997s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_camera) by extensions ['colcon_pkg']
+[0.997s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_camera) by extension 'colcon_pkg'
+[0.997s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_camera) by extensions ['colcon_meta']
+[0.997s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_camera) by extension 'colcon_meta'
+[0.998s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_camera) by extensions ['ros']
+[0.998s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_camera) by extension 'ros'
+[0.999s] [34mcolcon.colcon_core.package_identification[0m [1;30mDEBUG[0m [32mPackage 'src/strawberry_camera' with type 'ros.ament_python' and name 'strawberry_camera'[0m
+[0.999s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_cluster) by extensions ['ignore', 'ignore_ament_install']
+[1.000s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_cluster) by extension 'ignore'
+[1.000s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_cluster) by extension 'ignore_ament_install'
+[1.000s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_cluster) by extensions ['colcon_pkg']
+[1.000s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_cluster) by extension 'colcon_pkg'
+[1.000s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_cluster) by extensions ['colcon_meta']
+[1.000s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_cluster) by extension 'colcon_meta'
+[1.000s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_cluster) by extensions ['ros']
+[1.000s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_cluster) by extension 'ros'
+[1.001s] [34mcolcon.colcon_core.package_identification[0m [1;30mDEBUG[0m [32mPackage 'src/strawberry_cluster' with type 'ros.ament_python' and name 'strawberry_cluster'[0m
+[1.002s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_msgs) by extensions ['ignore', 'ignore_ament_install']
+[1.002s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_msgs) by extension 'ignore'
+[1.002s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_msgs) by extension 'ignore_ament_install'
+[1.002s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_msgs) by extensions ['colcon_pkg']
+[1.002s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_msgs) by extension 'colcon_pkg'
+[1.002s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_msgs) by extensions ['colcon_meta']
+[1.002s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_msgs) by extension 'colcon_meta'
+[1.002s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_msgs) by extensions ['ros']
+[1.002s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_msgs) by extension 'ros'
+[1.004s] [34mcolcon.colcon_core.package_identification[0m [1;30mDEBUG[0m [32mPackage 'src/strawberry_msgs' with type 'ros.ament_cmake' and name 'strawberry_msgs'[0m
+[1.005s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_segmentation) by extensions ['ignore', 'ignore_ament_install']
+[1.005s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_segmentation) by extension 'ignore'
+[1.005s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_segmentation) by extension 'ignore_ament_install'
+[1.005s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_segmentation) by extensions ['colcon_pkg']
+[1.005s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_segmentation) by extension 'colcon_pkg'
+[1.005s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_segmentation) by extensions ['colcon_meta']
+[1.005s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_segmentation) by extension 'colcon_meta'
+[1.005s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_segmentation) by extensions ['ros']
+[1.005s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_segmentation) by extension 'ros'
+[1.006s] [34mcolcon.colcon_core.package_identification[0m [1;30mDEBUG[0m [32mPackage 'src/strawberry_segmentation' with type 'ros.ament_python' and name 'strawberry_segmentation'[0m
+[1.007s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_tools) by extensions ['ignore', 'ignore_ament_install']
+[1.007s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_tools) by extension 'ignore'
+[1.007s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_tools) by extension 'ignore_ament_install'
+[1.008s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_tools) by extensions ['colcon_pkg']
+[1.008s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_tools) by extension 'colcon_pkg'
+[1.008s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_tools) by extensions ['colcon_meta']
+[1.008s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_tools) by extension 'colcon_meta'
+[1.008s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_tools) by extensions ['ros']
+[1.008s] [34mcolcon.colcon_core.package_identification[0m [1;30mLevel 1[0m _identify(src/strawberry_tools) by extension 'ros'
+[1.011s] [34mcolcon.colcon_core.package_identification[0m [1;30mDEBUG[0m [32mPackage 'src/strawberry_tools' with type 'ros.ament_python' and name 'strawberry_tools'[0m
+[1.012s] [34mcolcon.colcon_core.package_discovery[0m [1;30mLevel 1[0m discover_packages(recursive) using defaults
+[1.012s] [34mcolcon.colcon_core.package_discovery[0m [1;30mLevel 1[0m discover_packages(ignore) discover
+[1.012s] [34mcolcon.colcon_core.package_discovery[0m [1;30mLevel 1[0m discover_packages(ignore) using defaults
+[1.012s] [34mcolcon.colcon_core.package_discovery[0m [1;30mLevel 1[0m discover_packages(path) discover
+[1.013s] [34mcolcon.colcon_core.package_discovery[0m [1;30mLevel 1[0m discover_packages(path) using defaults
+[1.097s] [34mcolcon.colcon_core.package_discovery[0m [1;30mLevel 1[0m discover_packages(prefix_path) check parameters
+[1.097s] [34mcolcon.colcon_core.package_discovery[0m [1;30mLevel 1[0m discover_packages(prefix_path) discover
+[1.112s] [34mcolcon.colcon_installed_package_information.package_discovery[0m [1;30mDEBUG[0m [32mFound 7 installed packages in /home/parallels/Forschsemrep/strawberry_ws/install[0m
+[1.117s] [34mcolcon.colcon_installed_package_information.package_discovery[0m [1;30mDEBUG[0m [32mFound 400 installed packages in /opt/ros/humble[0m
+[1.120s] [34mcolcon.colcon_core.package_discovery[0m [1;30mLevel 1[0m discover_packages(prefix_path) using defaults
+[1.251s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'meca500_ros2' build argument 'cmake_args' from command line to 'None'
+[1.251s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'meca500_ros2' build argument 'cmake_target' from command line to 'None'
+[1.251s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'meca500_ros2' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[1.251s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'meca500_ros2' build argument 'cmake_clean_cache' from command line to 'False'
+[1.251s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'meca500_ros2' build argument 'cmake_clean_first' from command line to 'False'
+[1.251s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'meca500_ros2' build argument 'cmake_force_configure' from command line to 'False'
+[1.251s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'meca500_ros2' build argument 'ament_cmake_args' from command line to 'None'
+[1.251s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'meca500_ros2' build argument 'catkin_cmake_args' from command line to 'None'
+[1.251s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'meca500_ros2' build argument 'catkin_skip_building_tests' from command line to 'False'
+[1.252s] [34mcolcon.colcon_core.verb[0m [1;30mDEBUG[0m [32mBuilding package 'meca500_ros2' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2', 'merge_install': False, 'path': '/home/parallels/Forschsemrep/strawberry_ws/src/meca500_ros2', 'symlink_install': True, 'test_result_base': None}[0m
+[1.252s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_camera' build argument 'cmake_args' from command line to 'None'
+[1.253s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_camera' build argument 'cmake_target' from command line to 'None'
+[1.253s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_camera' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[1.253s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_camera' build argument 'cmake_clean_cache' from command line to 'False'
+[1.253s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_camera' build argument 'cmake_clean_first' from command line to 'False'
+[1.254s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_camera' build argument 'cmake_force_configure' from command line to 'False'
+[1.254s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_camera' build argument 'ament_cmake_args' from command line to 'None'
+[1.254s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_camera' build argument 'catkin_cmake_args' from command line to 'None'
+[1.254s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_camera' build argument 'catkin_skip_building_tests' from command line to 'False'
+[1.254s] [34mcolcon.colcon_core.verb[0m [1;30mDEBUG[0m [32mBuilding package 'strawberry_camera' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera', 'merge_install': False, 'path': '/home/parallels/Forschsemrep/strawberry_ws/src/strawberry_camera', 'symlink_install': True, 'test_result_base': None}[0m
+[1.255s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_cluster' build argument 'cmake_args' from command line to 'None'
+[1.255s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_cluster' build argument 'cmake_target' from command line to 'None'
+[1.255s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_cluster' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[1.255s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_cluster' build argument 'cmake_clean_cache' from command line to 'False'
+[1.255s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_cluster' build argument 'cmake_clean_first' from command line to 'False'
+[1.255s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_cluster' build argument 'cmake_force_configure' from command line to 'False'
+[1.255s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_cluster' build argument 'ament_cmake_args' from command line to 'None'
+[1.255s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_cluster' build argument 'catkin_cmake_args' from command line to 'None'
+[1.255s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_cluster' build argument 'catkin_skip_building_tests' from command line to 'False'
+[1.255s] [34mcolcon.colcon_core.verb[0m [1;30mDEBUG[0m [32mBuilding package 'strawberry_cluster' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster', 'merge_install': False, 'path': '/home/parallels/Forschsemrep/strawberry_ws/src/strawberry_cluster', 'symlink_install': True, 'test_result_base': None}[0m
+[1.256s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_msgs' build argument 'cmake_args' from command line to 'None'
+[1.256s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_msgs' build argument 'cmake_target' from command line to 'None'
+[1.256s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_msgs' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[1.257s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_msgs' build argument 'cmake_clean_cache' from command line to 'False'
+[1.257s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_msgs' build argument 'cmake_clean_first' from command line to 'False'
+[1.257s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_msgs' build argument 'cmake_force_configure' from command line to 'False'
+[1.257s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_msgs' build argument 'ament_cmake_args' from command line to 'None'
+[1.257s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_msgs' build argument 'catkin_cmake_args' from command line to 'None'
+[1.257s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_msgs' build argument 'catkin_skip_building_tests' from command line to 'False'
+[1.257s] [34mcolcon.colcon_core.verb[0m [1;30mDEBUG[0m [32mBuilding package 'strawberry_msgs' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs', 'merge_install': False, 'path': '/home/parallels/Forschsemrep/strawberry_ws/src/strawberry_msgs', 'symlink_install': True, 'test_result_base': None}[0m
+[1.257s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_segmentation' build argument 'cmake_args' from command line to 'None'
+[1.258s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_segmentation' build argument 'cmake_target' from command line to 'None'
+[1.258s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_segmentation' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[1.258s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_segmentation' build argument 'cmake_clean_cache' from command line to 'False'
+[1.258s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_segmentation' build argument 'cmake_clean_first' from command line to 'False'
+[1.258s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_segmentation' build argument 'cmake_force_configure' from command line to 'False'
+[1.258s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_segmentation' build argument 'ament_cmake_args' from command line to 'None'
+[1.258s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_segmentation' build argument 'catkin_cmake_args' from command line to 'None'
+[1.258s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_segmentation' build argument 'catkin_skip_building_tests' from command line to 'False'
+[1.258s] [34mcolcon.colcon_core.verb[0m [1;30mDEBUG[0m [32mBuilding package 'strawberry_segmentation' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation', 'merge_install': False, 'path': '/home/parallels/Forschsemrep/strawberry_ws/src/strawberry_segmentation', 'symlink_install': True, 'test_result_base': None}[0m
+[1.259s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_bringup' build argument 'cmake_args' from command line to 'None'
+[1.259s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_bringup' build argument 'cmake_target' from command line to 'None'
+[1.260s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_bringup' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[1.260s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_bringup' build argument 'cmake_clean_cache' from command line to 'False'
+[1.260s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_bringup' build argument 'cmake_clean_first' from command line to 'False'
+[1.260s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_bringup' build argument 'cmake_force_configure' from command line to 'False'
+[1.260s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_bringup' build argument 'ament_cmake_args' from command line to 'None'
+[1.260s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_bringup' build argument 'catkin_cmake_args' from command line to 'None'
+[1.260s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_bringup' build argument 'catkin_skip_building_tests' from command line to 'False'
+[1.260s] [34mcolcon.colcon_core.verb[0m [1;30mDEBUG[0m [32mBuilding package 'strawberry_bringup' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup', 'merge_install': False, 'path': '/home/parallels/Forschsemrep/strawberry_ws/src/strawberry_bringup', 'symlink_install': True, 'test_result_base': None}[0m
+[1.261s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_tools' build argument 'cmake_args' from command line to 'None'
+[1.262s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_tools' build argument 'cmake_target' from command line to 'None'
+[1.262s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_tools' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[1.262s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_tools' build argument 'cmake_clean_cache' from command line to 'False'
+[1.262s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_tools' build argument 'cmake_clean_first' from command line to 'False'
+[1.262s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_tools' build argument 'cmake_force_configure' from command line to 'False'
+[1.262s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_tools' build argument 'ament_cmake_args' from command line to 'None'
+[1.262s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_tools' build argument 'catkin_cmake_args' from command line to 'None'
+[1.262s] [34mcolcon.colcon_core.verb[0m [1;30mLevel 5[0m set package 'strawberry_tools' build argument 'catkin_skip_building_tests' from command line to 'False'
+[1.262s] [34mcolcon.colcon_core.verb[0m [1;30mDEBUG[0m [32mBuilding package 'strawberry_tools' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_tools', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools', 'merge_install': False, 'path': '/home/parallels/Forschsemrep/strawberry_ws/src/strawberry_tools', 'symlink_install': True, 'test_result_base': None}[0m
+[1.263s] [34mcolcon.colcon_core.executor[0m [1;30mINFO[0m Executing jobs using 'parallel' executor
+[1.265s] [34mcolcon.colcon_parallel_executor.executor.parallel[0m [1;30mDEBUG[0m [32mrun_until_complete[0m
+[1.266s] [34mcolcon.colcon_ros.task.ament_cmake.build[0m [1;30mINFO[0m Building ROS package in '/home/parallels/Forschsemrep/strawberry_ws/src/strawberry_msgs' with build type 'ament_cmake'
+[1.266s] [34mcolcon.colcon_cmake.task.cmake.build[0m [1;30mINFO[0m Building CMake package in '/home/parallels/Forschsemrep/strawberry_ws/src/strawberry_msgs'
+[1.275s] [34mcolcon.colcon_core.plugin_system[0m [1;30mINFO[0m Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[1.276s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.276s] [34mcolcon.colcon_core.shell[0m [1;30mDEBUG[0m [32mSkip shell extension 'dsv' for command environment[0m
+[1.289s] [34mcolcon.colcon_ros.task.ament_python.build[0m [1;30mINFO[0m Building ROS package in '/home/parallels/Forschsemrep/strawberry_ws/src/strawberry_camera' with build type 'ament_python'
+[1.290s] [34mcolcon.colcon_core.shell[0m [1;30mLevel 1[0m create_environment_hook('strawberry_camera', 'ament_prefix_path')
+[1.291s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/share/strawberry_camera/hook/ament_prefix_path.ps1'
+[1.300s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment descriptor '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/share/strawberry_camera/hook/ament_prefix_path.dsv'
+[1.302s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/share/strawberry_camera/hook/ament_prefix_path.sh'
+[1.305s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.305s] [34mcolcon.colcon_core.shell[0m [1;30mDEBUG[0m [32mSkip shell extension 'dsv' for command environment[0m
+[1.317s] [34mcolcon.colcon_ros.task.ament_python.build[0m [1;30mINFO[0m Building ROS package in '/home/parallels/Forschsemrep/strawberry_ws/src/strawberry_cluster' with build type 'ament_python'
+[1.318s] [34mcolcon.colcon_core.shell[0m [1;30mLevel 1[0m create_environment_hook('strawberry_cluster', 'ament_prefix_path')
+[1.318s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/share/strawberry_cluster/hook/ament_prefix_path.ps1'
+[1.320s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment descriptor '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/share/strawberry_cluster/hook/ament_prefix_path.dsv'
+[1.321s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/share/strawberry_cluster/hook/ament_prefix_path.sh'
+[1.323s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.323s] [34mcolcon.colcon_core.shell[0m [1;30mDEBUG[0m [32mSkip shell extension 'dsv' for command environment[0m
+[1.335s] [34mcolcon.colcon_ros.task.ament_python.build[0m [1;30mINFO[0m Building ROS package in '/home/parallels/Forschsemrep/strawberry_ws/src/strawberry_segmentation' with build type 'ament_python'
+[1.335s] [34mcolcon.colcon_core.shell[0m [1;30mLevel 1[0m create_environment_hook('strawberry_segmentation', 'ament_prefix_path')
+[1.336s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/share/strawberry_segmentation/hook/ament_prefix_path.ps1'
+[1.340s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment descriptor '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/share/strawberry_segmentation/hook/ament_prefix_path.dsv'
+[1.342s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/share/strawberry_segmentation/hook/ament_prefix_path.sh'
+[1.345s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.346s] [34mcolcon.colcon_core.shell[0m [1;30mDEBUG[0m [32mSkip shell extension 'dsv' for command environment[0m
+[1.367s] [34mcolcon.colcon_core.event_handler.log_command[0m [1;30mDEBUG[0m [32mInvoking command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera:/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2:/opt/ros/humble /usr/bin/cmake --build /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs -- -j4 -l4[0m
+[2.206s] [34mcolcon.colcon_core.task.python.build[0m [1;30mINFO[0m Building Python package in '/home/parallels/Forschsemrep/strawberry_ws/src/strawberry_camera'
+[2.207s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[2.208s] [34mcolcon.colcon_core.shell[0m [1;30mDEBUG[0m [32mSkip shell extension 'dsv' for command environment[0m
+[2.809s] [34mcolcon.colcon_core.task.python.build[0m [1;30mINFO[0m Building Python package in '/home/parallels/Forschsemrep/strawberry_ws/src/strawberry_cluster'
+[2.811s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[2.811s] [34mcolcon.colcon_core.shell[0m [1;30mDEBUG[0m [32mSkip shell extension 'dsv' for command environment[0m
+[3.280s] [34mcolcon.colcon_core.task.python.build[0m [1;30mINFO[0m Building Python package in '/home/parallels/Forschsemrep/strawberry_ws/src/strawberry_segmentation'
+[3.280s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[3.280s] [34mcolcon.colcon_core.shell[0m [1;30mDEBUG[0m [32mSkip shell extension 'dsv' for command environment[0m
+[3.287s] [34mcolcon.colcon_core.event_handler.log_command[0m [1;30mDEBUG[0m [32mInvoked command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera:/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2:/opt/ros/humble /usr/bin/cmake --build /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs -- -j4 -l4[0m
+[3.306s] [34mcolcon.colcon_core.event_handler.log_command[0m [1;30mDEBUG[0m [32mInvoking command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera:/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2:/opt/ros/humble /usr/bin/cmake --install /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs[0m
+[3.573s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m create_environment_scripts_only(strawberry_msgs)
+[3.577s] [34mcolcon.colcon_core.event_handler.log_command[0m [1;30mDEBUG[0m [32mInvoked command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera:/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2:/opt/ros/humble /usr/bin/cmake --install /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_msgs[0m
+[3.590s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs' for CMake module files
+[3.592s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs' for CMake config files
+[3.592s] [34mcolcon.colcon_core.shell[0m [1;30mLevel 1[0m create_environment_hook('strawberry_msgs', 'cmake_prefix_path')
+[3.594s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/hook/cmake_prefix_path.ps1'
+[3.597s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment descriptor '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/hook/cmake_prefix_path.dsv'
+[3.598s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/hook/cmake_prefix_path.sh'
+[3.601s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib'
+[3.602s] [34mcolcon.colcon_core.shell[0m [1;30mLevel 1[0m create_environment_hook('strawberry_msgs', 'ld_library_path_lib')
+[3.602s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/hook/ld_library_path_lib.ps1'
+[3.604s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment descriptor '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/hook/ld_library_path_lib.dsv'
+[3.606s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/hook/ld_library_path_lib.sh'
+[3.607s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/bin'
+[3.608s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/pkgconfig/strawberry_msgs.pc'
+[3.608s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/python3.10/site-packages'
+[3.608s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/bin'
+[3.609s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/package.ps1'
+[3.615s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package descriptor '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/package.dsv'
+[3.618s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/package.sh'
+[3.622s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/package.bash'
+[3.639s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/package.zsh'
+[3.645s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m create_file_with_runtime_dependencies(/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/colcon-core/packages/strawberry_msgs)
+[3.647s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m create_environment_scripts_only(strawberry_msgs)
+[3.647s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs' for CMake module files
+[3.648s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs' for CMake config files
+[3.649s] [34mcolcon.colcon_core.shell[0m [1;30mLevel 1[0m create_environment_hook('strawberry_msgs', 'cmake_prefix_path')
+[3.649s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/hook/cmake_prefix_path.ps1'
+[3.650s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment descriptor '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/hook/cmake_prefix_path.dsv'
+[3.651s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/hook/cmake_prefix_path.sh'
+[3.652s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib'
+[3.652s] [34mcolcon.colcon_core.shell[0m [1;30mLevel 1[0m create_environment_hook('strawberry_msgs', 'ld_library_path_lib')
+[3.652s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/hook/ld_library_path_lib.ps1'
+[3.653s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment descriptor '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/hook/ld_library_path_lib.dsv'
+[3.654s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/hook/ld_library_path_lib.sh'
+[3.655s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/bin'
+[3.656s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/pkgconfig/strawberry_msgs.pc'
+[3.656s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/lib/python3.10/site-packages'
+[3.657s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/bin'
+[3.658s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/package.ps1'
+[3.659s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package descriptor '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/package.dsv'
+[3.662s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/package.sh'
+[3.663s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/package.bash'
+[3.664s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/strawberry_msgs/package.zsh'
+[3.665s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m create_file_with_runtime_dependencies(/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/share/colcon-core/packages/strawberry_msgs)
+[3.667s] [34mcolcon.colcon_ros.task.ament_python.build[0m [1;30mINFO[0m Building ROS package in '/home/parallels/Forschsemrep/strawberry_ws/src/meca500_ros2' with build type 'ament_python'
+[3.667s] [34mcolcon.colcon_core.shell[0m [1;30mLevel 1[0m create_environment_hook('meca500_ros2', 'ament_prefix_path')
+[3.668s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/share/meca500_ros2/hook/ament_prefix_path.ps1'
+[3.670s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment descriptor '/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/share/meca500_ros2/hook/ament_prefix_path.dsv'
+[3.671s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/share/meca500_ros2/hook/ament_prefix_path.sh'
+[3.671s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[3.672s] [34mcolcon.colcon_core.shell[0m [1;30mDEBUG[0m [32mSkip shell extension 'dsv' for command environment[0m
+[4.481s] [34mcolcon.colcon_core.task.python.build[0m [1;30mINFO[0m Building Python package in '/home/parallels/Forschsemrep/strawberry_ws/src/meca500_ros2'
+[4.481s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[4.481s] [34mcolcon.colcon_core.shell[0m [1;30mDEBUG[0m [32mSkip shell extension 'dsv' for command environment[0m
+[4.691s] [34mcolcon.colcon_core.event_handler.log_command[0m [1;30mDEBUG[0m [32mInvoking command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster': PYTHONPATH=/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/build --no-deps symlink_data[0m
+[4.702s] [34mcolcon.colcon_core.event_handler.log_command[0m [1;30mDEBUG[0m [32mInvoking command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera': PYTHONPATH=/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera/build --no-deps symlink_data[0m
+[4.712s] [34mcolcon.colcon_core.event_handler.log_command[0m [1;30mDEBUG[0m [32mInvoking command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation': PYTHONPATH=/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation/build --no-deps symlink_data[0m
+[5.425s] [34mcolcon.colcon_core.event_handler.log_command[0m [1;30mDEBUG[0m [32mInvoking command in '/home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2': PYTHONPATH=/home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2/build --no-deps symlink_data[0m
+[5.991s] [34mcolcon.colcon_core.shell[0m [1;30mLevel 1[0m create_environment_hook('strawberry_camera', 'pythonpath_develop')
+[5.997s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera/share/strawberry_camera/hook/pythonpath_develop.ps1'
+[5.998s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment descriptor '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera/share/strawberry_camera/hook/pythonpath_develop.dsv'
+[5.993s] [34mcolcon.colcon_core.event_handler.log_command[0m [1;30mDEBUG[0m [32mInvoked command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera' returned '0': PYTHONPATH=/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera/build --no-deps symlink_data[0m
+[6.000s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera/share/strawberry_camera/hook/pythonpath_develop.sh'
+[6.002s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera' for CMake module files
+[6.003s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera' for CMake config files
+[6.006s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/lib'
+[6.007s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/bin'
+[6.007s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/lib/pkgconfig/strawberry_camera.pc'
+[6.008s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/lib/python3.10/site-packages'
+[6.008s] [34mcolcon.colcon_core.shell[0m [1;30mLevel 1[0m create_environment_hook('strawberry_camera', 'pythonpath')
+[6.009s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/share/strawberry_camera/hook/pythonpath.ps1'
+[6.012s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment descriptor '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/share/strawberry_camera/hook/pythonpath.dsv'
+[6.014s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/share/strawberry_camera/hook/pythonpath.sh'
+[6.016s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/bin'
+[6.017s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m create_environment_scripts_only(strawberry_camera)
+[6.022s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/share/strawberry_camera/package.ps1'
+[6.028s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package descriptor '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/share/strawberry_camera/package.dsv'
+[6.031s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/share/strawberry_camera/package.sh'
+[6.036s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/share/strawberry_camera/package.bash'
+[6.041s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/share/strawberry_camera/package.zsh'
+[6.042s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m create_file_with_runtime_dependencies(/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/share/colcon-core/packages/strawberry_camera)
+[6.048s] [34mcolcon.colcon_ros.task.ament_python.build[0m [1;30mINFO[0m Building ROS package in '/home/parallels/Forschsemrep/strawberry_ws/src/strawberry_tools' with build type 'ament_python'
+[6.049s] [34mcolcon.colcon_core.shell[0m [1;30mLevel 1[0m create_environment_hook('strawberry_tools', 'ament_prefix_path')
+[6.050s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/share/strawberry_tools/hook/ament_prefix_path.ps1'
+[6.055s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment descriptor '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/share/strawberry_tools/hook/ament_prefix_path.dsv'
+[6.056s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/share/strawberry_tools/hook/ament_prefix_path.sh'
+[6.061s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[6.061s] [34mcolcon.colcon_core.shell[0m [1;30mDEBUG[0m [32mSkip shell extension 'dsv' for command environment[0m
+[6.073s] [34mcolcon.colcon_core.shell[0m [1;30mLevel 1[0m create_environment_hook('strawberry_cluster', 'pythonpath_develop')
+[6.075s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/share/strawberry_cluster/hook/pythonpath_develop.ps1'
+[6.076s] [34mcolcon.colcon_core.event_handler.log_command[0m [1;30mDEBUG[0m [32mInvoked command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster' returned '0': PYTHONPATH=/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/build --no-deps symlink_data[0m
+[6.079s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment descriptor '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/share/strawberry_cluster/hook/pythonpath_develop.dsv'
+[6.082s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster/share/strawberry_cluster/hook/pythonpath_develop.sh'
+[6.086s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster' for CMake module files
+[6.087s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster' for CMake config files
+[6.089s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/lib'
+[6.089s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/bin'
+[6.090s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/lib/pkgconfig/strawberry_cluster.pc'
+[6.090s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/lib/python3.10/site-packages'
+[6.091s] [34mcolcon.colcon_core.shell[0m [1;30mLevel 1[0m create_environment_hook('strawberry_cluster', 'pythonpath')
+[6.091s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/share/strawberry_cluster/hook/pythonpath.ps1'
+[6.094s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment descriptor '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/share/strawberry_cluster/hook/pythonpath.dsv'
+[6.098s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/share/strawberry_cluster/hook/pythonpath.sh'
+[6.100s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/bin'
+[6.101s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m create_environment_scripts_only(strawberry_cluster)
+[6.102s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/share/strawberry_cluster/package.ps1'
+[6.104s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package descriptor '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/share/strawberry_cluster/package.dsv'
+[6.105s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/share/strawberry_cluster/package.sh'
+[6.108s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/share/strawberry_cluster/package.bash'
+[6.110s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/share/strawberry_cluster/package.zsh'
+[6.112s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m create_file_with_runtime_dependencies(/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/share/colcon-core/packages/strawberry_cluster)
+[7.071s] [34mcolcon.colcon_core.task.python.build[0m [1;30mINFO[0m Building Python package in '/home/parallels/Forschsemrep/strawberry_ws/src/strawberry_tools'
+[7.072s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[7.072s] [34mcolcon.colcon_core.shell[0m [1;30mDEBUG[0m [32mSkip shell extension 'dsv' for command environment[0m
+[7.102s] [34mcolcon.colcon_core.shell[0m [1;30mLevel 1[0m create_environment_hook('strawberry_segmentation', 'pythonpath_develop')
+[7.102s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation/share/strawberry_segmentation/hook/pythonpath_develop.ps1'
+[7.114s] [34mcolcon.colcon_core.event_handler.log_command[0m [1;30mDEBUG[0m [32mInvoked command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation' returned '0': PYTHONPATH=/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation/build --no-deps symlink_data[0m
+[7.116s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment descriptor '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation/share/strawberry_segmentation/hook/pythonpath_develop.dsv'
+[7.121s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation/share/strawberry_segmentation/hook/pythonpath_develop.sh'
+[7.125s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation' for CMake module files
+[7.130s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation' for CMake config files
+[7.132s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/lib'
+[7.133s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/bin'
+[7.133s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/lib/pkgconfig/strawberry_segmentation.pc'
+[7.134s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/lib/python3.10/site-packages'
+[7.134s] [34mcolcon.colcon_core.shell[0m [1;30mLevel 1[0m create_environment_hook('strawberry_segmentation', 'pythonpath')
+[7.138s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/share/strawberry_segmentation/hook/pythonpath.ps1'
+[7.140s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment descriptor '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/share/strawberry_segmentation/hook/pythonpath.dsv'
+[7.143s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/share/strawberry_segmentation/hook/pythonpath.sh'
+[7.149s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/bin'
+[7.149s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m create_environment_scripts_only(strawberry_segmentation)
+[7.151s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/share/strawberry_segmentation/package.ps1'
+[7.155s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package descriptor '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/share/strawberry_segmentation/package.dsv'
+[7.161s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/share/strawberry_segmentation/package.sh'
+[7.167s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/share/strawberry_segmentation/package.bash'
+[7.170s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/share/strawberry_segmentation/package.zsh'
+[7.172s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m create_file_with_runtime_dependencies(/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/share/colcon-core/packages/strawberry_segmentation)
+[7.175s] [34mcolcon.colcon_ros.task.ament_python.build[0m [1;30mINFO[0m Building ROS package in '/home/parallels/Forschsemrep/strawberry_ws/src/strawberry_bringup' with build type 'ament_python'
+[7.176s] [34mcolcon.colcon_core.shell[0m [1;30mLevel 1[0m create_environment_hook('strawberry_bringup', 'ament_prefix_path')
+[7.178s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/share/strawberry_bringup/hook/ament_prefix_path.ps1'
+[7.186s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment descriptor '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/share/strawberry_bringup/hook/ament_prefix_path.dsv'
+[7.190s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/share/strawberry_bringup/hook/ament_prefix_path.sh'
+[7.195s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[7.199s] [34mcolcon.colcon_core.shell[0m [1;30mDEBUG[0m [32mSkip shell extension 'dsv' for command environment[0m
+[7.258s] [34mcolcon.colcon_core.shell[0m [1;30mLevel 1[0m create_environment_hook('meca500_ros2', 'pythonpath_develop')
+[7.259s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2/share/meca500_ros2/hook/pythonpath_develop.ps1'
+[7.262s] [34mcolcon.colcon_core.event_handler.log_command[0m [1;30mDEBUG[0m [32mInvoked command in '/home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2' returned '0': PYTHONPATH=/home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2/build --no-deps symlink_data[0m
+[7.263s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment descriptor '/home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2/share/meca500_ros2/hook/pythonpath_develop.dsv'
+[7.278s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2/share/meca500_ros2/hook/pythonpath_develop.sh'
+[7.287s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2' for CMake module files
+[7.290s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2' for CMake config files
+[7.298s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/lib'
+[7.300s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/bin'
+[7.301s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/lib/pkgconfig/meca500_ros2.pc'
+[7.302s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/lib/python3.10/site-packages'
+[7.302s] [34mcolcon.colcon_core.shell[0m [1;30mLevel 1[0m create_environment_hook('meca500_ros2', 'pythonpath')
+[7.303s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/share/meca500_ros2/hook/pythonpath.ps1'
+[7.308s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment descriptor '/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/share/meca500_ros2/hook/pythonpath.dsv'
+[7.316s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/share/meca500_ros2/hook/pythonpath.sh'
+[7.322s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/bin'
+[7.322s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m create_environment_scripts_only(meca500_ros2)
+[7.323s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/share/meca500_ros2/package.ps1'
+[7.326s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package descriptor '/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/share/meca500_ros2/package.dsv'
+[7.334s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/share/meca500_ros2/package.sh'
+[7.337s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/share/meca500_ros2/package.bash'
+[7.338s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/share/meca500_ros2/package.zsh'
+[7.339s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m create_file_with_runtime_dependencies(/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/share/colcon-core/packages/meca500_ros2)
+[8.794s] [34mcolcon.colcon_core.task.python.build[0m [1;30mINFO[0m Building Python package in '/home/parallels/Forschsemrep/strawberry_ws/src/strawberry_bringup'
+[8.799s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[8.799s] [34mcolcon.colcon_core.shell[0m [1;30mDEBUG[0m [32mSkip shell extension 'dsv' for command environment[0m
+[9.111s] [34mcolcon.colcon_core.event_handler.log_command[0m [1;30mDEBUG[0m [32mInvoking command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_tools': PYTHONPATH=/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_tools/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_tools/build --no-deps symlink_data[0m
+[10.450s] [34mcolcon.colcon_core.event_handler.log_command[0m [1;30mDEBUG[0m [32mInvoking command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup': AMENT_PREFIX_PATH=/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs:/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2:/opt/ros/humble PYTHONPATH=/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/lib/python3.10/site-packages:/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/lib/python3.10/site-packages:/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/lib/python3.10/site-packages:/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/lib/python3.10/site-packages:/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_tools:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/lib/python3.10/site-packages:/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/lib/python3.10/site-packages:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages:/home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2:/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup/build --no-deps symlink_data[0m
+[11.661s] [34mcolcon.colcon_core.shell[0m [1;30mLevel 1[0m create_environment_hook('strawberry_tools', 'pythonpath_develop')
+[11.663s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_tools/share/strawberry_tools/hook/pythonpath_develop.ps1'
+[11.665s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment descriptor '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_tools/share/strawberry_tools/hook/pythonpath_develop.dsv'
+[11.666s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_tools/share/strawberry_tools/hook/pythonpath_develop.sh'
+[11.676s] [34mcolcon.colcon_core.event_handler.log_command[0m [1;30mDEBUG[0m [32mInvoked command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_tools' returned '0': PYTHONPATH=/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_tools/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_tools/build --no-deps symlink_data[0m
+[11.684s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools' for CMake module files
+[11.685s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools' for CMake config files
+[11.687s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/lib'
+[11.688s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/bin'
+[11.688s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/lib/pkgconfig/strawberry_tools.pc'
+[11.689s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/lib/python3.10/site-packages'
+[11.690s] [34mcolcon.colcon_core.shell[0m [1;30mLevel 1[0m create_environment_hook('strawberry_tools', 'pythonpath')
+[11.692s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/share/strawberry_tools/hook/pythonpath.ps1'
+[11.695s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment descriptor '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/share/strawberry_tools/hook/pythonpath.dsv'
+[11.696s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/share/strawberry_tools/hook/pythonpath.sh'
+[11.700s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/bin'
+[11.700s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m create_environment_scripts_only(strawberry_tools)
+[11.701s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/share/strawberry_tools/package.ps1'
+[11.704s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package descriptor '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/share/strawberry_tools/package.dsv'
+[11.716s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/share/strawberry_tools/package.sh'
+[11.729s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/share/strawberry_tools/package.bash'
+[11.739s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/share/strawberry_tools/package.zsh'
+[11.746s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m create_file_with_runtime_dependencies(/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/share/colcon-core/packages/strawberry_tools)
+[12.844s] [34mcolcon.colcon_core.shell[0m [1;30mLevel 1[0m create_environment_hook('strawberry_bringup', 'pythonpath_develop')
+[12.846s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup/share/strawberry_bringup/hook/pythonpath_develop.ps1'
+[12.847s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment descriptor '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup/share/strawberry_bringup/hook/pythonpath_develop.dsv'
+[12.849s] [34mcolcon.colcon_core.event_handler.log_command[0m [1;30mDEBUG[0m [32mInvoked command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup' returned '0': AMENT_PREFIX_PATH=/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs:/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2:/opt/ros/humble PYTHONPATH=/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/lib/python3.10/site-packages:/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_segmentation:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_segmentation/lib/python3.10/site-packages:/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_cluster:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_cluster/lib/python3.10/site-packages:/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_camera:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_camera/lib/python3.10/site-packages:/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_tools:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/lib/python3.10/site-packages:/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/lib/python3.10/site-packages:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_msgs/local/lib/python3.10/dist-packages:/home/parallels/Forschsemrep/strawberry_ws/build/meca500_ros2:/home/parallels/Forschsemrep/strawberry_ws/install/meca500_ros2/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup/build --no-deps symlink_data[0m
+[12.849s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_bringup/share/strawberry_bringup/hook/pythonpath_develop.sh'
+[12.851s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup' for CMake module files
+[12.852s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup' for CMake config files
+[12.855s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/lib'
+[12.856s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/bin'
+[12.857s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/lib/pkgconfig/strawberry_bringup.pc'
+[12.857s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/lib/python3.10/site-packages'
+[12.858s] [34mcolcon.colcon_core.shell[0m [1;30mLevel 1[0m create_environment_hook('strawberry_bringup', 'pythonpath')
+[12.858s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/share/strawberry_bringup/hook/pythonpath.ps1'
+[12.861s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment descriptor '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/share/strawberry_bringup/hook/pythonpath.dsv'
+[12.863s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating environment hook '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/share/strawberry_bringup/hook/pythonpath.sh'
+[12.866s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m checking '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/bin'
+[12.866s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m create_environment_scripts_only(strawberry_bringup)
+[12.867s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/share/strawberry_bringup/package.ps1'
+[12.869s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package descriptor '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/share/strawberry_bringup/package.dsv'
+[12.871s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/share/strawberry_bringup/package.sh'
+[12.873s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/share/strawberry_bringup/package.bash'
+[12.875s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating package script '/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/share/strawberry_bringup/package.zsh'
+[12.877s] [34mcolcon.colcon_core.environment[0m [1;30mLevel 1[0m create_file_with_runtime_dependencies(/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_bringup/share/colcon-core/packages/strawberry_bringup)
+[12.879s] [34mcolcon.colcon_parallel_executor.executor.parallel[0m [1;30mDEBUG[0m [32mclosing loop[0m
+[12.880s] [34mcolcon.colcon_parallel_executor.executor.parallel[0m [1;30mDEBUG[0m [32mloop closed[0m
+[12.881s] [34mcolcon.colcon_parallel_executor.executor.parallel[0m [1;30mDEBUG[0m [32mrun_until_complete finished with '0'[0m
+[12.881s] [34mcolcon.colcon_core.event_reactor[0m [1;30mDEBUG[0m [32mjoining thread[0m
+[12.904s] [34mcolcon.colcon_core.plugin_system[0m [1;30mINFO[0m Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[12.904s] [34mcolcon.colcon_core.plugin_system[0m [1;30mINFO[0m Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[12.905s] [34mcolcon.colcon_notification.desktop_notification[0m [1;30mINFO[0m Sending desktop notification using 'notify2'
+[13.022s] [34mcolcon.colcon_core.event_reactor[0m [1;30mDEBUG[0m [32mjoined thread[0m
+[13.023s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating prefix script '/home/parallels/Forschsemrep/strawberry_ws/install/local_setup.ps1'
+[13.029s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating prefix util module '/home/parallels/Forschsemrep/strawberry_ws/install/_local_setup_util_ps1.py'
+[13.041s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating prefix chain script '/home/parallels/Forschsemrep/strawberry_ws/install/setup.ps1'
+[13.050s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating prefix script '/home/parallels/Forschsemrep/strawberry_ws/install/local_setup.sh'
+[13.053s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating prefix util module '/home/parallels/Forschsemrep/strawberry_ws/install/_local_setup_util_sh.py'
+[13.056s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating prefix chain script '/home/parallels/Forschsemrep/strawberry_ws/install/setup.sh'
+[13.066s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating prefix script '/home/parallels/Forschsemrep/strawberry_ws/install/local_setup.bash'
+[13.071s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating prefix chain script '/home/parallels/Forschsemrep/strawberry_ws/install/setup.bash'
+[13.081s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating prefix script '/home/parallels/Forschsemrep/strawberry_ws/install/local_setup.zsh'
+[13.088s] [34mcolcon.colcon_core.shell[0m [1;30mINFO[0m Creating prefix chain script '/home/parallels/Forschsemrep/strawberry_ws/install/setup.zsh'

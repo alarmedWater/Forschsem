@@ -1,0 +1,4 @@
+plant_id;view_id;file;export_frame
+9;0;cloud_0.ply;world
+9;1;cloud_1.ply;world
+9;2;cloud_2.ply;world

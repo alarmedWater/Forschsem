@@ -1,0 +1,17 @@
+[3.058s] Invoking command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_tools': PYTHONPATH=/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_tools/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_tools/build --no-deps symlink_data
+[4.367s] running develop
+[5.430s] running egg_info
+[5.435s] writing strawberry_tools.egg-info/PKG-INFO
+[5.435s] writing dependency_links to strawberry_tools.egg-info/dependency_links.txt
+[5.435s] writing entry points to strawberry_tools.egg-info/entry_points.txt
+[5.435s] writing requirements to strawberry_tools.egg-info/requires.txt
+[5.435s] writing top-level names to strawberry_tools.egg-info/top_level.txt
+[5.440s] reading manifest file 'strawberry_tools.egg-info/SOURCES.txt'
+[5.445s] writing manifest file 'strawberry_tools.egg-info/SOURCES.txt'
+[5.454s] running build_ext
+[5.454s] Creating /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/lib/python3.10/site-packages/strawberry-tools.egg-link (link to .)
+[5.463s] Installing sync_audit script to /home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/lib/strawberry_tools
+[5.465s] 
+[5.467s] Installed /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_tools
+[5.468s] running symlink_data
+[5.624s] Invoked command in '/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_tools' returned '0': PYTHONPATH=/home/parallels/Forschsemrep/strawberry_ws/build/strawberry_tools/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/Forschsemrep/strawberry_ws/install/strawberry_tools/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/parallels/Forschsemrep/strawberry_ws/build/strawberry_tools/build --no-deps symlink_data
