@@ -50,7 +50,9 @@ poses:
     q_xyzw: [0.0, 0.0, 0.0, 1.0]
 
 robot:
-  # Pose = TRF with respect to WRF (GetPose), in mm/deg
+  cam_axes_correction_R_trf_cam_row_major_3x3: [0, 1, 0, 0, 0, -1, -1, 0, 0]
+  camera_in_trf_translation_mm: [-50.999, 91.072, -10.291]
+
   views:
     "0":
       key: "l"
@@ -62,9 +64,6 @@ robot:
       key: "r"
       pose_wrf_mm_deg: [195.183, -34.680, 243.936, -71.161, 50.263, -104.430]
 
-  # EXTRA: camera<->TRF correction (start with 0 / then test flips)
-  cam_axes_correction_deg: [180.0, 0.0, 0.0]
-  camera_in_trf_mm_deg: [0.0, 0.0, 0.0,  0.0, 0.0, 0.0]
 
 outputs:
   out_root: outputs

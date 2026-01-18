@@ -15,7 +15,7 @@ from strawberry_py.pipeline.stages.depth_mask import DepthMasker
 from strawberry_py.pipeline.stages.features import FeatureExtractor
 from strawberry_py.pipeline.stages.segmentation import YoloV8Segmenter
 from strawberry_py.pipeline.stages.selected_overlay import selected_overlay
-from strawberry_py.pipeline.stages.transforms import apply_pose, optical_to_trf
+from strawberry_py.pipeline.stages.transforms import quaternion_to_rotation_matrix
 from strawberry_py.types import Pose
 from strawberry_py.utils.ply import write_ply_xyz
 from strawberry_py.utils.vis import save_depth_preview
@@ -24,11 +24,17 @@ from strawberry_py.utils.vis import save_depth_preview
 class PipelineRunner:
     """
     Offline pipeline:
-      - iterate plants from PlantViewsDataset
       - per view: YOLO seg -> depth mask -> 3D clouds + features
-      - save per-view raw clouds (camera/optical or world)
-      - accumulate per-view instances into per-plant clustering
-      - export clusters after all views are processed
+      - save per-view raw clouds (camera or world)
+      - accumulate instances into per-plant clustering
+      - export clusters after all views processed
+
+    Important:
+      Points from FeatureExtractor are in CAMERA frame.
+      Robot GetPose gives WORLD <- TRF (pose of tool frame).
+      Therefore for world export/clustering we must do:
+         p_trf   = R_trf_cam @ p_cam + t_trf_cam
+         p_world = R_world_trf @ p_trf + t_world_trf
     """
 
     def __init__(self, cfg: AppCfg) -> None:
@@ -58,7 +64,6 @@ class PipelineRunner:
             min_mask_area_px=int(cfg.segmentation.min_mask_area_px),
             classes=list(cfg.segmentation.classes),
         )
-
         self.depth_masker = DepthMasker(cfg.depth, zero_background=True)
         self.extractor = FeatureExtractor(cfg.camera, cfg.depth, cfg.features)
 
@@ -68,17 +73,55 @@ class PipelineRunner:
         # dedup raw saving (plant_id, view_id)
         self._saved_raw: Set[Tuple[int, int]] = set()
 
-    # ----------------- pose helper -----------------
+        # ---- camera-in-TRF fixed correction (THIS fixes your Pylance errors) ----
+        self.R_trf_cam: np.ndarray
+        self.t_trf_cam_m: np.ndarray
+        self.R_trf_cam, self.t_trf_cam_m = self._load_cam_in_trf_correction()
 
-    def _pose_for_view_world(self, vid: int) -> Pose:
+    # ----------------- config helpers -----------------
+
+    def _load_cam_in_trf_correction(self) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Pose mapping for a view: WORLD <- CAM (tool/TRF-like frame).
+        Reads from cfg.robot:
+          cam_axes_correction_R_trf_cam_row_major_3x3: [9 ints]
+          camera_in_trf_translation_mm: [3 floats]
+        Returns:
+          R_trf_cam (3,3) float32
+          t_trf_cam_m (3,) float32  in meters
+        """
+        robot = getattr(self.cfg, "robot", None)
+        if robot is None:
+            raise ValueError("cfg.robot missing (need cam_axes_correction_* and camera_in_trf_translation_mm)")
+
+        R_list = getattr(robot, "cam_axes_correction_R_trf_cam_row_major_3x3", None)
+        t_mm = getattr(robot, "camera_in_trf_translation_mm", None)
+
+        if R_list is None or t_mm is None:
+            raise ValueError(
+                "robot.cam_axes_correction_R_trf_cam_row_major_3x3 and/or "
+                "robot.camera_in_trf_translation_mm missing in config"
+            )
+
+        R = np.asarray(R_list, dtype=np.float32).reshape((3, 3))
+        t = np.asarray(t_mm, dtype=np.float32).reshape((3,)) / 1000.0
+        return R, t
+
+    def _pose_for_view_world_trf(self, vid: int) -> Pose:
+        """
+        Pose for this view: WORLD <- TRF.
         Prefer cfg.robot.views[vid].pose_world; fallback to cfg.poses.default_pose.
         """
         rv = self.cfg.robot.views.get(int(vid))
         if rv is not None:
             return rv.pose_world
         return self.cfg.poses.default_pose
+
+    @staticmethod
+    def _pose_to_Rt(pose_world_trf: Pose) -> Tuple[np.ndarray, np.ndarray]:
+        qx, qy, qz, qw = pose_world_trf.q_xyzw
+        R = quaternion_to_rotation_matrix(float(qx), float(qy), float(qz), float(qw)).astype(np.float32)
+        t = np.asarray(pose_world_trf.t_xyz, dtype=np.float32).reshape((3,))
+        return R, t
 
     # ----------------- main run -----------------
 
@@ -95,7 +138,6 @@ class PipelineRunner:
             # reset per-plant clustering state
             self.clusterer.reset()
 
-            # per-plant features csv
             features_csv = plant_dir / "features.csv"
             with features_csv.open("w", newline="", encoding="utf-8") as fcsv:
                 w = csv.writer(fcsv, delimiter=";")
@@ -120,8 +162,7 @@ class PipelineRunner:
                     view_dir = plant_dir / f"view_{vid}"
                     view_dir.mkdir(parents=True, exist_ok=True)
 
-                    # pose for this view (WORLD <- CAM/TRF-like)
-                    pose_world_cam = self._pose_for_view_world(vid)
+                    pose_world_trf = self._pose_for_view_world_trf(vid)
 
                     # ---- segmentation ----
                     seg = self.segmenter(view.rgb)
@@ -186,7 +227,7 @@ class PipelineRunner:
                             vid=vid,
                             plant_dir=plant_dir,
                             points_cam_m=fr.all_points,
-                            pose_world_cam=pose_world_cam,
+                            pose_world_trf=pose_world_trf,
                         )
 
                     # ---- clustering accumulation (per view) ----
@@ -196,10 +237,11 @@ class PipelineRunner:
                             view_id=vid,
                             clouds_by_instance=fr.clouds_by_instance,
                             features=fr.features,
-                            pose_world_cam=pose_world_cam,
+                            pose_world_trf=pose_world_trf,
+                            R_trf_cam=self.R_trf_cam,
+                            t_trf_cam_m=self.t_trf_cam_m,
                         )
 
-            # ---- export clusters AFTER all views for this plant ----
             if self.cfg.outputs.cluster.enabled:
                 self.clusterer.export(plant_dir)
 
@@ -211,16 +253,16 @@ class PipelineRunner:
         vid: int,
         plant_dir: Path,
         points_cam_m: np.ndarray,
-        pose_world_cam: Pose,
+        pose_world_trf: Pose,
     ) -> None:
         """
         Save one raw cloud per view to:
           plant_XXX/raw_clouds/cloud_<vid>.ply
 
-        IMPORTANT:
-        FeatureExtractor points are in RealSense OPTICAL frame (x right, y down, z forward).
-        If exporting in 'world', we do:
-          optical -> trf/tool-like (optical_to_trf) -> apply WORLD<-CAM pose.
+        If export_frame == "world":
+           CAM -> TRF (fixed correction) -> WORLD (robot pose)
+        else:
+           CAM (as-is)
         """
         key = (pid, vid)
         raw_cfg = self.cfg.outputs.raw_cloud
@@ -229,7 +271,6 @@ class PipelineRunner:
         out_dir.mkdir(parents=True, exist_ok=True)
         out_path = out_dir / f"cloud_{vid}.ply"
 
-        # dedup / overwrite logic
         if raw_cfg.save_once_per_view and (key in self._saved_raw) and (not raw_cfg.overwrite):
             return
         if out_path.exists() and raw_cfg.save_once_per_view and (not raw_cfg.overwrite):
@@ -239,28 +280,22 @@ class PipelineRunner:
         if points_cam_m is None or getattr(points_cam_m, "size", 0) == 0:
             return
 
-        pts_optical = np.asarray(points_cam_m, dtype=np.float32).reshape((-1, 3))
+        pts_cam = np.asarray(points_cam_m, dtype=np.float32).reshape((-1, 3))
         export_frame = str(raw_cfg.export_frame).strip().lower()
 
         if export_frame == "world":
-            # optional debug flag comes from cluster config (same symptom source)
-            flip_y = bool(getattr(self.cfg.outputs.cluster, "flip_y", False))
-            pts_trf = optical_to_trf(pts_optical, flip_y=flip_y)
-            pts_out = apply_pose(pts_trf, pose_world_cam)
+            Rw, tw = self._pose_to_Rt(pose_world_trf)
+            pts_trf = (self.R_trf_cam @ pts_cam.T).T + self.t_trf_cam_m
+            pts_out = (Rw @ pts_trf.T).T + tw
         else:
-            # export in optical/camera frame
-            pts_out = pts_optical
+            pts_out = pts_cam
 
         write_ply_xyz(out_path, pts_out, ascii_mode=bool(raw_cfg.ply_ascii))
         self._saved_raw.add(key)
 
-        # optional summary
         self._write_raw_summary(out_dir=out_dir, plant_id=pid, export_frame=export_frame)
 
     def _write_raw_summary(self, out_dir: Path, plant_id: int, export_frame: str) -> None:
-        """
-        Writes raw_summary.csv listing which view clouds exist for this plant.
-        """
         csv_path = out_dir / "raw_summary.csv"
         rows = []
         for (pid, vid) in sorted(self._saved_raw):

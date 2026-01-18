@@ -1,6 +1,7 @@
+# strawberry_py/config.py
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Tuple, cast
 
@@ -80,6 +81,9 @@ class ClusterCfg:
     fused_filename: str = "plant_fused.ply"
     fused_voxel_size: float = 0.0
     fused_max_points: int = 0  # 0 => unlimited
+
+    # Optional debug knob (your YAML uses it)
+    flip_y: bool = False
 
 
 @dataclass(frozen=True)
@@ -164,7 +168,7 @@ class CameraMetaCfg:
 class RobotViewPoseCfg:
     pose_wrf_mm_deg: Tuple[float, float, float, float, float, float]
     key: str = ""
-    pose_world: Pose = Pose((0.0, 0.0, 0.0), (0.0, 0.0, 0.0, 1.0))  # T_world_cam
+    pose_world: Pose = Pose((0.0, 0.0, 0.0), (0.0, 0.0, 0.0, 1.0))  # WORLD <- TRF (GetPose)
 
 
 @dataclass(frozen=True)
@@ -175,6 +179,10 @@ class RobotCfg:
     trf_set_during_capture_mm_deg: Tuple[float, float, float, float, float, float] = (0.0, 0.0, 36.0, 0.0, 0.0, 45.0)
     euler_convention: str = "RzRyRx_deg"
     views: Dict[int, RobotViewPoseCfg] = field(default_factory=dict)
+
+    # NEW: fixed correction so that p_trf = R_trf_cam @ p_cam + t_trf_cam
+    cam_axes_correction_R_trf_cam_row_major_3x3: Optional[Tuple[float, float, float, float, float, float, float, float, float]] = None
+    camera_in_trf_translation_mm: Optional[Tuple[float, float, float]] = None
 
 
 @dataclass(frozen=True)
@@ -268,8 +276,19 @@ def _rotmat_to_quat_xyzw(R: np.ndarray) -> Tuple[float, float, float, float]:
     return float(q[0]), float(q[1]), float(q[2]), float(q[3])
 
 
-def _pose_from_meca_pose_mm_deg(x_mm: float, y_mm: float, z_mm: float,
-                               rx_deg: float, ry_deg: float, rz_deg: float) -> Pose:
+def _pose_from_meca_pose_mm_deg(
+    x_mm: float,
+    y_mm: float,
+    z_mm: float,
+    rx_deg: float,
+    ry_deg: float,
+    rz_deg: float,
+) -> Pose:
+    """
+    Default Mecademic convention we use everywhere here:
+      R = Rz(rz) @ Ry(ry) @ Rx(rx)
+    producing a body/tool->world rotation.
+    """
     rx = np.deg2rad(rx_deg)
     ry = np.deg2rad(ry_deg)
     rz = np.deg2rad(rz_deg)
@@ -277,6 +296,14 @@ def _pose_from_meca_pose_mm_deg(x_mm: float, y_mm: float, z_mm: float,
     qx, qy, qz, qw = _rotmat_to_quat_xyzw(R)
     t_xyz = (x_mm / 1000.0, y_mm / 1000.0, z_mm / 1000.0)
     return Pose(t_xyz=t_xyz, q_xyzw=(qx, qy, qz, qw))
+
+
+def _parse_tuple_floats(v: Any, n: int, name: str) -> Optional[Tuple[float, ...]]:
+    if v is None:
+        return None
+    if not (isinstance(v, list) and len(v) == n):
+        raise ValueError(f"{name} must be a list of {n} numbers")
+    return tuple(float(x) for x in v)
 
 
 # ============================================================
@@ -408,6 +435,18 @@ def load_config(path: str | Path) -> AppCfg:
     robot_raw = cast(Mapping[str, Any], _get(raw, "robot", {}) or {})
     views_raw = _get(robot_raw, "views", {}) or {}
 
+    # Parse optional fixed CAM->TRF correction (what your runner expects)
+    R_trf_cam = _parse_tuple_floats(
+        robot_raw.get("cam_axes_correction_R_trf_cam_row_major_3x3", None),
+        9,
+        "robot.cam_axes_correction_R_trf_cam_row_major_3x3",
+    )
+    t_trf_cam_mm = _parse_tuple_floats(
+        robot_raw.get("camera_in_trf_translation_mm", None),
+        3,
+        "robot.camera_in_trf_translation_mm",
+    )
+
     trf_raw = cast(Mapping[str, Any], _get(robot_raw, "frames.trf_set_during_capture", {}) or {})
     trf_tuple = (
         float(trf_raw.get("x_mm", 0.0)),
@@ -445,6 +484,8 @@ def load_config(path: str | Path) -> AppCfg:
         trf_set_during_capture_mm_deg=trf_tuple,
         euler_convention=str(_get(robot_raw, "pose_convention.euler", _get(robot_raw, "euler_convention", "RzRyRx_deg"))),
         views=views,
+        cam_axes_correction_R_trf_cam_row_major_3x3=cast(Optional[Tuple[float, float, float, float, float, float, float, float, float]], R_trf_cam),
+        camera_in_trf_translation_mm=cast(Optional[Tuple[float, float, float]], t_trf_cam_mm),
     )
 
     # ---------------- Segmentation ----------------
@@ -511,6 +552,7 @@ def load_config(path: str | Path) -> AppCfg:
         fused_filename=str(cluster_raw.get("fused_filename", "plant_fused.ply")),
         fused_voxel_size=float(cluster_raw.get("fused_voxel_size", 0.0)),
         fused_max_points=int(cluster_raw.get("fused_max_points", 0)),
+        flip_y=bool(cluster_raw.get("flip_y", False)),
     )
 
     out_root = _as_path(str(out_raw.get("out_root", "outputs")), base_dir)
