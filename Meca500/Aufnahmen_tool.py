@@ -189,31 +189,42 @@ class RealsenseCamera:
     def get_frames(self):
         """
         Liefert:
-        - color_image: numpy (Color-Frame, aus aligned frameset)
+        - color_image: numpy (Color-Frame aus aligned frameset)
         - depth_aligned_image: numpy (Depth auf Color aligned)
         - depth_raw_image: numpy (Depth roh)
-        - depth_frame_raw: rs.depth_frame (roh, für PLY-Geometrie)
-        - color_frame: rs.video_frame (roh, für Textur in PLY)
+        - depth_frame_raw: rs.depth_frame (roh)
+        - color_frame_raw: rs.video_frame (roh)
+        - depth_frame_aligned: rs.depth_frame (aligned)
+        - color_frame_aligned: rs.video_frame (aligned)
         """
         frames = self.pipeline.wait_for_frames()
 
         # Rohframes
         depth_frame_raw = frames.get_depth_frame()
-        color_frame = frames.get_color_frame()
+        color_frame_raw = frames.get_color_frame()
 
         # Aligned frames (Depth -> Color)
         aligned_frames = self.align.process(frames)
         depth_frame_aligned = aligned_frames.get_depth_frame()
         color_frame_aligned = aligned_frames.get_color_frame()
 
-        if (not depth_frame_raw) or (not color_frame) or (not depth_frame_aligned) or (not color_frame_aligned):
-            return None, None, None, None, None
+        if (not depth_frame_raw) or (not color_frame_raw) or (not depth_frame_aligned) or (not color_frame_aligned):
+            return None, None, None, None, None, None, None
 
         depth_raw_image = np.asanyarray(depth_frame_raw.get_data())
         depth_aligned_image = np.asanyarray(depth_frame_aligned.get_data())
         color_image = np.asanyarray(color_frame_aligned.get_data())
 
-        return color_image, depth_aligned_image, depth_raw_image, depth_frame_raw, color_frame
+        return (
+            color_image,
+            depth_aligned_image,
+            depth_raw_image,
+            depth_frame_raw,
+            color_frame_raw,
+            depth_frame_aligned,
+            color_frame_aligned,
+        )
+
 
 
     def save_ply(self, ply_path: str, depth_frame, color_frame=None):
@@ -393,11 +404,10 @@ def main():
                 time.sleep(SETTLE_SECONDS)
 
                 # Bild aufnehmen
-                color, depth_aligned, depth_raw, depth_frame_raw, color_frame = cam.get_frames()
+                color, depth_aligned, depth_raw, depth_frame_raw, color_frame_raw, depth_frame_aligned, color_frame_aligned = cam.get_frames()
                 if color is None or depth_aligned is None or depth_raw is None:
                     raise RuntimeError("Keine Frames von der RealSense erhalten (Frames = None).")
 
-                # (optional) Calibration einmal pro Ordner schreiben – bleibt wie bei dir
                 if not calib_written:
                     cam.save_camera_calib_yaml_txt(calib_path)
                     calib_written = True
@@ -407,10 +417,15 @@ def main():
                 save_capture_all(run_dir, idx, color, depth_aligned, depth_raw)
                 print(f"[CAM] Gespeichert: color{idx}.png + depth_aligned{idx}.png + depth_raw{idx}.png")
 
-                # PLY aus RAW depth + Color texturiert
-                ply_path = os.path.join(run_dir, f"cloud{idx}.ply")
-                cam.save_ply(ply_path, depth_frame_raw, color_frame)
-                print(f"[CAM] Gespeichert: cloud{idx}.ply")
+                # PLY aus RAW depth + RAW color (wie bisher)
+                ply_raw_path = os.path.join(run_dir, f"cloud_raw{idx}.ply")
+                cam.save_ply(ply_raw_path, depth_frame_raw, color_frame_raw)
+                print(f"[CAM] Gespeichert: cloud_raw{idx}.ply")
+
+                # PLY aus ALIGNED depth + ALIGNED color
+                ply_aligned_path = os.path.join(run_dir, f"cloud_aligned{idx}.ply")
+                cam.save_ply(ply_aligned_path, depth_frame_aligned, color_frame_aligned)
+                print(f"[CAM] Gespeichert: cloud_aligned{idx}.ply")
 
 
                 # Koordinaten abfragen und in Datei schreiben
