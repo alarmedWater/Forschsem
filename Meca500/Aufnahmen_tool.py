@@ -59,19 +59,36 @@ class RealsenseCamera:
         self.pipeline.start(self.config)
         self.align = rs.align(rs.stream.color)
 
+        self.pc = rs.pointcloud()
+
     def get_frames(self):
-        """Gibt aligned color & depth als numpy arrays zurück."""
+        """Gibt aligned color & depth als numpy arrays zurück UND zusätzlich die aligned rs.frames (für .ply Export)"""
         frames = self.pipeline.wait_for_frames()
         aligned_frames = self.align.process(frames)
+
         depth_frame = aligned_frames.get_depth_frame()
         color_frame = aligned_frames.get_color_frame()
 
         if not depth_frame or not color_frame:
-            return None, None
+            return None, None, None, None
 
         depth_image = np.asanyarray(depth_frame.get_data())
         color_image = np.asanyarray(color_frame.get_data())
-        return color_image, depth_image
+        return color_image, depth_image, depth_frame, color_frame
+    
+    def save_ply(self, ply_path: str, depth_frame, color_frame=None):
+        """
+        Speichert eine Pointcloud als .ply. Wenn color_frame übergeben wird, wird die Pointcloud texturiert (RGB)."""
+        # Für texturierte Pointcloud muss die Pointcloud auf das Color-Frame gemappt werden
+        if color_frame is not None:
+            self.pc.map_to(color_frame)
+
+        points = self.pc.calculate(depth_frame)
+        # export_to_ply nimmt (path, texture_frame) - texture_frame darf None sein
+        if color_frame is not None:
+            points.export_to_ply(ply_path, color_frame)
+        else:
+            points.export_to_ply(ply_path, depth_frame)
 
     def close(self):
         try:
@@ -224,12 +241,16 @@ def main():
                 time.sleep(SETTLE_SECONDS)
 
                 # Bild aufnehmen
-                color, depth = cam.get_frames()
+                color, depth, depth_frame, color_frame = cam.get_frames()
                 if color is None or depth is None:
                     raise RuntimeError("Keine Frames von der RealSense erhalten (color/depth = None).")
 
                 save_capture(run_dir, idx, color, depth)
                 print(f"[CAM] Gespeichert: color{idx}.png + depth{idx}.png")
+
+                ply_path = os.path.join(run_dir, f"cloud{idx}.ply")
+                cam.save_ply(ply_path, depth_frame, color_frame)
+                print(f"[CAM] Gespeichert: cloud{idx}.ply")
 
                 # Koordinaten abfragen und in Datei schreiben
                 x, y, z, rx, ry, rz = get_trf_pose(robot)
