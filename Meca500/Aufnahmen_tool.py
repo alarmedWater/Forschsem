@@ -51,18 +51,128 @@ SETTLE_SECONDS = 0.5
 # -------------------------
 class RealsenseCamera:
     def __init__(self, width=RS_WIDTH, height=RS_HEIGHT, fps=RS_FPS):
+        self.width = width
+        self.height = height
+        self.fps = fps
+
         self.pipeline = rs.pipeline()
         self.config = rs.config()
         self.config.enable_stream(rs.stream.depth, width, height, rs.format.z16, fps)
         self.config.enable_stream(rs.stream.color, width, height, rs.format.bgr8, fps)
 
-        self.pipeline.start(self.config)
+        self.profile = self.pipeline.start(self.config)
         self.align = rs.align(rs.stream.color)
-
         self.pc = rs.pointcloud()
 
-    def get_frames(self):
-        """Gibt aligned color & depth als numpy arrays zurück UND zusätzlich die aligned rs.frames (für .ply Export)"""
+        # Device-Infos + Depth-Scale
+        dev = self.profile.get_device()
+
+        def safe_info(key):
+            try:
+                return dev.get_info(key)
+            except Exception:
+                return "unknown"
+
+        self.device_name = safe_info(rs.camera_info.name)
+        self.serial = safe_info(rs.camera_info.serial_number)
+        self.firmware = safe_info(rs.camera_info.firmware_version)
+        self.product_line = safe_info(rs.camera_info.product_line)
+
+        try:
+            depth_sensor = dev.first_depth_sensor()
+            self.depth_scale = float(depth_sensor.get_depth_scale())
+        except Exception:
+            self.depth_scale = None
+
+    def _distortion_to_str(self, model) -> str:
+        mapping = {
+            rs.distortion.none: "none",
+            rs.distortion.modified_brown_conrady: "modified_brown_conrady",
+            rs.distortion.inverse_brown_conrady: "inverse_brown_conrady",
+            rs.distortion.brown_conrady: "brown_conrady",
+            rs.distortion.ftheta: "ftheta",
+            rs.distortion.kannala_brandt4: "kannala_brandt4",
+        }
+        return mapping.get(model, str(model))
+
+    def _get_extrinsics_depth_to_color(self):
+        depth_vsp = self.profile.get_stream(rs.stream.depth).as_video_stream_profile()
+        color_vsp = self.profile.get_stream(rs.stream.color).as_video_stream_profile()
+        ex = depth_vsp.get_extrinsics_to(color_vsp)
+        R = list(ex.rotation)      # 9 Werte, row-major
+        t = list(ex.translation)   # 3 Werte, Meter
+        return R, t
+
+    def save_camera_calib_yaml_txt(self, txt_path: str):
+        """
+        Speichert Kamera-Infos 1x pro Aufnahme-Ordner im YAML-ähnlichen Textformat:
+        - device info, stream_mode, depth_scale
+        - intrinsics (native depth + native color)
+        - extrinsics depth_to_color
+        """
+        from datetime import datetime, timezone
+        ts_utc = datetime.now(timezone.utc).isoformat()
+
+        depth_vsp = self.profile.get_stream(rs.stream.depth).as_video_stream_profile()
+        color_vsp = self.profile.get_stream(rs.stream.color).as_video_stream_profile()
+        depth_intr = depth_vsp.intrinsics
+        color_intr = color_vsp.intrinsics
+
+        R, t = self._get_extrinsics_depth_to_color()
+
+        def intr_block(intr, label: str):
+            coeff_lines = "".join(f"      - {c}\n" for c in intr.coeffs)  # 6 spaces before '-'
+            return (
+                f"  {label}:\n"
+                f"    width: {intr.width}\n"
+                f"    height: {intr.height}\n"
+                f"    fx: {intr.fx}\n"
+                f"    fy: {intr.fy}\n"
+                f"    cx: {intr.ppx}\n"
+                f"    cy: {intr.ppy}\n"
+                f"    distortion_model: {self._distortion_to_str(intr.model)}\n"
+                f"    distortion_coeffs:\n"
+                f"{coeff_lines}"
+            )
+
+        with open(txt_path, "w", encoding="utf-8") as f:
+            f.write(f"timestamp_utc: '{ts_utc}'\n")
+            f.write("device:\n")
+            f.write(f"  name: {self.device_name}\n")
+            f.write(f"  serial_number: '{self.serial}'\n")
+            f.write(f"  firmware_version: {self.firmware}\n")
+            f.write(f"  product_line: {self.product_line}\n")
+            f.write("stream_mode:\n")
+            f.write(f"  width: {self.width}\n")
+            f.write(f"  height: {self.height}\n")
+            f.write(f"  fps: {self.fps}\n")
+
+            if self.depth_scale is not None:
+                f.write(f"depth_scale_m_per_unit: {self.depth_scale}\n")
+            else:
+                f.write("depth_scale_m_per_unit: unknown\n")
+
+            f.write("intrinsics:\n")
+            f.write(intr_block(depth_intr, "depth"))
+            f.write(intr_block(color_intr, "color"))
+
+            f.write("extrinsics:\n")
+            f.write("  depth_to_color:\n")
+            f.write("    rotation_row_major_3x3:\n")
+            for v in R:
+                f.write(f"      - {v}\n")   # 6 spaces before '-'
+            f.write("    translation_m:\n")
+            for v in t:
+                f.write(f"      - {v}\n")   # 6 spaces before '-'
+
+            f.write("notes:\n")
+            f.write("  - Intrinsics are constant for a given stream configuration.\n")
+            f.write("  - If you resize/crop images later, update fx/fy/cx/cy accordingly.\n")
+            f.write("  - Aligned depth-to-color images typically use the color intrinsics.\n")
+
+
+    def get_frames_alt(self):
+        """Gibt aligned color & depth als numpy arrays zurück UND die rs.frames für .ply Export"""
         frames = self.pipeline.wait_for_frames()
         aligned_frames = self.align.process(frames)
 
@@ -76,15 +186,42 @@ class RealsenseCamera:
         color_image = np.asanyarray(color_frame.get_data())
         return color_image, depth_image, depth_frame, color_frame
     
-    def save_ply(self, ply_path: str, depth_frame, color_frame=None):
+    def get_frames(self):
         """
-        Speichert eine Pointcloud als .ply. Wenn color_frame übergeben wird, wird die Pointcloud texturiert (RGB)."""
-        # Für texturierte Pointcloud muss die Pointcloud auf das Color-Frame gemappt werden
+        Liefert:
+        - color_image: numpy (Color-Frame, aus aligned frameset)
+        - depth_aligned_image: numpy (Depth auf Color aligned)
+        - depth_raw_image: numpy (Depth roh)
+        - depth_frame_raw: rs.depth_frame (roh, für PLY-Geometrie)
+        - color_frame: rs.video_frame (roh, für Textur in PLY)
+        """
+        frames = self.pipeline.wait_for_frames()
+
+        # Rohframes
+        depth_frame_raw = frames.get_depth_frame()
+        color_frame = frames.get_color_frame()
+
+        # Aligned frames (Depth -> Color)
+        aligned_frames = self.align.process(frames)
+        depth_frame_aligned = aligned_frames.get_depth_frame()
+        color_frame_aligned = aligned_frames.get_color_frame()
+
+        if (not depth_frame_raw) or (not color_frame) or (not depth_frame_aligned) or (not color_frame_aligned):
+            return None, None, None, None, None
+
+        depth_raw_image = np.asanyarray(depth_frame_raw.get_data())
+        depth_aligned_image = np.asanyarray(depth_frame_aligned.get_data())
+        color_image = np.asanyarray(color_frame_aligned.get_data())
+
+        return color_image, depth_aligned_image, depth_raw_image, depth_frame_raw, color_frame
+
+
+    def save_ply(self, ply_path: str, depth_frame, color_frame=None):
+        """Speichert eine Pointcloud als .ply (texturiert, wenn color_frame übergeben wird)."""
         if color_frame is not None:
             self.pc.map_to(color_frame)
 
         points = self.pc.calculate(depth_frame)
-        # export_to_ply nimmt (path, texture_frame) - texture_frame darf None sein
         if color_frame is not None:
             points.export_to_ply(ply_path, color_frame)
         else:
@@ -192,6 +329,18 @@ def save_capture(out_dir: str, idx: int, color, depth) -> None:
     if not ok1 or not ok2:
         raise IOError(f"Konnte Bilder nicht speichern: {color_path} / {depth_path}")
 
+def save_capture_all(out_dir: str, idx: int, color, depth_aligned, depth_raw) -> None:
+    """Speichert color + depth_aligned + depth_raw als PNG."""
+    color_path = os.path.join(out_dir, f"color{idx}.png")
+    depth_aligned_path = os.path.join(out_dir, f"depth_aligned{idx}.png")
+    depth_raw_path = os.path.join(out_dir, f"depth_raw{idx}.png")
+
+    ok1 = cv2.imwrite(color_path, color)
+    ok2 = cv2.imwrite(depth_aligned_path, depth_aligned)  # uint16 -> 16-bit PNG
+    ok3 = cv2.imwrite(depth_raw_path, depth_raw)          # uint16 -> 16-bit PNG
+
+    if not (ok1 and ok2 and ok3):
+        raise IOError(f"Konnte Bilder nicht speichern: {color_path} / {depth_aligned_path} / {depth_raw_path}")
 
 # -------------------------
 # Hauptablauf
@@ -231,6 +380,9 @@ def main():
 
         sequence = [("l", 0), ("m", 1), ("r", 2)]
 
+        calib_written = False
+        calib_path = os.path.join(run_dir, "CameraCalibration.txt")
+
         with open(coord_path, "w", encoding="utf-8") as f:
             f.write("# Koordinaten (GetPose) in mm/deg, WRF=BRF, TRF gesetzt\n")
             f.write("# idx;pos;x_mm;y_mm;z_mm;rx_deg;ry_deg;rz_deg;timestamp\n")
@@ -241,16 +393,25 @@ def main():
                 time.sleep(SETTLE_SECONDS)
 
                 # Bild aufnehmen
-                color, depth, depth_frame, color_frame = cam.get_frames()
-                if color is None or depth is None:
-                    raise RuntimeError("Keine Frames von der RealSense erhalten (color/depth = None).")
+                color, depth_aligned, depth_raw, depth_frame_raw, color_frame = cam.get_frames()
+                if color is None or depth_aligned is None or depth_raw is None:
+                    raise RuntimeError("Keine Frames von der RealSense erhalten (Frames = None).")
 
-                save_capture(run_dir, idx, color, depth)
-                print(f"[CAM] Gespeichert: color{idx}.png + depth{idx}.png")
+                # (optional) Calibration einmal pro Ordner schreiben – bleibt wie bei dir
+                if not calib_written:
+                    cam.save_camera_calib_yaml_txt(calib_path)
+                    calib_written = True
+                    print("[CAM] Gespeichert: CameraCalibration.txt")
 
+                # PNGs speichern
+                save_capture_all(run_dir, idx, color, depth_aligned, depth_raw)
+                print(f"[CAM] Gespeichert: color{idx}.png + depth_aligned{idx}.png + depth_raw{idx}.png")
+
+                # PLY aus RAW depth + Color texturiert
                 ply_path = os.path.join(run_dir, f"cloud{idx}.ply")
-                cam.save_ply(ply_path, depth_frame, color_frame)
+                cam.save_ply(ply_path, depth_frame_raw, color_frame)
                 print(f"[CAM] Gespeichert: cloud{idx}.ply")
+
 
                 # Koordinaten abfragen und in Datei schreiben
                 x, y, z, rx, ry, rz = get_trf_pose(robot)
