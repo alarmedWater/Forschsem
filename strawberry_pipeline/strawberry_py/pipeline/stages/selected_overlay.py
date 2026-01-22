@@ -3,7 +3,7 @@ from __future__ import annotations
 import cv2
 import numpy as np
 
-from strawberry_py.types import RGBImage, LabelImage, assert_rgb, assert_label_u16
+from strawberry_py.st_types import RGBImage, LabelImage, assert_rgb, assert_label_u16
 
 
 def selected_overlay(

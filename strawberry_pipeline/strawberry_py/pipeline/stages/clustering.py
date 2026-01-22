@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Set, Tuple
 import numpy as np
 
 from strawberry_py.config import ClusterCfg
-from strawberry_py.types import InstanceFeatures, PointCloud, Pose
+from strawberry_py.st_types import InstanceFeatures, PointCloud, Pose
 from strawberry_py.pipeline.stages.transforms import quaternion_to_rotation_matrix
 
 

@@ -1,6 +1,6 @@
 dataset:
   root: ../data/plant_views
-  plant_glob: "plant_000"
+  plant_glob: "plant_*"
   rgb_pattern: "color_{view}.png"
   depth_pattern: "depth_{view}.png"
   expected_views_per_plant: 3
@@ -56,14 +56,19 @@ robot:
   model: Meca500
   ip: ""
   wrf_equals_brf: true
-  euler_convention: RzRyRx_deg
 
-  # INFO (passt zu deinem Capture-Skript: SetTrf(0,0,36,0,0,45))
+  # Mecademic "mobile XYZ" (Rx then Ry' then Rz'') -> WORLD<-TRF: R = Rz @ Ry @ Rx
+  euler_convention: RxRyRz_deg
+  # INFO: wurde beim Capturen gesetzt (GetPose ist dann WORLD<-TRF der Kamera-TRF)
   trf_set_during_capture_mm_deg: [0.0, 0.0, 36.0, 0.0, 0.0, 45.0]
 
-  # CAM(optical) -> TRF correction (aus Overlap / plant_000)
-  cam_axes_correction_R_trf_cam_row_major_3x3: [0, 0, 1, 0, -1, 0, 1, 0, 0]
-  camera_in_trf_translation_mm: [-125.695, 11.500, -42.251]
+  # CAM(optical) -> TRF Achsenkorrektur (aus deinem Runner-Log)
+  cam_axes_correction_R_trf_cam_row_major_3x3: [0, 0, 1,  -1, 0, 0,  0, -1, 0]
+
+  # WICHTIG: Pipeline darf keinen zusätzlichen Flansch->Kamera Offset addieren (sonst doppelt!)
+  camera_in_trf_translation_mm: [0.0, 0.0, 0.0]
+
+
 
   views:
     "0":
@@ -84,7 +89,7 @@ outputs:
 
   raw_cloud:
     enabled: true
-    export_frame: all          # <- wichtig für Debug: cam + trf + world
+    export_frame: all
     save_once_per_view: true
     overwrite: true
     ply_ascii: true

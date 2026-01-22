@@ -18,8 +18,14 @@ def main() -> None:
     cfg_path = Path(args.config).resolve()
     cfg = load_config(cfg_path)
 
+    print(f"[Config] euler_convention = {cfg.robot.euler_convention}")
+    print(f"[Config] views loaded = {sorted(cfg.robot.views.keys())}")
+    print(f"[Config] intrinsics = fx={cfg.camera.fx} fy={cfg.camera.fy} cx={cfg.camera.cx} cy={cfg.camera.cy}")
+    print(f"[Config] R_trf_cam = {cfg.robot.cam_axes_correction_R_trf_cam_row_major_3x3}")
+
     runner = PipelineRunner(cfg)
     runner.run()
+
 
 
 if __name__ == "__main__":

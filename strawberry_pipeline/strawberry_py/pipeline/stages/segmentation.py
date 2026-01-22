@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import cv2
 import numpy as np
 
-from strawberry_py.types import RGBImage, SegmentationResult, assert_rgb, assert_label_u16
+from strawberry_py.st_types import RGBImage, SegmentationResult, assert_rgb, assert_label_u16
 
 
 class YoloV8Segmenter:

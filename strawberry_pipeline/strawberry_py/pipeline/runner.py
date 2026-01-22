@@ -16,7 +16,7 @@ from strawberry_py.pipeline.stages.features import FeatureExtractor
 from strawberry_py.pipeline.stages.segmentation import YoloV8Segmenter
 from strawberry_py.pipeline.stages.selected_overlay import selected_overlay
 from strawberry_py.pipeline.stages.transforms import quaternion_to_rotation_matrix
-from strawberry_py.types import Pose
+from strawberry_py.st_types import Pose
 from strawberry_py.utils.ply import write_ply_xyz
 from strawberry_py.utils.vis import save_depth_preview
 
@@ -122,11 +122,20 @@ class PipelineRunner:
         return R, t
 
     def _pose_for_view_world_trf(self, vid: int) -> Pose:
-        """Pose for this view: WORLD <- TRF."""
+        """
+        Pose for this view: WORLD <- TRF.
+        STRICT: No fallback allowed. Missing view pose must fail fast,
+        otherwise clustering silently breaks.
+        """
         rv = self.cfg.robot.views.get(int(vid))
-        if rv is not None:
-            return rv.pose_world
-        return self.cfg.poses.default_pose
+        if rv is None:
+            raise KeyError(
+                f"Missing robot.views[{vid}] in config. "
+                f"dataset.view_ids={self.cfg.dataset.view_ids}. "
+                "No fallback pose allowed."
+            )
+        return rv.pose_world
+
 
     @staticmethod
     def _pose_to_Rt(pose_world_trf: Pose) -> Tuple[np.ndarray, np.ndarray]:
@@ -227,6 +236,8 @@ class PipelineRunner:
                     view_dir.mkdir(parents=True, exist_ok=True)
 
                     pose_world_trf = self._pose_for_view_world_trf(vid)
+                    Rw, tw = self._pose_to_Rt(pose_world_trf)
+                    print(f"[view {vid}] t_world_trf = {tw.tolist()}")
 
                     # ---- segmentation ----
                     seg = self.segmenter(view.rgb)
