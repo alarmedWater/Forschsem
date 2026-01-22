@@ -1,0 +1,66 @@
+robot:
+  ip: "192.168.0.100"
+  joint_vel: 20
+  joint_acc: 20
+  settle_s: 0.5
+
+  # WRF=BRF für klare Interpretation
+  wrf_equals_brf: true
+
+  # TRF wie beim Capturen gesetzt (wenn ihr TRF nutzt)
+  trf_set_mm_deg: [0.0, 0.0, 36.0, 0.0, 0.0, 45.0]
+
+  # Euler-Konvention für GetPose -> WORLD<-TRF
+  # Mecademic "mobile XYZ" ist typischerweise R = Rz @ Ry @ Rx
+  euler_convention: "RzRyRx_deg"
+
+  # CAM(optical) -> TRF Achsenkorrektur (Row-major 3x3)
+  # Beispiel aus deinem Runner-Log:
+  cam_axes_correction_R_trf_cam_row_major_3x3: [0, 0, 1,  -1, 0, 0,  0, -1, 0]
+
+  # Unbekannter Offset TRF->Kamera (wird mit pivot solve geschätzt)
+  # Erstmal 0, nach solve übernehmen:
+  camera_in_trf_translation_mm: [0.0, 0.0, 0.0]
+
+  # Joint-Positionen (deg) für Views
+  positions:
+    l: [48, 14, 24, -108, 91, -81]
+    m: [0, -35, 35, 0, 0, 135]
+    r: [-41, 14, 24, 106, 89, 6]
+
+  # Reihenfolge für Dataset / Pivot
+  sequence: ["l", "m", "r"]
+
+camera:
+  width: 640
+  height: 480
+  fps: 30
+
+depth:
+  # RealSense: depth_m = depth_u16 * scale_m_per_unit
+  # wird auch live ausgelesen; diese Zahl ist als fallback/Log hilfreich
+  scale_m_per_unit: 1.0e-4
+  treat_65535_as_invalid: true
+
+dataset:
+  out_root: "runs"
+  run_name: ""          # leer => auto timestamp
+  plant_prefix: "plant_"
+  start_plant_id: 0
+  num_plants: 1
+  view_ids: [0, 1, 2]
+  view_to_pose_key:
+    "0": "l"
+    "1": "m"
+    "2": "r"
+
+outputs:
+  save_depth_raw: true
+  save_ply_aligned: true
+  save_ply_raw: false
+
+ellipse:
+  # Für Pivot/Offset-Schätzung: Kontur-/Edge Parameter
+  min_contour_area: 500.0
+  canny1: 60
+  canny2: 160
