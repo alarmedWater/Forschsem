@@ -50,8 +50,14 @@ poses:
     q_xyzw: [0.0, 0.0, 0.0, 1.0]
 
 robot:
-  cam_axes_correction_R_trf_cam_row_major_3x3: [0, 1, 0, 0, 0, -1, -1, 0, 0]
-  camera_in_trf_translation_mm: [-50.999, 91.072, -10.291]
+  model: Meca500
+  ip: ""
+  wrf_equals_brf: true
+  euler_convention: RzRyRx_deg
+
+  # CAM(optical) -> TRF correction (from cloud overlap / plant_000)
+  cam_axes_correction_R_trf_cam_row_major_3x3: [0, 0, 1, 0, -1, 0, 1, 0, 0]
+  camera_in_trf_translation_mm: [-125.695, 11.500, -42.251]
 
   views:
     "0":
@@ -64,7 +70,6 @@ robot:
       key: "r"
       pose_wrf_mm_deg: [195.183, -34.680, 243.936, -71.161, 50.263, -104.430]
 
-
 outputs:
   out_root: outputs
   save_overlay: true
@@ -75,7 +80,7 @@ outputs:
     enabled: true
     export_frame: world
     save_once_per_view: true
-    overwrite: false
+    overwrite: true
     ply_ascii: true
 
   cluster:
@@ -88,3 +93,4 @@ outputs:
     fused_voxel_size: 0.0
     fused_max_points: 0
     max_points_per_cluster: 200000
+    flip_y: false
