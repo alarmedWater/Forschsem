@@ -1,5 +1,8 @@
 dataset:
   root: ../data/plant_views
+  plant_glob: "plant_000"
+  rgb_pattern: "color_{view}.png"
+  depth_pattern: "depth_{view}.png"
   expected_views_per_plant: 3
   view_ids: [0, 1, 2]
 
@@ -55,7 +58,10 @@ robot:
   wrf_equals_brf: true
   euler_convention: RzRyRx_deg
 
-  # CAM(optical) -> TRF correction (from cloud overlap / plant_000)
+  # INFO (passt zu deinem Capture-Skript: SetTrf(0,0,36,0,0,45))
+  trf_set_during_capture_mm_deg: [0.0, 0.0, 36.0, 0.0, 0.0, 45.0]
+
+  # CAM(optical) -> TRF correction (aus Overlap / plant_000)
   cam_axes_correction_R_trf_cam_row_major_3x3: [0, 0, 1, 0, -1, 0, 1, 0, 0]
   camera_in_trf_translation_mm: [-125.695, 11.500, -42.251]
 
@@ -78,7 +84,7 @@ outputs:
 
   raw_cloud:
     enabled: true
-    export_frame: world
+    export_frame: all          # <- wichtig für Debug: cam + trf + world
     save_once_per_view: true
     overwrite: true
     ply_ascii: true

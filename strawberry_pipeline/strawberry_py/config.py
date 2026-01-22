@@ -61,7 +61,7 @@ class SelectedCfg:
 @dataclass(frozen=True)
 class RawCloudCfg:
     enabled: bool = True
-    export_frame: str = "camera"  # "camera" | "world"
+    export_frame: str = "camera"  # "camera" | "trf" | "world" | "all"
     save_once_per_view: bool = True
     overwrite: bool = False
     ply_ascii: bool = True
@@ -589,8 +589,10 @@ def load_config(path: str | Path) -> AppCfg:
         overwrite=bool(raw_cloud_raw.get("overwrite", False)),
         ply_ascii=bool(raw_cloud_raw.get("ply_ascii", True)),
     )
-    if raw_cloud.export_frame not in ("camera", "world"):
-        raise ValueError("outputs.raw_cloud.export_frame must be 'camera' or 'world'.")
+    if raw_cloud.export_frame not in ("camera", "trf", "world", "all"):
+        raise ValueError("outputs.raw_cloud.export_frame must be 'camera', 'trf', 'world' or 'all'.")
+
+
 
     cluster_raw = cast(Mapping[str, Any], _get(out_raw, "cluster", {}) or {})
     cluster = ClusterCfg(
