@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import csv
 from pathlib import Path
-from typing import Set, Tuple
+from typing import List, Set, Tuple
 
 import cv2
 import numpy as np
@@ -25,14 +25,15 @@ class PipelineRunner:
     """
     Offline pipeline:
       - per view: YOLO seg -> depth mask -> 3D clouds + features
-      - save per-view raw clouds (camera or world)
+      - save per-view raw clouds in CAM / TRF / WORLD (or all)
       - accumulate instances into per-plant clustering
       - export clusters after all views processed
 
-    Important:
-      Points from FeatureExtractor are in CAMERA frame.
-      Robot GetPose gives WORLD <- TRF (pose of tool frame).
-      Therefore for world export/clustering we must do:
+    Frames / transforms:
+      FeatureExtractor outputs points in CAM (RealSense optical) frame.
+      Robot pose provides WORLD <- TRF.
+      We additionally need fixed TRF <- CAM (R_trf_cam, t_trf_cam_m).
+      Then:
          p_trf   = R_trf_cam @ p_cam + t_trf_cam
          p_world = R_world_trf @ p_trf + t_world_trf
     """
@@ -73,7 +74,12 @@ class PipelineRunner:
         # dedup raw saving (plant_id, view_id)
         self._saved_raw: Set[Tuple[int, int]] = set()
 
-        # ---- camera-in-TRF fixed correction (THIS fixes your Pylance errors) ----
+        # optional debug knob (read if present; default True)
+        # NOTE: cfg.outputs.raw_cloud has no "debug" in your dataclass,
+        # so we read it safely with getattr.
+        self._debug_raw = bool(getattr(cfg.outputs.raw_cloud, "debug", True))
+
+        # fixed CAM->TRF correction
         self.R_trf_cam: np.ndarray
         self.t_trf_cam_m: np.ndarray
         self.R_trf_cam, self.t_trf_cam_m = self._load_cam_in_trf_correction()
@@ -83,15 +89,18 @@ class PipelineRunner:
     def _load_cam_in_trf_correction(self) -> Tuple[np.ndarray, np.ndarray]:
         """
         Reads from cfg.robot:
-          cam_axes_correction_R_trf_cam_row_major_3x3: [9 ints]
-          camera_in_trf_translation_mm: [3 floats]
+          cam_axes_correction_R_trf_cam_row_major_3x3: len=9
+          camera_in_trf_translation_mm: len=3
         Returns:
           R_trf_cam (3,3) float32
           t_trf_cam_m (3,) float32  in meters
         """
         robot = getattr(self.cfg, "robot", None)
         if robot is None:
-            raise ValueError("cfg.robot missing (need cam_axes_correction_* and camera_in_trf_translation_mm)")
+            raise ValueError(
+                "cfg.robot missing. Need robot.cam_axes_correction_R_trf_cam_row_major_3x3 "
+                "and robot.camera_in_trf_translation_mm."
+            )
 
         R_list = getattr(robot, "cam_axes_correction_R_trf_cam_row_major_3x3", None)
         t_mm = getattr(robot, "camera_in_trf_translation_mm", None)
@@ -99,18 +108,21 @@ class PipelineRunner:
         if R_list is None or t_mm is None:
             raise ValueError(
                 "robot.cam_axes_correction_R_trf_cam_row_major_3x3 and/or "
-                "robot.camera_in_trf_translation_mm missing in config"
+                "robot.camera_in_trf_translation_mm missing in config."
             )
 
         R = np.asarray(R_list, dtype=np.float32).reshape((3, 3))
         t = np.asarray(t_mm, dtype=np.float32).reshape((3,)) / 1000.0
+
+        if self._debug_raw:
+            ortho_err, det = self._rotation_sanity(R)
+            print(f"[Runner] R_trf_cam sanity: ortho_err={ortho_err:.3e} det={det:.6f}")
+            print(f"[Runner] t_trf_cam_m = {t.tolist()}")
+
         return R, t
 
     def _pose_for_view_world_trf(self, vid: int) -> Pose:
-        """
-        Pose for this view: WORLD <- TRF.
-        Prefer cfg.robot.views[vid].pose_world; fallback to cfg.poses.default_pose.
-        """
+        """Pose for this view: WORLD <- TRF."""
         rv = self.cfg.robot.views.get(int(vid))
         if rv is not None:
             return rv.pose_world
@@ -122,6 +134,58 @@ class PipelineRunner:
         R = quaternion_to_rotation_matrix(float(qx), float(qy), float(qz), float(qw)).astype(np.float32)
         t = np.asarray(pose_world_trf.t_xyz, dtype=np.float32).reshape((3,))
         return R, t
+
+    @staticmethod
+    def _rotation_sanity(R: np.ndarray) -> Tuple[float, float]:
+        """
+        Returns (orthonormal_error, det).
+        orthonormal_error ~ ||R^T R - I||_F
+        """
+        R = np.asarray(R, dtype=np.float64).reshape((3, 3))
+        I = np.eye(3, dtype=np.float64)
+        err = float(np.linalg.norm(R.T @ R - I, ord="fro"))
+        det = float(np.linalg.det(R))
+        return err, det
+
+    # ----------------- transform helpers -----------------
+
+    def _cam_to_trf(self, pts_cam: np.ndarray) -> np.ndarray:
+        pts = np.asarray(pts_cam, dtype=np.float32).reshape((-1, 3))
+        if pts.size == 0:
+            return pts
+        return (self.R_trf_cam @ pts.T).T + self.t_trf_cam_m
+
+    def _trf_to_world(self, pts_trf: np.ndarray, pose_world_trf: Pose) -> np.ndarray:
+        pts = np.asarray(pts_trf, dtype=np.float32).reshape((-1, 3))
+        if pts.size == 0:
+            return pts
+        Rw, tw = self._pose_to_Rt(pose_world_trf)
+        return (Rw @ pts.T).T + tw
+
+    def _forward_result_dot(self, pts_world: np.ndarray, pose_world_trf: Pose) -> float:
+        """
+        Sanity check:
+          forward_world • (centroid_world - cam_origin_world) should be > 0.
+
+        Uses optical forward axis (0,0,1) in CAM, mapped CAM->TRF->WORLD.
+        """
+        pts = np.asarray(pts_world, dtype=np.float32).reshape((-1, 3))
+        if pts.size == 0:
+            return float("nan")
+
+        Rw, tw = self._pose_to_Rt(pose_world_trf)
+
+        # CAM origin in TRF is t_trf_cam_m (because p_trf = R*p_cam + t)
+        cam_origin_world = (Rw @ self.t_trf_cam_m) + tw
+
+        # CAM forward axis (optical z) mapped to TRF then WORLD
+        f_cam = np.array([0.0, 0.0, 1.0], dtype=np.float32)
+        f_trf = self.R_trf_cam @ f_cam
+        f_world = Rw @ f_trf
+
+        centroid = pts.mean(axis=0)
+        v = centroid - cam_origin_world
+        return float(np.dot(f_world, v))
 
     # ----------------- main run -----------------
 
@@ -256,54 +320,80 @@ class PipelineRunner:
         pose_world_trf: Pose,
     ) -> None:
         """
-        Save one raw cloud per view to:
-          plant_XXX/raw_clouds/cloud_<vid>.ply
+        Save raw cloud per view to plant_XXX/raw_clouds/
 
-        If export_frame == "world":
-           CAM -> TRF (fixed correction) -> WORLD (robot pose)
-        else:
-           CAM (as-is)
+        export_frame:
+          - "camera" / "cam":   saves cloud_{vid}_cam.ply
+          - "trf":              saves cloud_{vid}_trf.ply
+          - "world":            saves cloud_{vid}_world.ply
+          - "all":              saves all three
         """
         key = (pid, vid)
         raw_cfg = self.cfg.outputs.raw_cloud
 
         out_dir = plant_dir / "raw_clouds"
         out_dir.mkdir(parents=True, exist_ok=True)
-        out_path = out_dir / f"cloud_{vid}.ply"
 
         if raw_cfg.save_once_per_view and (key in self._saved_raw) and (not raw_cfg.overwrite):
-            return
-        if out_path.exists() and raw_cfg.save_once_per_view and (not raw_cfg.overwrite):
-            self._saved_raw.add(key)
             return
 
         if points_cam_m is None or getattr(points_cam_m, "size", 0) == 0:
             return
 
         pts_cam = np.asarray(points_cam_m, dtype=np.float32).reshape((-1, 3))
+
         export_frame = str(raw_cfg.export_frame).strip().lower()
+        if export_frame in ("cam",):
+            export_frame = "camera"
 
-        if export_frame == "world":
-            Rw, tw = self._pose_to_Rt(pose_world_trf)
-            pts_trf = (self.R_trf_cam @ pts_cam.T).T + self.t_trf_cam_m
-            pts_out = (Rw @ pts_trf.T).T + tw
-        else:
-            pts_out = pts_cam
+        if export_frame not in ("camera", "trf", "world", "all"):
+            raise ValueError("outputs.raw_cloud.export_frame must be one of: camera | trf | world | all")
 
-        write_ply_xyz(out_path, pts_out, ascii_mode=bool(raw_cfg.ply_ascii))
+        pts_trf = self._cam_to_trf(pts_cam)
+        pts_world = self._trf_to_world(pts_trf, pose_world_trf)
+
+        if self._debug_raw and export_frame in ("world", "all"):
+            dot = self._forward_result_dot(pts_world, pose_world_trf)
+            print(f"[plant {pid:03d} view {vid}] forward_dot={dot:.4f} (should be > 0)")
+
+        # write files
+        if export_frame in ("camera", "all"):
+            write_ply_xyz(out_dir / f"cloud_{vid}_cam.ply", pts_cam, ascii_mode=bool(raw_cfg.ply_ascii))
+
+        if export_frame in ("trf", "all"):
+            write_ply_xyz(out_dir / f"cloud_{vid}_trf.ply", pts_trf, ascii_mode=bool(raw_cfg.ply_ascii))
+
+        if export_frame in ("world", "all"):
+            write_ply_xyz(out_dir / f"cloud_{vid}_world.ply", pts_world, ascii_mode=bool(raw_cfg.ply_ascii))
+
         self._saved_raw.add(key)
+        self._write_raw_summary(out_dir=out_dir, plant_id=pid)
 
-        self._write_raw_summary(out_dir=out_dir, plant_id=pid, export_frame=export_frame)
-
-    def _write_raw_summary(self, out_dir: Path, plant_id: int, export_frame: str) -> None:
+    def _write_raw_summary(self, out_dir: Path, plant_id: int) -> None:
+        """
+        Writes raw_clouds/raw_summary.csv by scanning the folder.
+        Rows:
+          plant_id;view_id;frame;file
+        """
         csv_path = out_dir / "raw_summary.csv"
-        rows = []
-        for (pid, vid) in sorted(self._saved_raw):
-            if pid != plant_id:
+
+        files = sorted(out_dir.glob("cloud_*_*.ply"))
+        out_rows: List[List[object]] = []
+
+        for f in files:
+            # expected: cloud_{vid}_{frame}.ply
+            stem = f.stem
+            parts = stem.split("_")
+            if len(parts) < 3:
                 continue
-            rows.append([pid, vid, f"cloud_{vid}.ply", export_frame])
+            try:
+                vid = int(parts[1])
+            except Exception:
+                continue
+            frame = parts[2]
+            out_rows.append([int(plant_id), int(vid), str(frame), f.name])
 
         with csv_path.open("w", newline="", encoding="utf-8") as f:
             w = csv.writer(f, delimiter=";")
-            w.writerow(["plant_id", "view_id", "file", "export_frame"])
-            w.writerows(rows)
+            w.writerow(["plant_id", "view_id", "frame", "file"])
+            w.writerows(out_rows)
