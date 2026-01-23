@@ -8,7 +8,7 @@ from typing import Dict, Iterator, List, Tuple
 import cv2
 import numpy as np
 
-from strawberry_py.types import (
+from strawberry_py.st_types import (
     PlantId, ViewId, FrameIndex,
     RGBImage, DepthU16,
     FrameInfo, ViewFrame, PlantSample,

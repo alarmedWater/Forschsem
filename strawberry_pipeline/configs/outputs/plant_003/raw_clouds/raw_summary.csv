@@ -1,4 +1,10 @@
-plant_id;view_id;file;export_frame
-3;0;cloud_0.ply;world
-3;1;cloud_1.ply;world
-3;2;cloud_2.ply;world
+plant_id;view_id;frame;file
+3;0;cam;cloud_0_cam.ply
+3;0;trf;cloud_0_trf.ply
+3;0;world;cloud_0_world.ply
+3;1;cam;cloud_1_cam.ply
+3;1;trf;cloud_1_trf.ply
+3;1;world;cloud_1_world.ply
+3;2;cam;cloud_2_cam.ply
+3;2;trf;cloud_2_trf.ply
+3;2;world;cloud_2_world.ply

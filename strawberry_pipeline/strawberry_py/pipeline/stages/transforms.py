@@ -6,7 +6,7 @@ from typing import Tuple
 import numpy as np
 
 from strawberry_py.config import DepthCfg
-from strawberry_py.types import DepthU16, DepthF32, Mask, PointCloud, Pose
+from strawberry_py.st_types import DepthU16, DepthF32, Mask, PointCloud, Pose
 
 
 # ============================================================

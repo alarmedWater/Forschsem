@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Mapping, Optional, Tuple, cast
 import numpy as np
 import yaml
 
-from strawberry_py.types import CameraIntrinsics, DepthUnit, Pose
+from strawberry_py.st_types import CameraIntrinsics, DepthUnit, Pose
 
 
 # ============================================================
@@ -177,19 +177,26 @@ class RobotCfg:
     ip: str = ""
     wrf_equals_brf: bool = True
 
-    # purely informational (optional)
+    # purely informational: what you set during capture (TRF pose wrt FRF)
     trf_set_during_capture_mm_deg: Tuple[float, float, float, float, float, float] = (
-        0.0, 0.0, 36.0, 0.0, 0.0, 45.0
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0
     )
 
-    # IMPORTANT: we use this to interpret pose_wrf_mm_deg
+    # IMPORTANT: interpret pose_wrf_mm_deg from GetPose
+    # Mecademic manual: mobile XYZ (RxRyRz) <=> R = Rz @ Ry @ Rx for WORLD<-TRF
     euler_convention: str = "RzRyRx_deg"
 
     views: Dict[int, RobotViewPoseCfg] = field(default_factory=dict)
 
-    # CAM->TRF fixed correction (used by runner/clusterer)
-    cam_axes_correction_R_trf_cam_row_major_3x3: Optional[Tuple[float, ...]] = None  # len=9
-    camera_in_trf_translation_mm: Optional[Tuple[float, float, float]] = None       # len=3
+    # Fixed TRF <- CAM mapping used by pipeline
+    # If your TRF is already the camera (because you SetTRF to camera),
+    # then translation MUST be [0,0,0] to avoid double offset.
+    cam_axes_correction_R_trf_cam_row_major_3x3: Tuple[float, ...] = (
+        1.0, 0.0, 0.0,
+        0.0, 1.0, 0.0,
+        0.0, 0.0, 1.0
+    )
+    camera_in_trf_translation_mm: Tuple[float, float, float] = (0.0, 0.0, 0.0)
 
 
 @dataclass(frozen=True)
@@ -286,15 +293,14 @@ def _rotmat_to_quat_xyzw(R: np.ndarray) -> Tuple[float, float, float, float]:
 def _rot_from_euler_convention(rx: float, ry: float, rz: float, conv: str) -> np.ndarray:
     """
     conv examples:
-      - "RzRyRx_deg" (your BEST)
-      - "RxRyRz_deg"
-    We interpret it literally as matrix multiplication order:
-      RzRyRx => R = Rz(rz) @ Ry(ry) @ Rx(rx)
+      - "RzRyRx_deg"  -> R = Rz(rz) @ Ry(ry) @ Rx(rx)
+      - "RxRyRz_deg"  -> R = Rx(rx) @ Ry(ry) @ Rz(rz)
+
+    NOTE: This function is used for WORLD<-TRF rotation from Mecademic pose.
     """
     base = conv.strip()
     if base.endswith("_deg"):
         base = base[:-4]
-
     base = base.replace(" ", "")
     if not base.startswith("R") or len(base) != 6:
         raise ValueError(f"Unsupported euler_convention '{conv}'. Expected e.g. 'RzRyRx_deg'")
@@ -306,12 +312,11 @@ def _rot_from_euler_convention(rx: float, ry: float, rz: float, conv: str) -> np
         "z": _rotz(rz),
     }
 
-    R = np.eye(3, dtype=np.float64)
-    # multiply in the string order: RzRyRx => Rz @ Ry @ Rx
-    for ax in order:
-        if ax not in mats:
-            raise ValueError(f"Invalid axis '{ax}' in euler_convention '{conv}'")
-        R = mats[ax] @ R  # left-multiply (keeps the written order correct)
+    # IMPORTANT: keep the written order (RzRyRx => Rz @ Ry @ Rx)
+    try:
+        R = mats[order[0]] @ mats[order[1]] @ mats[order[2]]
+    except KeyError as exc:
+        raise ValueError(f"Invalid axis in euler_convention '{conv}'") from exc
     return R
 
 
@@ -324,20 +329,11 @@ def _pose_from_meca_pose_mm_deg(
     rz_deg: float,
     euler_convention: str,
 ) -> Pose:
-    """
-    Pose from Mecademic pose_wrf_mm_deg using configured convention.
-
-    For your case (BEST):
-      euler_convention = "RzRyRx_deg"
-      => R = Rz(rz) @ Ry(ry) @ Rx(rx)
-    """
     rx = np.deg2rad(rx_deg)
     ry = np.deg2rad(ry_deg)
     rz = np.deg2rad(rz_deg)
 
-    # FIXED: actually use the convention
     R = _rot_from_euler_convention(rx, ry, rz, euler_convention)
-
     qx, qy, qz, qw = _rotmat_to_quat_xyzw(R)
     t_xyz = (x_mm / 1000.0, y_mm / 1000.0, z_mm / 1000.0)
     return Pose(t_xyz=t_xyz, q_xyzw=(qx, qy, qz, qw))
@@ -407,9 +403,6 @@ def load_config(path: str | Path) -> AppCfg:
         except Exception:
             return None
 
-    # support both:
-    # camera.intrinsics: {fx,fy,cx,cy,width,height}  (your current YAML)
-    # camera.intrinsics.color / depth (legacy)
     intr_color = _parse_intr(_get(intr_raw, "color", None))
     intr_depth = _parse_intr(_get(intr_raw, "depth", None))
     intr_flat = _parse_intr(intr_raw) if (intr_color is None and intr_depth is None) else None
@@ -443,13 +436,14 @@ def load_config(path: str | Path) -> AppCfg:
         intrinsics_depth=intr_depth,
         extrinsics_depth_to_color=extr_d2c,
     )
+    active_intr = intr_flat or intr_color or intr_depth
+    if active_intr is None:
+        raise ValueError(
+            "No camera intrinsics found in YAML. "
+            "Expected camera.intrinsics (width/height/fx/fy/cx/cy). "
+            "Strict mode: no fallback intrinsics allowed."
+        )
 
-    active_intr = (
-        intr_flat
-        or intr_color
-        or intr_depth
-        or IntrinsicsCfg(width=640, height=480, fx=392.0, fy=392.0, cx=320.0, cy=240.0)
-    )
     camera = CameraIntrinsics(
         fx=float(active_intr.fx),
         fy=float(active_intr.fy),
@@ -485,24 +479,40 @@ def load_config(path: str | Path) -> AppCfg:
     robot_raw = cast(Mapping[str, Any], _get(raw, "robot", {}) or {})
     views_raw = _get(robot_raw, "views", {}) or {}
 
-    # euler convention (THIS is what you want pinned)
+    # Mecademic: mobile XYZ => use RzRyRx for WORLD<-TRF
     euler_convention = str(robot_raw.get("euler_convention", "RzRyRx_deg")).strip()
 
-    # Parse optional fixed CAM->TRF correction (what runner expects)
+    # TRF that was set during capture is ONLY informational here
+    trf_list = robot_raw.get("trf_set_during_capture_mm_deg", None)
+    if isinstance(trf_list, list) and len(trf_list) == 6:
+        trf_tuple = tuple(float(x) for x in trf_list)  # type: ignore[assignment]
+    else:
+        trf_tuple = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+    # CAM->TRF correction:
+    # default: identity rotation + zero translation (prevents accidental double offset)
     R_trf_cam = _parse_tuple_floats(
         robot_raw.get("cam_axes_correction_R_trf_cam_row_major_3x3", None),
         9,
         "robot.cam_axes_correction_R_trf_cam_row_major_3x3",
     )
+    if R_trf_cam is None:
+        raise ValueError(
+            "robot.cam_axes_correction_R_trf_cam_row_major_3x3 missing. "
+            "Strict mode: no fallback identity rotation allowed."
+        )
+
     t_trf_cam_mm = _parse_tuple_floats(
         robot_raw.get("camera_in_trf_translation_mm", None),
         3,
         "robot.camera_in_trf_translation_mm",
     )
+    if t_trf_cam_mm is None:
+        raise ValueError(
+            "robot.camera_in_trf_translation_mm missing. "
+            "Strict mode: no fallback zero translation allowed."
+        )
 
-    trf_tuple = (
-        0.0, 0.0, 36.0, 0.0, 0.0, 45.0
-    )
 
     views: Dict[int, RobotViewPoseCfg] = {}
     if isinstance(views_raw, Mapping):
@@ -528,16 +538,25 @@ def load_config(path: str | Path) -> AppCfg:
                 key=str(v.get("key", "")),
                 pose_world=pose_world,
             )
+    # ---- STRICT validation: all dataset views must exist in robot.views ----
+    missing = [int(vid) for vid in dataset.view_ids if int(vid) not in views]
+    if missing:
+        raise ValueError(
+            f"Missing robot.views for view_ids={missing}. "
+            f"Found views={sorted(list(views.keys()))}. "
+            "Strict mode: no fallback poses allowed."
+        )
+
 
     robot = RobotCfg(
         model=str(robot_raw.get("model", "Meca500")),
         ip=str(robot_raw.get("ip", "")),
         wrf_equals_brf=bool(robot_raw.get("wrf_equals_brf", True)),
-        trf_set_during_capture_mm_deg=trf_tuple,
+        trf_set_during_capture_mm_deg=cast(Tuple[float, float, float, float, float, float], trf_tuple),
         euler_convention=euler_convention,
         views=views,
-        cam_axes_correction_R_trf_cam_row_major_3x3=cast(Optional[Tuple[float, ...]], R_trf_cam),
-        camera_in_trf_translation_mm=cast(Optional[Tuple[float, float, float]], t_trf_cam_mm),
+        cam_axes_correction_R_trf_cam_row_major_3x3=cast(Tuple[float, ...], R_trf_cam),
+        camera_in_trf_translation_mm=cast(Tuple[float, float, float], t_trf_cam_mm),
     )
 
     # ---------------- Segmentation ----------------
@@ -591,8 +610,6 @@ def load_config(path: str | Path) -> AppCfg:
     )
     if raw_cloud.export_frame not in ("camera", "trf", "world", "all"):
         raise ValueError("outputs.raw_cloud.export_frame must be 'camera', 'trf', 'world' or 'all'.")
-
-
 
     cluster_raw = cast(Mapping[str, Any], _get(out_raw, "cluster", {}) or {})
     cluster = ClusterCfg(

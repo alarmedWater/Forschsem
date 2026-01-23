@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 
 from strawberry_py.config import DepthCfg, FeaturesCfg
-from strawberry_py.types import (
+from strawberry_py.st_types import (
     CameraIntrinsics,
     DepthU16, LabelImage,
     FeaturesResult, InstanceFeatures,

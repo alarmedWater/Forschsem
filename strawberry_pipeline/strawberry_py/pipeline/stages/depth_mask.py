@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 
 from strawberry_py.config import DepthCfg
-from strawberry_py.types import DepthU16, LabelImage, DepthMaskResult, assert_depth_u16, assert_label_u16
+from strawberry_py.st_types import DepthU16, LabelImage, DepthMaskResult, assert_depth_u16, assert_label_u16
 from strawberry_py.pipeline.stages.transforms import compute_valid_range_mask
 
 

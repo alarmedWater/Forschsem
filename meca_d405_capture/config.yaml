@@ -1,0 +1,137 @@
+# ============================================================
+# config.yaml  (Meca500 + RealSense D405 Capture / Calibration)
+# ============================================================
+
+robot:
+  ip: "192.168.0.100"
+
+  joint_vel: 20
+  joint_acc: 20
+  settle_s: 0.5
+
+  # WRF=BRF (wie dein alter Code)
+  wrf_equals_brf: true
+
+  # TRF wie im Setup (ALT: z=36mm, NEU: z=32.3mm)
+  trf_set_mm_deg: [0.0, 0.0, 32.3, 0.0, 0.0, 45.0]
+
+  # Euler-Konvention (für Pivot-Solve / pose_mm_deg_to_T)
+  euler_convention: "RzRyRx_deg"
+
+  # CAM(optical) -> TRF Achsenkorrektur
+  cam_axes_correction_R_trf_cam_row_major_3x3: [
+    0, 0, 1,
+    -1, 0, 0,
+    0, -1, 0
+  ]
+
+  # Ergebnis aus Pivot-Solve (später hier eintragen!)
+  camera_in_trf_translation_mm: [0.0, 0.0, 0.0]
+
+  # ==========================================================
+  # Pivot / Offset Schätzung: KARTESISCHE Posenquelle
+  # ==========================================================
+  # WICHTIG:
+  # - Datei heißt am besten "positions.yaml"
+  # - Pfad am besten relativ zum config.yaml Ordner
+  positions_file: "positions.yaml"
+
+  # auto_pose_confirm: Script fährt Pose an, du bestätigst jeweils mit ENTER
+  pivot_motion_mode: "auto_pose_confirm"
+  pivot_prompt_each_pose: true
+
+  # ==========================================================
+  # Joint-Views fürs Dataset (wie dein alter Code: l/m/r)
+  # ==========================================================
+  positions:
+    l: [48, 14, 24, -108, 91, -81]
+    m: [0, -35, 35, 0, 0, 135]
+    r: [-41, 14, 24, 106, 89, 6]
+
+  sequence: ["l", "m", "r"]
+
+
+camera:
+  width: 640
+  height: 480
+  fps: 30
+
+  device_info:
+    name: "Intel RealSense D405"
+    serial_number: "218622270259"
+    firmware_version: "5.16.0.1"
+    product_line: "D400"
+
+  calib:
+    depth_scale_m_per_unit: 9.999999747378752e-05
+
+    intrinsics_color:
+      width: 640
+      height: 480
+      fx: 392.277618
+      fy: 391.363373
+      cx: 323.552460
+      cy: 242.033798
+      distortion_model: "inverse_brown_conrady"
+      distortion_coeffs: [
+        -0.05286535993218422,
+         0.05753187835216522,
+        -0.0003681946254801005,
+         0.000499460962601006,
+        -0.01893887110054493
+      ]
+
+    intrinsics_depth:
+      width: 640
+      height: 480
+      fx: 384.897705
+      fy: 384.897705
+      cx: 326.554962
+      cy: 241.885437
+      distortion_model: "brown_conrady"
+      distortion_coeffs: [0.0, 0.0, 0.0, 0.0, 0.0]
+
+    extrinsics_depth_to_color:
+      rotation_row_major_3x3: [
+        0.9999829530715942,  0.0009599336190149188, -0.005763840861618519,
+       -0.0009559188620187342, 0.9999992847442627,  0.0006992650451138616,
+        0.005764508154243231, -0.0006937433499842882, 0.9999831318855286
+      ]
+      translation_m: [
+        9.210062125930563e-05,
+        7.057415700728598e-07,
+        0.00013046100502833724
+      ]
+
+    aligned_depth_uses_color_intrinsics: true
+
+
+depth:
+  scale_m_per_unit: 9.999999747378752e-05
+  treat_65535_as_invalid: true
+
+
+dataset:
+  out_root: "runs"
+  run_name: ""
+  plant_prefix: "plant_"
+  start_plant_id: 0
+  num_plants: 1
+
+  view_ids: [0, 1, 2]
+  view_to_pose_key:
+    "0": "l"
+    "1": "m"
+    "2": "r"
+
+
+outputs:
+  save_depth_raw: true
+  save_ply_aligned: true
+  save_ply_raw: false
+
+
+ellipse:
+  min_contour_area: 500.0
+  canny1: 60
+  canny2: 160

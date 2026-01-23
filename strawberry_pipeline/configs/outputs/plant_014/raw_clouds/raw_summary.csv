@@ -1,3 +1,7 @@
-plant_id;view_id;file;export_frame
-14;1;cloud_1.ply;world
-14;2;cloud_2.ply;world
+plant_id;view_id;frame;file
+14;1;cam;cloud_1_cam.ply
+14;1;trf;cloud_1_trf.ply
+14;1;world;cloud_1_world.ply
+14;2;cam;cloud_2_cam.ply
+14;2;trf;cloud_2_trf.ply
+14;2;world;cloud_2_world.ply

@@ -1,0 +1,12 @@
+numpy
+PyYAML
+opencv-python
+
+# Robot
+mecademicpy
+
+# RealSense Python Bindings (typisch über librealsense2 / apt installiert, siehe README)
+pyrealsense2
+
+# optional (nur wenn du Open3D-Visualisierung willst)
+open3d
