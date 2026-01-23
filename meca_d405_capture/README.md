@@ -31,6 +31,9 @@ python src/validate_robot_pose.py --config config.yaml
 ### Schritt A: Kamera testen
 python src/camera_d405.py
 
+python src/camera_d405.py --self-check --patch 20 --debug-out runs/selfcheck_cam.png
+
+
 => Gibt Meta/Intrinsics/Depth-Scale aus und macht einen Frame-Test.
 
 ### Schritt B: Roboter-Posen validieren (Pose stabil? Wiederholbar?)
