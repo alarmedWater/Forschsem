@@ -1,5 +1,13 @@
 # meca_d405_capture
 
+
+
+näcshter schritt: python src/estimate_cam_offset_pivot.py --config config.yaml capture --run_dir runs/pivot_001 --debug
+
+python src/estimate_cam_offset_pivot.py --config config.yaml solve --run_dir runs/pivot_001
+
+
+
 Mini-Tooling für Meca500 + Intel RealSense D405:
 - Robot-Posen zuverlässig abfahren und prüfen
 - RGB + aligned depth + raw depth speichern

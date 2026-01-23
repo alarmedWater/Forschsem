@@ -4,12 +4,15 @@
 """
 estimate_cam_offset_pivot.py
 
-Schätzt Kamera-Translation t_trf_cam (in TRF, Meter) mit Pivot-Methode:
-- Fester Referenzpunkt in Welt (Ellipse-Marker)
-- Viele Robot-Posen (sequence)
-- Pro Pose: Ellipse-fit -> center (u,v), depth median -> 3D Punkt p_cam
-- Bekannte Rotation R_trf_cam (CAM optical -> TRF)
-- Unbekannt: t_trf_cam und P_world (fester Weltpunkt)
+Schätzt Kamera-Translation t_trf_cam (in TRF, Meter) mit Pivot-Methode.
+
+Idee:
+- Es gibt einen festen Weltpunkt (Ellipse-Marker), der sich NICHT bewegt.
+- Du fährst den Roboter in viele Posen.
+- Pro Pose misst du den Marker im Kamerabild:
+    Ellipse-fit -> (u,v) + depth median -> 3D Punkt p_cam (im CAM optical frame).
+- Du kennst die Rotation R_trf_cam (CAM optical -> TRF) als Achsenkorrektur.
+- Unbekannt: t_trf_cam (Translation Kamera in TRF) und P_world (Weltpunkt).
 
 Messmodell:
   P_world = Rw_i @ (R_trf_cam @ p_cam_i + t_trf_cam) + tw_i
@@ -18,9 +21,24 @@ Linear in [P_world, t_trf_cam]:
   [ I  -Rw_i ] [P_world] = Rw_i @ (R_trf_cam @ p_cam_i) + tw_i
               [t_trf_cam]
 
-CLI:
-  python src/estimate_cam_offset_pivot.py --config config.yaml capture --run_dir runs/pivot_001 --debug
-  python src/estimate_cam_offset_pivot.py --config config.yaml solve --run_dir runs/pivot_001
+Workflow:
+  1) config.yaml pflegen (robot.positions_file, ellipse params, etc.)
+  2) positions.yaml pflegen:
+       poses_mm_deg: {p01:[x,y,z,rx,ry,rz], ...}
+       sequence: [p01, p02, ...]
+  3) capture:
+       python src/estimate_cam_offset_pivot.py --config config.yaml capture --run_dir runs/pivot_001 --debug
+     - fährt Pose für Pose (auto_pose_confirm) oder wartet (manual)
+     - nach jeder Pose: ENTER bestätigt nächste Pose
+     - schreibt runs/pivot_001/measurements.csv + debug images
+  4) solve:
+       python src/estimate_cam_offset_pivot.py --config config.yaml solve --run_dir runs/pivot_001
+     - schreibt runs/pivot_001/estimated_cam_offset.yaml (mm) und gibt RMS/Max Fehler aus.
+
+Wichtige Hinweise:
+- Depth muss aligned-to-color sein (dein camera_d405.py liefert das).
+- Für Pivot brauchst du möglichst viele Posen mit guter Geometrie (verschiedene Blickwinkel/Abstände).
+- RMS Fehler sollte im besten Fall im einstelligen mm Bereich liegen (setup-abhängig).
 """
 
 from __future__ import annotations
@@ -52,23 +70,53 @@ from transforms import (  # noqa: E402
 )
 
 
+# ============================================================
+# Config models
+# ============================================================
+
 @dataclass(frozen=True)
 class PivotCfg:
     euler_convention: str
     R_trf_cam: np.ndarray
     depth_scale_m_per_unit: float
-    positions: Dict[str, Tuple[float, float, float, float, float, float]]
+    positions: Dict[str, Tuple[float, float, float, float, float, float]]  # [x,y,z,rx,ry,rz] mm/deg
     sequence: List[str]
     settle_s: float
+    motion_mode: str  # "manual" | "auto_pose" | "auto_pose_confirm"
+    prompt_each_pose: bool
     min_contour_area: float
     canny1: int
     canny2: int
 
 
+def _load_positions_file(path: Path) -> Tuple[Dict[str, Tuple[float, float, float, float, float, float]], List[str]]:
+    raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+    poses_raw = raw.get("poses_mm_deg", {})
+    seq_raw = raw.get("sequence", [])
+
+    if not isinstance(poses_raw, dict) or not poses_raw:
+        raise ValueError(f"{path}: poses_mm_deg missing/empty")
+    if not isinstance(seq_raw, list) or not seq_raw:
+        raise ValueError(f"{path}: sequence missing/empty")
+
+    poses: Dict[str, Tuple[float, float, float, float, float, float]] = {}
+    for k, v in poses_raw.items():
+        if not (isinstance(v, list) and len(v) == 6):
+            raise ValueError(f"{path}: poses_mm_deg['{k}'] must be list of 6 [x,y,z,rx,ry,rz]")
+        poses[str(k)] = tuple(float(x) for x in v)  # type: ignore
+
+    seq = [str(s) for s in seq_raw]
+    for s in seq:
+        if s not in poses:
+            raise ValueError(f"{path}: sequence key '{s}' not found in poses_mm_deg")
+
+    return poses, seq
+
+
 def load_cfg(path: Path) -> Tuple[PivotCfg, dict]:
     raw = yaml.safe_load(path.read_text(encoding="utf-8"))
-
     rob = raw.get("robot", {})
+
     euler = str(rob.get("euler_convention", "RzRyRx_deg")).strip()
 
     R_list = rob.get("cam_axes_correction_R_trf_cam_row_major_3x3", None)
@@ -80,21 +128,30 @@ def load_cfg(path: Path) -> Tuple[PivotCfg, dict]:
     if ortho_err > 1e-6 or abs(det - 1.0) > 1e-6:
         print(f"[WARN] R_trf_cam sanity: ortho_err={ortho_err:.3e} det={det:.6f}")
 
+    # Depth scale: prefer camera.calib.depth_scale_m_per_unit, fallback depth.scale_m_per_unit
+    cam = raw.get("camera", {})
+    calib = cam.get("calib", {})
     depth = raw.get("depth", {})
-    depth_scale = float(depth.get("scale_m_per_unit", 1e-4))
 
-    positions_raw = rob.get("positions", {})
-    if not isinstance(positions_raw, dict) or not positions_raw:
-        raise ValueError("robot.positions missing")
-    positions: Dict[str, Tuple[float, float, float, float, float, float]] = {}
-    for k, v in positions_raw.items():
-        if not (isinstance(v, list) and len(v) == 6):
-            raise ValueError(f"robot.positions['{k}'] must be list of 6")
-        positions[str(k)] = tuple(float(x) for x in v)  # type: ignore
+    depth_scale = calib.get("depth_scale_m_per_unit", None)
+    if depth_scale is None:
+        depth_scale = depth.get("scale_m_per_unit", 1e-4)
+    depth_scale = float(depth_scale)
 
-    seq = rob.get("sequence", ["l", "m", "r"])
-    seq = [str(s) for s in seq]
     settle_s = float(rob.get("settle_s", 0.5))
+    motion_mode = str(rob.get("pivot_motion_mode", "manual")).strip()
+    prompt_each_pose = bool(rob.get("pivot_prompt_each_pose", True))
+
+    # Load positions from positions_file (preferred)
+    positions_file = rob.get("positions_file", None)
+    if positions_file:
+        pos_path = Path(str(positions_file)).expanduser()
+        if not pos_path.is_absolute():
+            pos_path = (path.parent / pos_path).resolve()
+        positions, seq = _load_positions_file(pos_path)
+        print(f"[CFG] loaded positions from {pos_path} (n={len(seq)})")
+    else:
+        raise ValueError("robot.positions_file is missing. Please set it to your positions.yaml")
 
     ell = raw.get("ellipse", {})
     return (
@@ -105,6 +162,8 @@ def load_cfg(path: Path) -> Tuple[PivotCfg, dict]:
             positions=positions,
             sequence=seq,
             settle_s=settle_s,
+            motion_mode=motion_mode,
+            prompt_each_pose=prompt_each_pose,
             min_contour_area=float(ell.get("min_contour_area", 500.0)),
             canny1=int(ell.get("canny1", 60)),
             canny2=int(ell.get("canny2", 160)),
@@ -112,6 +171,10 @@ def load_cfg(path: Path) -> Tuple[PivotCfg, dict]:
         raw,
     )
 
+
+# ============================================================
+# Detection
+# ============================================================
 
 @dataclass(frozen=True)
 class EllipseObs:
@@ -139,6 +202,7 @@ def detect_ellipse_and_depth(
     debug_dir: Optional[Path] = None,
     idx: int = 0,
 ) -> Optional[EllipseObs]:
+    """Findet größte Ellipse (über Konturfläche) und nimmt Median-Depth innerhalb der Ellipse."""
     h, w = rgb_bgr.shape[:2]
     if depth_u16.shape[:2] != (h, w):
         raise ValueError("Depth must be aligned to color (same resolution).")
@@ -208,8 +272,13 @@ def detect_ellipse_and_depth(
     )
 
 
+# ============================================================
+# CSV I/O
+# ============================================================
+
 CSV_HEADER = [
     "idx",
+    "pose_key",
     "x_mm", "y_mm", "z_mm", "rx_deg", "ry_deg", "rz_deg",
     "u_px", "v_px", "depth_m",
     "axis_a_px", "axis_b_px", "angle_deg",
@@ -268,6 +337,10 @@ def read_measurements_csv(path: Path) -> Tuple[List[Tuple[float, float, float, f
     return poses, obs, K, depth_scale
 
 
+# ============================================================
+# Solve
+# ============================================================
+
 @dataclass(frozen=True)
 class SolveResult:
     t_trf_cam_m: np.ndarray
@@ -297,7 +370,11 @@ def solve_translation_only(
 
     for i, (pose, ob) in enumerate(zip(poses_mm_deg, obs)):
         x_mm, y_mm, z_mm, rx, ry, rz = pose
-        T = pose_mm_deg_to_T(x_mm, y_mm, z_mm, rx, ry, rz, euler_convention=euler_convention, t_in_m=True)
+        T = pose_mm_deg_to_T(
+            x_mm, y_mm, z_mm, rx, ry, rz,
+            euler_convention=euler_convention,
+            t_in_m=True,
+        )
         Rw = T[:3, :3]
         tw = T[:3, 3]
 
@@ -314,10 +391,15 @@ def solve_translation_only(
     P = x_hat[0:3]
     t = x_hat[3:6]
 
+    # error stats
     errs = []
     for pose, ob in zip(poses_mm_deg, obs):
         x_mm, y_mm, z_mm, rx, ry, rz = pose
-        T = pose_mm_deg_to_T(x_mm, y_mm, z_mm, rx, ry, rz, euler_convention=euler_convention, t_in_m=True)
+        T = pose_mm_deg_to_T(
+            x_mm, y_mm, z_mm, rx, ry, rz,
+            euler_convention=euler_convention,
+            t_in_m=True,
+        )
         Rw = T[:3, :3]
         tw = T[:3, 3]
         p_cam = uv_depth_to_xyz_cam(ob.u, ob.v, ob.depth_m, K)
@@ -338,6 +420,31 @@ def solve_translation_only(
     )
 
 
+# ============================================================
+# Robot move helper (safe)
+# ============================================================
+
+def _robot_move_pose_mm_deg(robot: Meca500Controller, target: Tuple[float, float, float, float, float, float]) -> None:
+    """
+    Wrapper: nutzt bevorzugt robot.move_pose_mm_deg(...) wenn vorhanden,
+    sonst versucht robot.move_pose(...) (falls du so eine Methode hast).
+    """
+    if hasattr(robot, "move_pose_mm_deg"):
+        robot.move_pose_mm_deg(*target)  # type: ignore
+        return
+    if hasattr(robot, "move_pose"):
+        robot.move_pose(*target)  # type: ignore
+        return
+    raise RuntimeError(
+        "Robot controller has no move_pose_mm_deg() / move_pose(). "
+        "Bitte in robot_meca.py implementieren (MovePose/MoveLin der Mecademic API)."
+    )
+
+
+# ============================================================
+# Commands
+# ============================================================
+
 def cmd_capture(cfg_path: Path, run_dir: Path, debug: bool) -> None:
     cfg, raw = load_cfg(cfg_path)
 
@@ -347,7 +454,11 @@ def cmd_capture(cfg_path: Path, run_dir: Path, debug: bool) -> None:
 
     robot = Meca500Controller.from_config_yaml(cfg_path, verbose=True)
     cam_cfg = raw.get("camera", {})
-    cam = RealsenseD405(int(cam_cfg.get("width", 640)), int(cam_cfg.get("height", 480)), int(cam_cfg.get("fps", 30)))
+    cam = RealsenseD405(
+        int(cam_cfg.get("width", 640)),
+        int(cam_cfg.get("height", 480)),
+        int(cam_cfg.get("fps", 30)),
+    )
 
     rows: List[dict] = []
     csv_path = run_dir / "measurements.csv"
@@ -372,16 +483,42 @@ def cmd_capture(cfg_path: Path, run_dir: Path, debug: bool) -> None:
         depth_scale = float(meta.depth_scale_m_per_unit or cfg.depth_scale_m_per_unit)
 
         print(f"[CAPTURE] run_dir={run_dir}")
-        print(f"[CAPTURE] sequence={cfg.sequence}")
+        print(f"[CAPTURE] motion_mode={cfg.motion_mode}")
+        print(f"[CAPTURE] prompt_each_pose={cfg.prompt_each_pose}")
+        print(f"[CAPTURE] sequence length={len(cfg.sequence)}")
         print(f"[CAPTURE] writing {csv_path}")
         print(f"[CAPTURE] intrinsics: fx={K.fx:.3f} fy={K.fy:.3f} cx={K.cx:.3f} cy={K.cy:.3f}")
         print(f"[CAPTURE] depth_scale_m_per_unit: {depth_scale:.9e}")
 
-        for i, key in enumerate(cfg.sequence):
-            print(f"\n[CAPTURE] Move to '{key}' ({i+1}/{len(cfg.sequence)})")
-            robot.move_to(key)
-            time.sleep(cfg.settle_s)
+        # small warmup
+        for _ in range(3):
+            _ = cam.get_frames()
 
+        for i, key in enumerate(cfg.sequence):
+            print(f"\n[CAPTURE] Pose '{key}' ({i+1}/{len(cfg.sequence)})")
+
+            if cfg.motion_mode == "manual":
+                if cfg.prompt_each_pose:
+                    input("  -> Fahre den Roboter manuell in die Pose und drücke ENTER zum Messen (Ctrl+C=Abbruch)...")
+                time.sleep(cfg.settle_s)
+
+            elif cfg.motion_mode in ("auto_pose", "auto_pose_confirm"):
+                target = cfg.positions[key]
+
+                if cfg.motion_mode == "auto_pose_confirm" and cfg.prompt_each_pose:
+                    input(f"  -> ENTER = fahre Pose {key} an (Ctrl+C=Abbruch)...")
+
+                _robot_move_pose_mm_deg(robot, target)
+                time.sleep(cfg.settle_s)
+
+                # Optional: vor Messung nochmal ENTER (falls du wirklich erst „checken“ willst)
+                # if cfg.prompt_each_pose:
+                #     input("  -> ENTER = messen...")
+
+            else:
+                raise ValueError(f"Unknown motion_mode: {cfg.motion_mode}")
+
+            # IST-Pose lesen (wichtig!)
             pose = robot.get_pose_mm_deg()
 
             fr = cam.get_frames()
@@ -401,6 +538,7 @@ def cmd_capture(cfg_path: Path, run_dir: Path, debug: bool) -> None:
             ts = time.strftime("%Y-%m-%d %H:%M:%S")
             row = dict(
                 idx=int(i),
+                pose_key=str(key),
                 x_mm=float(pose.x_mm), y_mm=float(pose.y_mm), z_mm=float(pose.z_mm),
                 rx_deg=float(pose.rx_deg), ry_deg=float(pose.ry_deg), rz_deg=float(pose.rz_deg),
                 u_px=float(ob.u), v_px=float(ob.v), depth_m=float(ob.depth_m),
@@ -423,7 +561,10 @@ def cmd_capture(cfg_path: Path, run_dir: Path, debug: bool) -> None:
             cam.stop()
         except Exception:
             pass
-        robot.disconnect()
+        try:
+            robot.disconnect()
+        except Exception:
+            pass
 
 
 def cmd_solve(cfg_path: Path, run_dir: Path) -> None:
@@ -459,6 +600,10 @@ def cmd_solve(cfg_path: Path, run_dir: Path) -> None:
     print(f"[SOLVE] wrote {snippet_path}")
 
 
+# ============================================================
+# CLI
+# ============================================================
+
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
     p.add_argument("--config", type=str, required=True)
@@ -477,6 +622,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     cfg_path = Path(args.config).resolve()
+
     if args.cmd == "capture":
         cmd_capture(cfg_path, Path(args.run_dir), bool(args.debug))
     elif args.cmd == "solve":
