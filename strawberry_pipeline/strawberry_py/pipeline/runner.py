@@ -29,13 +29,19 @@ class PipelineRunner:
       - accumulate instances into per-plant clustering
       - export clusters after all views processed
 
-    Frames / transforms:
-      FeatureExtractor outputs points in CAM (RealSense optical) frame.
-      Robot pose provides WORLD <- TRF.
-      We additionally need fixed TRF <- CAM (R_trf_cam, t_trf_cam_m).
-      Then:
-         p_trf   = R_trf_cam @ p_cam + t_trf_cam
-         p_world = R_world_trf @ p_trf + t_world_trf
+    Frames / transforms (DEIN Setup):
+      - FeatureExtractor outputs points in CAM (RealSense OPTICAL) frame.
+      - Robot GetPose provides WORLD <- TRF.
+      - Flansch->Kamera-Offset (32.3mm) und die 45°-Montage sind bereits in GetPose enthalten,
+        daher darf KEIN zusätzlicher Flansch->Kamera-Offset im Code addiert werden.
+
+      Was trotzdem nötig ist:
+        Eine reine Achsen-/Frame-Konvention Korrektur CAM(optical) -> TRF (Rotation, KEINE Translation).
+        (Deine Matrix [0,0,1; -1,0,0; 0,-1,0] ist genau so eine opt->tool Mapping-Rotation.)
+
+      Dann:
+        p_trf   = R_trf_cam @ p_cam            (t_trf_cam muss 0 sein)
+        p_world = R_world_trf @ p_trf + t_world_trf
     """
 
     def __init__(self, cfg: AppCfg) -> None:
@@ -74,26 +80,27 @@ class PipelineRunner:
         # dedup raw saving (plant_id, view_id)
         self._saved_raw: Set[Tuple[int, int]] = set()
 
-        # optional debug knob (read if present; default True)
-        # NOTE: cfg.outputs.raw_cloud has no "debug" in your dataclass,
-        # so we read it safely with getattr.
+        # optional debug knob
         self._debug_raw = bool(getattr(cfg.outputs.raw_cloud, "debug", True))
 
-        # fixed CAM->TRF correction
+        # fixed CAM(optical)->TRF mapping (rotation) + (translation, MUST be zero)
         self.R_trf_cam: np.ndarray
         self.t_trf_cam_m: np.ndarray
         self.R_trf_cam, self.t_trf_cam_m = self._load_cam_in_trf_correction()
+
+        # enforce: no double-offset
+        self._validate_cam_in_trf_translation_is_zero()
 
     # ----------------- config helpers -----------------
 
     def _load_cam_in_trf_correction(self) -> Tuple[np.ndarray, np.ndarray]:
         """
         Reads from cfg.robot:
-          cam_axes_correction_R_trf_cam_row_major_3x3: len=9
-          camera_in_trf_translation_mm: len=3
+          cam_axes_correction_R_trf_cam_row_major_3x3: len=9  (rotation only)
+          camera_in_trf_translation_mm: len=3                 (MUST be 0, else double offset)
         Returns:
           R_trf_cam (3,3) float32
-          t_trf_cam_m (3,) float32  in meters
+          t_trf_cam_m (3,) float32 in meters
         """
         robot = getattr(self.cfg, "robot", None)
         if robot is None:
@@ -114,18 +121,36 @@ class PipelineRunner:
         R = np.asarray(R_list, dtype=np.float32).reshape((3, 3))
         t = np.asarray(t_mm, dtype=np.float32).reshape((3,)) / 1000.0
 
+        # sanity checks
+        ortho_err, det = self._rotation_sanity(R)
+        if ortho_err > 1e-5 or abs(det - 1.0) > 1e-4:
+            raise ValueError(
+                f"Invalid rotation matrix robot.cam_axes_correction_R_trf_cam_row_major_3x3: "
+                f"ortho_err={ortho_err:.3e}, det={det:.6f}"
+            )
+
         if self._debug_raw:
-            ortho_err, det = self._rotation_sanity(R)
             print(f"[Runner] R_trf_cam sanity: ortho_err={ortho_err:.3e} det={det:.6f}")
-            print(f"[Runner] t_trf_cam_m = {t.tolist()}")
+            print(f"[Runner] t_trf_cam_m (should be ~0) = {t.tolist()}")
 
         return R, t
 
+    def _validate_cam_in_trf_translation_is_zero(self) -> None:
+        """
+        In deinem Setup ist der Flansch->Kamera-Offset schon in GetPose drin.
+        Daher MUSS camera_in_trf_translation_mm = [0,0,0] sein, sonst wird doppelt verschoben.
+        """
+        t = np.asarray(self.t_trf_cam_m, dtype=np.float32).reshape((3,))
+        if float(np.linalg.norm(t)) > 1e-9:
+            raise ValueError(
+                "Config error: robot.camera_in_trf_translation_mm must be [0,0,0], "
+                "because GetPose already includes the flange->camera optical-center offset."
+            )
+
     def _pose_for_view_world_trf(self, vid: int) -> Pose:
         """
-        Pose for this view: WORLD <- TRF.
-        STRICT: No fallback allowed. Missing view pose must fail fast,
-        otherwise clustering silently breaks.
+        Pose for this view: WORLD <- TRF (aus GetPose).
+        STRICT: No fallback allowed.
         """
         rv = self.cfg.robot.views.get(int(vid))
         if rv is None:
@@ -135,7 +160,6 @@ class PipelineRunner:
                 "No fallback pose allowed."
             )
         return rv.pose_world
-
 
     @staticmethod
     def _pose_to_Rt(pose_world_trf: Pose) -> Tuple[np.ndarray, np.ndarray]:
@@ -159,10 +183,13 @@ class PipelineRunner:
     # ----------------- transform helpers -----------------
 
     def _cam_to_trf(self, pts_cam: np.ndarray) -> np.ndarray:
+        """
+        CAM(optical) -> TRF (pure rotation, translation enforced zero).
+        """
         pts = np.asarray(pts_cam, dtype=np.float32).reshape((-1, 3))
         if pts.size == 0:
             return pts
-        return (self.R_trf_cam @ pts.T).T + self.t_trf_cam_m
+        return (self.R_trf_cam @ pts.T).T
 
     def _trf_to_world(self, pts_trf: np.ndarray, pose_world_trf: Pose) -> np.ndarray:
         pts = np.asarray(pts_trf, dtype=np.float32).reshape((-1, 3))
@@ -176,7 +203,8 @@ class PipelineRunner:
         Sanity check:
           forward_world • (centroid_world - cam_origin_world) should be > 0.
 
-        Uses optical forward axis (0,0,1) in CAM, mapped CAM->TRF->WORLD.
+        CAM forward axis (0,0,1) mapped CAM->TRF->WORLD.
+        TRF origin == camera optical center (because translation is 0 and GetPose contains the offset).
         """
         pts = np.asarray(pts_world, dtype=np.float32).reshape((-1, 3))
         if pts.size == 0:
@@ -184,11 +212,9 @@ class PipelineRunner:
 
         Rw, tw = self._pose_to_Rt(pose_world_trf)
 
-        # CAM origin in TRF is t_trf_cam_m (because p_trf = R*p_cam + t)
-        cam_origin_world = (Rw @ self.t_trf_cam_m) + tw
+        cam_origin_world = tw  # TRF origin is camera origin in world
 
-        # CAM forward axis (optical z) mapped to TRF then WORLD
-        f_cam = np.array([0.0, 0.0, 1.0], dtype=np.float32)
+        f_cam = np.array([0.0, 0.0, 1.0], dtype=np.float32)  # optical forward
         f_trf = self.R_trf_cam @ f_cam
         f_world = Rw @ f_trf
 
@@ -236,7 +262,7 @@ class PipelineRunner:
                     view_dir.mkdir(parents=True, exist_ok=True)
 
                     pose_world_trf = self._pose_for_view_world_trf(vid)
-                    Rw, tw = self._pose_to_Rt(pose_world_trf)
+                    _, tw = self._pose_to_Rt(pose_world_trf)
                     print(f"[view {vid}] t_world_trf = {tw.tolist()}")
 
                     # ---- segmentation ----
@@ -314,7 +340,7 @@ class PipelineRunner:
                             features=fr.features,
                             pose_world_trf=pose_world_trf,
                             R_trf_cam=self.R_trf_cam,
-                            t_trf_cam_m=self.t_trf_cam_m,
+                            t_trf_cam_m=self.t_trf_cam_m,  # stays zero; clusterer may ignore it
                         )
 
             if self.cfg.outputs.cluster.enabled:
@@ -334,9 +360,9 @@ class PipelineRunner:
         Save raw cloud per view to plant_XXX/raw_clouds/
 
         export_frame:
-          - "camera" / "cam":   saves cloud_{vid}_cam.ply
-          - "trf":              saves cloud_{vid}_trf.ply
-          - "world":            saves cloud_{vid}_world.ply
+          - "camera" / "cam":   saves cloud_{vid}_cam.ply   (optical)
+          - "trf":              saves cloud_{vid}_trf.ply   (after R_trf_cam)
+          - "world":            saves cloud_{vid}_world.ply (after pose)
           - "all":              saves all three
         """
         key = (pid, vid)
@@ -354,7 +380,7 @@ class PipelineRunner:
         pts_cam = np.asarray(points_cam_m, dtype=np.float32).reshape((-1, 3))
 
         export_frame = str(raw_cfg.export_frame).strip().lower()
-        if export_frame in ("cam",):
+        if export_frame == "cam":
             export_frame = "camera"
 
         if export_frame not in ("camera", "trf", "world", "all"):
@@ -367,7 +393,6 @@ class PipelineRunner:
             dot = self._forward_result_dot(pts_world, pose_world_trf)
             print(f"[plant {pid:03d} view {vid}] forward_dot={dot:.4f} (should be > 0)")
 
-        # write files
         if export_frame in ("camera", "all"):
             write_ply_xyz(out_dir / f"cloud_{vid}_cam.ply", pts_cam, ascii_mode=bool(raw_cfg.ply_ascii))
 
@@ -387,13 +412,11 @@ class PipelineRunner:
           plant_id;view_id;frame;file
         """
         csv_path = out_dir / "raw_summary.csv"
-
         files = sorted(out_dir.glob("cloud_*_*.ply"))
         out_rows: List[List[object]] = []
 
         for f in files:
-            # expected: cloud_{vid}_{frame}.ply
-            stem = f.stem
+            stem = f.stem  # cloud_{vid}_{frame}
             parts = stem.split("_")
             if len(parts) < 3:
                 continue

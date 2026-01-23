@@ -1,5 +1,5 @@
 dataset:
-  root: ../data/plant_views
+  root: ../data/plant_views_new
   plant_glob: "plant_*"
   rgb_pattern: "color_{view}.png"
   depth_pattern: "depth_{view}.png"

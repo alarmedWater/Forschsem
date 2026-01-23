@@ -4,7 +4,7 @@ from __future__ import annotations
 import csv
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, List, Set, Tuple, Optional
 
 import numpy as np
 
@@ -28,7 +28,7 @@ class StrawberryClusterer:
 
     Points/features arrive in CAMERA (RealSense optical) frame.
     We apply:
-      TRF <- CAM  (fixed correction from YAML)
+      TRF <- CAM  (axes correction; translation typically 0 in your setup)
       WORLD <- TRF (pose from robot GetPose, per view)
     """
 
@@ -59,6 +59,7 @@ class StrawberryClusterer:
             return pts
         R = np.asarray(R_trf_cam, dtype=np.float32).reshape((3, 3))
         t = np.asarray(t_trf_cam_m, dtype=np.float32).reshape((3,))
+        # In deinem Setup ist t == 0 (weil Offset schon in GetPose drin ist).
         return (R @ pts.T).T + t
 
     def add_view(
@@ -67,12 +68,24 @@ class StrawberryClusterer:
         view_id: int,
         clouds_by_instance: Dict[int, PointCloud],
         features: Dict[int, InstanceFeatures],
-        pose_world_trf: Pose,          # WORLD <- TRF from robot GetPose
-        R_trf_cam: np.ndarray,         # TRF <- CAM correction
-        t_trf_cam_m: np.ndarray,       # TRF <- CAM translation (meters)
+        # akzeptiere beide Keyword-Namen:
+        pose_world_trf: Optional[Pose] = None,   # WORLD <- TRF from robot GetPose
+        pose_world: Optional[Pose] = None,       # backward-compat alias
+        R_trf_cam: np.ndarray | None = None,     # TRF <- CAM axes correction
+        t_trf_cam_m: np.ndarray | None = None,   # TRF <- CAM translation (meters) (should be 0)
+        **kwargs: Any,                           # ignore unknown legacy args safely
     ) -> None:
         if not self.cfg.enabled:
             return
+
+        # resolve pose alias
+        if pose_world_trf is None:
+            pose_world_trf = pose_world
+        if pose_world_trf is None:
+            raise ValueError("add_view: pose_world_trf (or pose_world) must be provided.")
+
+        if R_trf_cam is None or t_trf_cam_m is None:
+            raise ValueError("add_view: R_trf_cam and t_trf_cam_m must be provided.")
 
         Rw, tw = self._pose_to_Rt_world_trf(pose_world_trf)
 
@@ -86,7 +99,6 @@ class StrawberryClusterer:
             centroid_trf = self._cam_to_trf(centroid_cam, R_trf_cam, t_trf_cam_m)[0]
             centroid_world = (Rw @ centroid_trf) + tw
 
-            # IMPORTANT: clustering uses WORLD centroids
             cid, created = self._assign_to_cluster(centroid_world, int(feat.num_points), int(view_id))
 
             # -------- points: CAM -> TRF -> WORLD --------
