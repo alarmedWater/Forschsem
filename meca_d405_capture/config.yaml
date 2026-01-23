@@ -1,77 +1,47 @@
 # ============================================================
 # config.yaml  (Meca500 + RealSense D405 Capture / Calibration)
 # ============================================================
-# Ziel:
-# - Robot-Setup (IP, TRF/WRF, Posen)
-# - Kamera-Setup (Streammode)
-# - Kamera-Messwerte aus Self-Check dauerhaft speichern:
-#   depth_scale, Intrinsics, Distortion, Extrinsics depth->color
-# - Pivot-Offset Schätzung: Kamera-Translation in TRF bestimmen
-#
-# WICHTIG:
-# - Für Pivot benutzt du KARTESISCHE Posen (Flansch): x,y,z,rx,ry,rz
-#   -> in positions_file (z.B. meca_d405_capture/positions.yaml)
-# - robot.positions (Joint) kann optional bleiben (für Dataset-Views),
-#   Pivot nutzt positions_file + pivot.sequence.
-# ============================================================
 
 robot:
   ip: "192.168.0.100"
 
-  # Bewegungsparameter (nur relevant wenn ihr Auto-Fahren nutzt)
   joint_vel: 20
   joint_acc: 20
-
-  # Wartezeit nach dem Erreichen einer Pose (Vibrationen/Auto-Exposure)
   settle_s: 0.5
 
-  # WRF=BRF für klare Interpretation (empfohlen)
+  # WRF=BRF (wie dein alter Code)
   wrf_equals_brf: true
 
-  # TRF wie beim Capturen gesetzt.
-  # ⚠️ PLACEHOLDER aus erster Version: nur korrekt, wenn ihr TRF genau so setzt.
-  # Wenn ihr TRF anders setzt: echte Werte hier eintragen.
-  trf_set_mm_deg: [0.0, 0.0, 36.0, 0.0, 0.0, 45.0]
+  # TRF wie im Setup (ALT: z=36mm, NEU: z=32.3mm)
+  trf_set_mm_deg: [0.0, 0.0, 32.3, 0.0, 0.0, 45.0]
 
-  # Euler-Konvention für pose_mm_deg_to_T()
-  # Mecademic "mobile XYZ" ist typischerweise R = Rz @ Ry @ Rx
+  # Euler-Konvention (für Pivot-Solve / pose_mm_deg_to_T)
   euler_convention: "RzRyRx_deg"
 
-  # CAM(optical) -> TRF Achsenkorrektur (Row-major 3x3).
-  # ✅ aus deinem Projektlog / Annahme.
-  # MUSS orthonormal sein (det ~ +1).
+  # CAM(optical) -> TRF Achsenkorrektur
   cam_axes_correction_R_trf_cam_row_major_3x3: [
     0, 0, 1,
     -1, 0, 0,
     0, -1, 0
   ]
 
-  # Kamera-Translation in TRF (Offset) = t_trf_cam
-  # ❗ UNBEKANNT am Anfang -> wird durch Pivot-Solve geschätzt.
-  # Nach solve übernehmen!
-  camera_in_trf_translation_mm: [0.0, 0.0, 0.0]  # PLACEHOLDER bis Pivot-Solve
+  # Ergebnis aus Pivot-Solve (später hier eintragen!)
+  camera_in_trf_translation_mm: [0.0, 0.0, 0.0]
 
   # ==========================================================
-  # Pivot / Offset Schätzung: Posenquelle
+  # Pivot / Offset Schätzung: KARTESISCHE Posenquelle
   # ==========================================================
-  # ✅ Deine 16 (oder mehr) KARTESISCHE Posen kommen hier rein:
-  # Format in positions.yaml:
-  #   poses_mm_deg:
-  #     p01: [x,y,z,rx,ry,rz]
-  #   sequence: [p01, p02, ...]
-  positions_file: "C:/Users/Marlon/Documents/GitHub/Forschsem/meca_d405_capture/position.yaml"
+  # WICHTIG:
+  # - Datei heißt am besten "positions.yaml"
+  # - Pfad am besten relativ zum config.yaml Ordner
+  positions_file: "positions.yaml"
 
-  # Wie soll das Pivot-Capture laufen?
-  # - manual: du fährst Pose an, Script misst nach ENTER
-  # - auto_pose: Script fährt automatisch (nur wenn in robot_meca.py implementiert)
+  # auto_pose_confirm: Script fährt Pose an, du bestätigst jeweils mit ENTER
   pivot_motion_mode: "auto_pose_confirm"
-
-  # Optional: im manual mode trotzdem loggen, welchen Key du gerade messen sollst
   pivot_prompt_each_pose: true
 
-
   # ==========================================================
-  # OPTIONAL: Joint-Views fürs Dataset (kann bleiben, Pivot nutzt das NICHT)
+  # Joint-Views fürs Dataset (wie dein alter Code: l/m/r)
   # ==========================================================
   positions:
     l: [48, 14, 24, -108, 91, -81]
@@ -82,27 +52,19 @@ robot:
 
 
 camera:
-  # Stream mode (wie im Self-Check)
   width: 640
   height: 480
   fps: 30
 
-  # Dokumentation: aus Self-Check / Meta
   device_info:
     name: "Intel RealSense D405"
     serial_number: "218622270259"
     firmware_version: "5.16.0.1"
     product_line: "D400"
 
-  # ==========================================================
-  # Kamera-Kalibrierwerte (aus Self-Check / Meta)
-  # ==========================================================
   calib:
-    # ✅ GEMESSEN (Self-Check)
-    # depth_m = depth_u16 * depth_scale_m_per_unit
     depth_scale_m_per_unit: 9.999999747378752e-05
 
-    # ✅ GEMESSEN: COLOR intrinsics (aligned depth nutzt COLOR intrinsics)
     intrinsics_color:
       width: 640
       height: 480
@@ -119,7 +81,6 @@ camera:
         -0.01893887110054493
       ]
 
-    # ✅ GEMESSEN: DEPTH intrinsics
     intrinsics_depth:
       width: 640
       height: 480
@@ -130,7 +91,6 @@ camera:
       distortion_model: "brown_conrady"
       distortion_coeffs: [0.0, 0.0, 0.0, 0.0, 0.0]
 
-    # ✅ GEMESSEN: Extrinsics depth -> color (Meta)
     extrinsics_depth_to_color:
       rotation_row_major_3x3: [
         0.9999829530715942,  0.0009599336190149188, -0.005763840861618519,
@@ -143,20 +103,17 @@ camera:
         0.00013046100502833724
       ]
 
-    # ✅ Doku: aligned depth -> color => Backprojection mit COLOR intrinsics
     aligned_depth_uses_color_intrinsics: true
 
 
 depth:
-  # Fallback/Logik fürs Code-Handling
-  # ✅ GEMESSEN: entspricht camera.calib.depth_scale_m_per_unit
   scale_m_per_unit: 9.999999747378752e-05
   treat_65535_as_invalid: true
 
 
 dataset:
   out_root: "runs"
-  run_name: ""          # leer => auto timestamp
+  run_name: ""
   plant_prefix: "plant_"
   start_plant_id: 0
   num_plants: 1
@@ -175,8 +132,6 @@ outputs:
 
 
 ellipse:
-  # Pivot/Offset-Schätzung: Kontur-/Edge Parameter
-  # Startwerte (heuristisch). Falls Ellipse nicht gefunden wird: anpassen.
   min_contour_area: 500.0
   canny1: 60
   canny2: 160

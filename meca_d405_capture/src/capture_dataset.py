@@ -2,275 +2,509 @@
 # -*- coding: utf-8 -*-
 
 """
-capture_dataset.py
+capture_dataset_legacy_positions.py
 
-Nimmt ein Dataset mit mehreren Plants und mehreren Views auf.
-Speichert:
-- config_used.yaml
-- camera_meta.yaml
-- run_meta.yaml (Robot snapshot inkl. WRF/TRF + pose_source)
-- poses.csv (Pose + pose_source + optional joints)
-- pro plant:
-    color_{view}.png
-    depth_{view}.png          (aligned depth-to-color, uint16)
-    optional depth_raw_{view}.png
-    optional cloud_aligned_{view}.ply
-    optional cloud_raw_{view}.ply
+Verbesserte, aber "legacy-kompatible" Version deines alten Skripts.
+
+Was es macht:
+- Meca500 fährt die Joint-Posen: m -> l (idx0) -> m (idx1) -> r (idx2) -> m
+- Pro Position nimmt RealSense D405:
+    - color_aligned (BGR)
+    - depth_aligned_u16 (Depth auf Color aligned)
+    - depth_raw_u16 (roher Depth)
+    - optional: cloud_raw_{idx}.ply (raw depth + raw color)
+    - optional: cloud_aligned_{idx}.ply (aligned depth + aligned color)
+- Speichert alles in: Datensatz/Aufnahme###/
+- Schreibt Koordinaten.txt mit GetPose() (TCP Pose im aktuellen WRF/TRF)
+- Wartet pro "Erdbeere" auf ENTER, damit du die nächste Probe einhängen kannst.
 
 Start:
-  python src/capture_dataset.py --config config.yaml
+  python src/capture_dataset_legacy_positions.py
+oder mit Parametern:
+  python src/capture_dataset_legacy_positions.py --dataset_dir Datensatz --ip 192.168.0.100
+
+Hinweis:
+- Der Code nutzt exakt deine alten Joint-Positionen (POSITIONS l/m/r).
+- TRF/WRF wird wie früher gesetzt (WRF=BRF, TRF fix).
 """
 
 from __future__ import annotations
 
 import argparse
-import csv
+import os
+import re
 import time
 from dataclasses import dataclass
 from pathlib import Path
-import sys
-from typing import Dict, List, Tuple, Any
+from typing import Optional, Tuple
 
-import yaml
 import cv2
+import numpy as np
+import pyrealsense2 as rs
 
-_THIS_DIR = Path(__file__).resolve().parent
-if str(_THIS_DIR) not in sys.path:
-    sys.path.insert(0, str(_THIS_DIR))
-
-from robot_meca import Meca500Controller  # noqa: E402
-from camera_d405 import RealsenseD405     # noqa: E402
+import mecademicpy.robot as mdr
+from mecademicpy.robot_classes import CommunicationError
 
 
+# -------------------------
+# Defaults (wie dein alter Code)
+# -------------------------
+DEFAULT_DATASET_DIR = "Datensatz"
+
+DEFAULT_ROBOT_IP = "192.168.0.100"
+DEFAULT_ROBOT_VEL = 20
+DEFAULT_ROBOT_ACC = 20
+
+# Gelenkpositionen (J1..J6) für links/mitte/rechts (EXAKT aus deinem alten Code)
+POSITIONS = {
+    "l": (48, 14, 24, -108, 91, -81),
+    "m": (0, -35, 35, 0, 0, 135),
+    "r": (-41, 14, 24, 106, 89, 6),
+}
+
+# RealSense Defaults
+DEFAULT_RS_WIDTH = 640
+DEFAULT_RS_HEIGHT = 480
+DEFAULT_RS_FPS = 30
+
+# Wartezeit nach Motion (Robot + Auto-Exposure)
+DEFAULT_SETTLE_SECONDS = 0.5
+
+
+# -------------------------
+# RealSense Kamera (nahe an deinem alten Code, aber robuster)
+# -------------------------
 @dataclass(frozen=True)
-class CaptureCfg:
-    out_root: Path
-    run_name: str
-    plant_prefix: str
-    start_plant_id: int
-    num_plants: int
-    view_ids: List[int]
-    view_to_pose_key: Dict[int, str]
-    save_depth_raw: bool
-    save_ply_aligned: bool
-    save_ply_raw: bool
+class RsMeta:
+    device_name: str
+    serial: str
+    firmware: str
+    product_line: str
+    depth_scale_m_per_unit: Optional[float]
 
 
-POSES_HEADER = [
-    "plant_id", "view_id", "pose_key",
-    "pose_source",
-    "x_mm", "y_mm", "z_mm", "rx_deg", "ry_deg", "rz_deg",
-    "j1_deg", "j2_deg", "j3_deg", "j4_deg", "j5_deg", "j6_deg",
-    "timestamp",
-]
+class RealsenseCamera:
+    def __init__(self, width: int, height: int, fps: int):
+        self.width = int(width)
+        self.height = int(height)
+        self.fps = int(fps)
+
+        self.pipeline = rs.pipeline()
+        self.config = rs.config()
+        self.config.enable_stream(rs.stream.depth, self.width, self.height, rs.format.z16, self.fps)
+        self.config.enable_stream(rs.stream.color, self.width, self.height, rs.format.bgr8, self.fps)
+
+        self.profile = self.pipeline.start(self.config)
+        self.align = rs.align(rs.stream.color)
+        self.pc = rs.pointcloud()
+
+        # Meta
+        dev = self.profile.get_device()
+
+        def safe_info(key) -> str:
+            try:
+                return dev.get_info(key)
+            except Exception:
+                return "unknown"
+
+        depth_scale = None
+        try:
+            depth_sensor = dev.first_depth_sensor()
+            depth_scale = float(depth_sensor.get_depth_scale())
+        except Exception:
+            depth_scale = None
+
+        self.meta = RsMeta(
+            device_name=safe_info(rs.camera_info.name),
+            serial=safe_info(rs.camera_info.serial_number),
+            firmware=safe_info(rs.camera_info.firmware_version),
+            product_line=safe_info(rs.camera_info.product_line),
+            depth_scale_m_per_unit=depth_scale,
+        )
+
+    def _distortion_to_str(self, model) -> str:
+        mapping = {
+            rs.distortion.none: "none",
+            rs.distortion.modified_brown_conrady: "modified_brown_conrady",
+            rs.distortion.inverse_brown_conrady: "inverse_brown_conrady",
+            rs.distortion.brown_conrady: "brown_conrady",
+            rs.distortion.ftheta: "ftheta",
+            rs.distortion.kannala_brandt4: "kannala_brandt4",
+        }
+        return mapping.get(model, str(model))
+
+    def _get_extrinsics_depth_to_color(self) -> Tuple[list, list]:
+        depth_vsp = self.profile.get_stream(rs.stream.depth).as_video_stream_profile()
+        color_vsp = self.profile.get_stream(rs.stream.color).as_video_stream_profile()
+        ex = depth_vsp.get_extrinsics_to(color_vsp)
+        R = list(ex.rotation)      # 9 Werte, row-major
+        t = list(ex.translation)   # 3 Werte, Meter
+        return R, t
+
+    def save_camera_calib_yaml_txt(self, txt_path: Path) -> None:
+        """Speichert Kamera-Infos, Intrinsics, Extrinsics depth->color in eine Textdatei."""
+        from datetime import datetime, timezone
+
+        ts_utc = datetime.now(timezone.utc).isoformat()
+
+        depth_vsp = self.profile.get_stream(rs.stream.depth).as_video_stream_profile()
+        color_vsp = self.profile.get_stream(rs.stream.color).as_video_stream_profile()
+        depth_intr = depth_vsp.intrinsics
+        color_intr = color_vsp.intrinsics
+        R, t = self._get_extrinsics_depth_to_color()
+
+        def intr_block(intr, label: str) -> str:
+            coeff_lines = "".join(f"      - {c}\n" for c in intr.coeffs)  # 6 spaces before '-'
+            return (
+                f"  {label}:\n"
+                f"    width: {intr.width}\n"
+                f"    height: {intr.height}\n"
+                f"    fx: {intr.fx}\n"
+                f"    fy: {intr.fy}\n"
+                f"    cx: {intr.ppx}\n"
+                f"    cy: {intr.ppy}\n"
+                f"    distortion_model: {self._distortion_to_str(intr.model)}\n"
+                f"    distortion_coeffs:\n"
+                f"{coeff_lines}"
+            )
+
+        txt_path.parent.mkdir(parents=True, exist_ok=True)
+        with txt_path.open("w", encoding="utf-8") as f:
+            f.write(f"timestamp_utc: '{ts_utc}'\n")
+            f.write("device:\n")
+            f.write(f"  name: {self.meta.device_name}\n")
+            f.write(f"  serial_number: '{self.meta.serial}'\n")
+            f.write(f"  firmware_version: {self.meta.firmware}\n")
+            f.write(f"  product_line: {self.meta.product_line}\n")
+
+            f.write("stream_mode:\n")
+            f.write(f"  width: {self.width}\n")
+            f.write(f"  height: {self.height}\n")
+            f.write(f"  fps: {self.fps}\n")
+
+            if self.meta.depth_scale_m_per_unit is not None:
+                f.write(f"depth_scale_m_per_unit: {self.meta.depth_scale_m_per_unit}\n")
+            else:
+                f.write("depth_scale_m_per_unit: unknown\n")
+
+            f.write("intrinsics:\n")
+            f.write(intr_block(depth_intr, "depth"))
+            f.write(intr_block(color_intr, "color"))
+
+            f.write("extrinsics:\n")
+            f.write("  depth_to_color:\n")
+            f.write("    rotation_row_major_3x3:\n")
+            for v in R:
+                f.write(f"      - {v}\n")
+            f.write("    translation_m:\n")
+            for v in t:
+                f.write(f"      - {v}\n")
+
+            f.write("notes:\n")
+            f.write("  - Intrinsics are constant for a given stream configuration.\n")
+            f.write("  - If you resize/crop images later, update fx/fy/cx/cy accordingly.\n")
+            f.write("  - Aligned depth-to-color images typically use the color intrinsics.\n")
+
+    def warmup(self, n: int = 15) -> None:
+        """Ein paar Frames verwerfen, damit Auto-Exposure/Auto-WhiteBalance stabil wird."""
+        for _ in range(int(n)):
+            _ = self.pipeline.wait_for_frames()
+
+    def get_frames(self):
+        """
+        Liefert:
+        - color_image (aligned): np.uint8 (H,W,3) BGR
+        - depth_aligned_image: np.uint16 (H,W)
+        - depth_raw_image: np.uint16 (H,W)
+        - depth_frame_raw: rs.depth_frame
+        - color_frame_raw: rs.video_frame
+        - depth_frame_aligned: rs.depth_frame
+        - color_frame_aligned: rs.video_frame
+        """
+        frames = self.pipeline.wait_for_frames()
+
+        depth_frame_raw = frames.get_depth_frame()
+        color_frame_raw = frames.get_color_frame()
+
+        aligned_frames = self.align.process(frames)
+        depth_frame_aligned = aligned_frames.get_depth_frame()
+        color_frame_aligned = aligned_frames.get_color_frame()
+
+        if (not depth_frame_raw) or (not color_frame_raw) or (not depth_frame_aligned) or (not color_frame_aligned):
+            return None, None, None, None, None, None, None
+
+        depth_raw_image = np.asanyarray(depth_frame_raw.get_data())
+        depth_aligned_image = np.asanyarray(depth_frame_aligned.get_data())
+        color_image = np.asanyarray(color_frame_aligned.get_data())
+
+        return (
+            color_image,
+            depth_aligned_image,
+            depth_raw_image,
+            depth_frame_raw,
+            color_frame_raw,
+            depth_frame_aligned,
+            color_frame_aligned,
+        )
+
+    def save_ply(self, ply_path: Path, depth_frame, color_frame=None) -> None:
+        """Speichert eine Pointcloud als .ply (texturiert, wenn color_frame übergeben wird)."""
+        ply_path.parent.mkdir(parents=True, exist_ok=True)
+        if color_frame is not None:
+            self.pc.map_to(color_frame)
+        points = self.pc.calculate(depth_frame)
+        if color_frame is not None:
+            points.export_to_ply(str(ply_path), color_frame)
+        else:
+            points.export_to_ply(str(ply_path), depth_frame)
+
+    def close(self) -> None:
+        try:
+            self.pipeline.stop()
+        except Exception:
+            pass
 
 
-def load_cfg(cfg_path: Path) -> Tuple[CaptureCfg, dict]:
-    raw = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
+# -------------------------
+# Robot Helpers (wie früher, aber mit etwas mehr Robustheit)
+# -------------------------
+def ensure_robot_ready(robot: mdr.Robot) -> None:
+    """Roboter aktivieren & homen (inkl. ResetError/ClearMotion)."""
+    try:
+        robot.ResetError()
+    except Exception as exc:
+        print(f"[ROBOT] ResetError() failed: {exc!r}")
 
-    ds = raw.get("dataset", {}) or {}
-    out_root = Path(ds.get("out_root", "runs")).resolve()
-    run_name = str(ds.get("run_name", "")).strip()
-    if not run_name:
-        run_name = time.strftime("dataset_%Y%m%d_%H%M%S")
+    try:
+        robot.ClearMotion()
+    except Exception as exc:
+        print(f"[ROBOT] ClearMotion() failed: {exc!r}")
 
-    plant_prefix = str(ds.get("plant_prefix", "plant_"))
-    start_plant_id = int(ds.get("start_plant_id", 0))
-    num_plants = int(ds.get("num_plants", 1))
-    view_ids = [int(v) for v in ds.get("view_ids", [0, 1, 2])]
-
-    view_map_raw = ds.get("view_to_pose_key", {})
-    if not isinstance(view_map_raw, dict) or not view_map_raw:
-        raise ValueError("dataset.view_to_pose_key missing")
-    view_to_pose_key = {int(k): str(v) for k, v in view_map_raw.items()}
-
-    out = raw.get("outputs", {}) or {}
-    save_depth_raw = bool(out.get("save_depth_raw", True))
-    save_ply_aligned = bool(out.get("save_ply_aligned", True))
-    save_ply_raw = bool(out.get("save_ply_raw", False))
-
-    return (
-        CaptureCfg(
-            out_root=out_root,
-            run_name=run_name,
-            plant_prefix=plant_prefix,
-            start_plant_id=start_plant_id,
-            num_plants=num_plants,
-            view_ids=view_ids,
-            view_to_pose_key=view_to_pose_key,
-            save_depth_raw=save_depth_raw,
-            save_ply_aligned=save_ply_aligned,
-            save_ply_raw=save_ply_raw,
-        ),
-        raw,
-    )
+    robot.ActivateAndHome()
+    robot.WaitHomed()
 
 
-def ensure_dir(p: Path) -> None:
-    p.mkdir(parents=True, exist_ok=True)
+def set_wrf_to_brf(robot: mdr.Robot) -> None:
+    robot.SetWrf(0, 0, 0, 0, 0, 0)
 
 
-def plant_dir(run_dir: Path, prefix: str, plant_id: int) -> Path:
-    return run_dir / f"{prefix}{plant_id:03d}"
+def set_trf_fixed(robot: mdr.Robot, *, trf_x: float, trf_y: float, trf_z: float, trf_rx: float, trf_ry: float, trf_rz: float) -> None:
+    """
+    TRF setzen. (Genau wie dein alter Code: (0,0,36mm) und rz=45°)
+    Wichtig: Das ist "Tool Reference Frame", nicht dein Kamerapivot-offset.
+    """
+    robot.SetTrf(float(trf_x), float(trf_y), float(trf_z), float(trf_rx), float(trf_ry), float(trf_rz))
 
 
-def write_yaml(path: Path, data: Any) -> None:
-    path.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+def move_to(robot: mdr.Robot, key: str) -> None:
+    if key not in POSITIONS:
+        raise ValueError(f"Unbekannte Position '{key}'. Erlaubt: {list(POSITIONS.keys())}")
+    robot.MoveJoints(*POSITIONS[key])
+    robot.WaitIdle()
 
 
-def save_png_rgb(path: Path, bgr) -> None:
+def get_tcp_pose(robot: mdr.Robot) -> Tuple[float, float, float, float, float, float]:
+    """GetPose() -> TCP pose im aktuellen WRF/TRF."""
+    x, y, z, rx, ry, rz = robot.GetPose()
+    return float(x), float(y), float(z), float(rx), float(ry), float(rz)
+
+
+# -------------------------
+# Filesystem Helpers
+# -------------------------
+def create_next_recording_folder(base_dir: Path) -> Path:
+    """
+    Legt Datensatz/Aufnahme### an (nächster freier Index).
+    """
+    base_dir.mkdir(parents=True, exist_ok=True)
+    pat = re.compile(r"^Aufnahme(\d{3})$")
+
+    nums = []
+    for name in os.listdir(str(base_dir)):
+        full = base_dir / name
+        if not full.is_dir():
+            continue
+        m = pat.match(name)
+        if m:
+            nums.append(int(m.group(1)))
+
+    next_num = (max(nums) + 1) if nums else 1
+    out_dir = base_dir / f"Aufnahme{next_num:03d}"
+    out_dir.mkdir(parents=True, exist_ok=False)
+    return out_dir
+
+
+def save_png_rgb(path: Path, bgr: np.ndarray) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     ok = cv2.imwrite(str(path), bgr)
     if not ok:
         raise IOError(f"Failed to write {path}")
 
 
-def save_png_depth_u16(path: Path, depth_u16) -> None:
+def save_png_depth_u16(path: Path, depth_u16: np.ndarray) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     ok = cv2.imwrite(str(path), depth_u16)  # keeps 16-bit
     if not ok:
         raise IOError(f"Failed to write {path}")
 
 
+# -------------------------
+# Main
+# -------------------------
 def parse_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--config", required=True, type=str)
+    ap.add_argument("--dataset_dir", type=str, default=DEFAULT_DATASET_DIR)
+    ap.add_argument("--ip", type=str, default=DEFAULT_ROBOT_IP)
+    ap.add_argument("--vel", type=float, default=DEFAULT_ROBOT_VEL)
+    ap.add_argument("--acc", type=float, default=DEFAULT_ROBOT_ACC)
+
+    ap.add_argument("--width", type=int, default=DEFAULT_RS_WIDTH)
+    ap.add_argument("--height", type=int, default=DEFAULT_RS_HEIGHT)
+    ap.add_argument("--fps", type=int, default=DEFAULT_RS_FPS)
+
+    ap.add_argument("--settle", type=float, default=DEFAULT_SETTLE_SECONDS)
+
+    # TRF wie früher fest verdrahtet:
+    ap.add_argument("--trf_x", type=float, default=0.0)
+    ap.add_argument("--trf_y", type=float, default=0.0)
+    ap.add_argument("--trf_z", type=float, default=36.0)
+    ap.add_argument("--trf_rx", type=float, default=0.0)
+    ap.add_argument("--trf_ry", type=float, default=0.0)
+    ap.add_argument("--trf_rz", type=float, default=45.0)
+
+    ap.add_argument("--no_ply", action="store_true", help="wenn gesetzt: keine PLYs exportieren")
+    ap.add_argument("--no_raw_depth_png", action="store_true", help="wenn gesetzt: depth_raw*.png nicht speichern")
+
     return ap.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    cfg_path = Path(args.config).resolve()
-    cfg, raw = load_cfg(cfg_path)
 
-    run_dir = cfg.out_root / cfg.run_name
-    ensure_dir(run_dir)
+    dataset_dir = Path(args.dataset_dir)
+    run_dir = create_next_recording_folder(dataset_dir)
 
-    # Copy config for provenance
-    write_yaml(run_dir / "config_used.yaml", raw)
+    coord_path = run_dir / "Koordinaten.txt"
+    calib_path = run_dir / "CameraCalibration.txt"
 
-    # init robot + camera using same config
-    robot = Meca500Controller.from_config_yaml(cfg_path, verbose=True)
+    print(f"[DATA] Speichere in: {run_dir}")
 
-    cam_cfg = raw.get("camera", {}) or {}
-    cam = RealsenseD405(
-        width=int(cam_cfg.get("width", 640)),
-        height=int(cam_cfg.get("height", 480)),
-        fps=int(cam_cfg.get("fps", 30)),
-    )
+    cam = RealsenseCamera(width=args.width, height=args.height, fps=args.fps)
 
-    poses_csv = run_dir / "poses.csv"
-    poses_exists = poses_csv.exists()
-
-    print(f"[CAPTURE] run_dir={run_dir}")
+    robot = mdr.Robot()
 
     try:
-        # --- Robot init ---
-        robot.connect()
-        robot.activate_and_home()
-        robot.set_wrf_trf_from_config(cfg_path)
+        # ---- Robot connect/init ----
+        print("[ROBOT] Verbinde ...")
+        robot.Connect(args.ip)
+        print("[ROBOT] Verbunden.")
 
-        # pose stability quick check
-        stab = robot.pose_stability_check(samples=8, dt_s=0.05)
-        print(f"[CAPTURE] pose stability: {stab}")
+        ensure_robot_ready(robot)
+        robot.SetJointVel(float(args.vel))
+        robot.SetJointAcc(float(args.acc))
 
-        # --- Camera init ---
-        cam.start()
-        cam.save_meta_yaml(run_dir / "camera_meta.yaml")
-        print(f"[CAPTURE] wrote {run_dir / 'camera_meta.yaml'}")
+        print("[ROBOT] Setze WRF = BRF ...")
+        set_wrf_to_brf(robot)
 
-        # --- store robot snapshot meta once ---
-        run_meta = {
-            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-            "pose_stability": stab,
-            "robot_state": robot.get_state_dict(),
-        }
-        write_yaml(run_dir / "run_meta.yaml", run_meta)
-        print(f"[CAPTURE] wrote {run_dir / 'run_meta.yaml'}")
+        print("[ROBOT] Setze TRF (fixed) ...")
+        set_trf_fixed(
+            robot,
+            trf_x=args.trf_x, trf_y=args.trf_y, trf_z=args.trf_z,
+            trf_rx=args.trf_rx, trf_ry=args.trf_ry, trf_rz=args.trf_rz,
+        )
 
-        # --- capture loop ---
-        with poses_csv.open("a", newline="", encoding="utf-8") as f:
-            w = csv.DictWriter(f, fieldnames=POSES_HEADER, delimiter=";")
-            if not poses_exists:
-                w.writeheader()
+        # ---- Camera warmup + calib once ----
+        cam.warmup(15)
+        cam.save_camera_calib_yaml_txt(calib_path)
+        print(f"[CAM] Gespeichert: {calib_path.name}")
 
-            for plant_idx in range(cfg.num_plants):
-                pid = cfg.start_plant_id + plant_idx
-                pdir = plant_dir(run_dir, cfg.plant_prefix, pid)
-                ensure_dir(pdir)
+        # ---- One "Strawberry" capture per ENTER ----
+        input("\n[USER] Hänge Erdbeere ein / richte Szene aus. ENTER = 3 Views aufnehmen (Ctrl+C=Abbruch) ...")
 
-                print(f"\n[CAPTURE] Plant {pid:03d} -> {pdir}")
+        # Ablauf: Mitte -> Links (0) -> Mitte (1) -> Rechts (2) -> Mitte
+        print("[SEQ] Fahre zunächst nach Mitte ...")
+        move_to(robot, "m")
+        time.sleep(float(args.settle))
 
-                for view_id in cfg.view_ids:
-                    pose_key = cfg.view_to_pose_key.get(int(view_id))
-                    if pose_key is None:
-                        raise ValueError(f"Missing view_to_pose_key for view_id={view_id}")
+        sequence = [("l", 0), ("m", 1), ("r", 2)]
 
-                    print(f"[CAPTURE] view={view_id} move='{pose_key}'")
-                    robot.move_to(pose_key)
+        with coord_path.open("w", encoding="utf-8") as f:
+            f.write("# Koordinaten (GetPose) in mm/deg, WRF=BRF, TRF gesetzt\n")
+            f.write("# idx;pos;x_mm;y_mm;z_mm;rx_deg;ry_deg;rz_deg;timestamp\n")
 
-                    fr = cam.get_frames()
-                    color = fr["color_bgr"]
-                    depth_al = fr["depth_aligned_u16"]
-                    depth_raw = fr["depth_raw_u16"]
+            for pos_key, idx in sequence:
+                print(f"\n[SEQ] Fahre nach {pos_key} (idx={idx}) ...")
+                move_to(robot, pos_key)
+                time.sleep(float(args.settle))
 
-                    # save images
-                    save_png_rgb(pdir / f"color_{view_id}.png", color)
-                    save_png_depth_u16(pdir / f"depth_{view_id}.png", depth_al)
-                    if cfg.save_depth_raw:
-                        save_png_depth_u16(pdir / f"depth_raw_{view_id}.png", depth_raw)
+                fr = cam.get_frames()
+                if fr[0] is None:
+                    raise RuntimeError("Keine Frames von der RealSense erhalten (Frames=None).")
 
-                    # save PLY
-                    if cfg.save_ply_aligned:
-                        cam.export_ply_rs(
-                            pdir / f"cloud_aligned_{view_id}.ply",
-                            fr["rs_depth_aligned"],
-                            fr["rs_color_aligned"],
-                        )
-                    if cfg.save_ply_raw:
-                        cam.export_ply_rs(
-                            pdir / f"cloud_raw_{view_id}.ply",
-                            fr["rs_depth_raw"],
-                            fr["rs_color_raw"],
-                        )
+                color, depth_aligned, depth_raw, depth_frame_raw, color_frame_raw, depth_frame_aligned, color_frame_aligned = fr
 
-                    pose = robot.get_pose_mm_deg()
-                    joints = robot.get_joints_deg()
-                    ts = time.strftime("%Y-%m-%d %H:%M:%S")
+                # Save PNGs
+                save_png_rgb(run_dir / f"color{idx}.png", color)
+                save_png_depth_u16(run_dir / f"depth_aligned{idx}.png", depth_aligned)
+                if not args.no_raw_depth_png:
+                    save_png_depth_u16(run_dir / f"depth_raw{idx}.png", depth_raw)
 
-                    row = {
-                        "plant_id": pid,
-                        "view_id": int(view_id),
-                        "pose_key": str(pose_key),
-                        "pose_source": pose.source,
-                        "x_mm": pose.x_mm,
-                        "y_mm": pose.y_mm,
-                        "z_mm": pose.z_mm,
-                        "rx_deg": pose.rx_deg,
-                        "ry_deg": pose.ry_deg,
-                        "rz_deg": pose.rz_deg,
-                        "timestamp": ts,
-                    }
+                print(f"[CAM] PNGs gespeichert (idx={idx})")
 
-                    # joints optional
-                    if joints is None:
-                        row.update({f"j{i}_deg": "" for i in range(1, 7)})
-                    else:
-                        row.update({f"j{i}_deg": float(joints[i - 1]) for i in range(1, 7)})
+                # Save PLYs (optional)
+                if not args.no_ply:
+                    ply_raw_path = run_dir / f"cloud_raw{idx}.ply"
+                    cam.save_ply(ply_raw_path, depth_frame_raw, color_frame_raw)
+                    print(f"[CAM] Gespeichert: {ply_raw_path.name}")
 
-                    w.writerow(row)
-                    f.flush()
+                    ply_aligned_path = run_dir / f"cloud_aligned{idx}.ply"
+                    cam.save_ply(ply_aligned_path, depth_frame_aligned, color_frame_aligned)
+                    print(f"[CAM] Gespeichert: {ply_aligned_path.name}")
 
-                    print(f"[CAPTURE] saved view={view_id} + pose({pose.source})")
+                # Write TCP pose
+                x, y, z, rx, ry, rz = get_tcp_pose(robot)
+                ts = time.strftime("%Y-%m-%d %H:%M:%S")
+                f.write(f"{idx};{pos_key};{x:.3f};{y:.3f};{z:.3f};{rx:.3f};{ry:.3f};{rz:.3f};{ts}\n")
+                f.flush()
 
-        print(f"\n[CAPTURE] DONE: {run_dir}")
+                print(f"[ROBOT] Pose gespeichert: x={x:.3f} y={y:.3f} z={z:.3f}  rx={rx:.3f} ry={ry:.3f} rz={rz:.3f}")
+
+        print("\n[SEQ] Fahre zurück nach Mitte ...")
+        move_to(robot, "m")
+        robot.WaitIdle()
+
+        print(f"\n[DONE] Fertig. Output: {run_dir}")
+
+    except (TimeoutError, CommunicationError) as e:
+        print("[ROBOT] Kommunikationsfehler:", e)
+
+    except KeyboardInterrupt:
+        print("\n[ABORT] Abgebrochen per Ctrl+C.")
+
+    except Exception as e:
+        print("[ERROR]", repr(e))
 
     finally:
+        # Kamera stoppen
+        cam.close()
+
+        # Roboter sauber deaktivieren
         try:
-            cam.stop()
+            robot.WaitIdle()
         except Exception:
             pass
-        robot.disconnect()
+        try:
+            robot.DeactivateRobot()
+            if hasattr(robot, "WaitDeactivated"):
+                robot.WaitDeactivated()
+        except Exception:
+            pass
+        try:
+            robot.Disconnect()
+        except Exception:
+            pass
+
+        print("[CLEANUP] Roboter getrennt, Kamera gestoppt.")
 
 
 if __name__ == "__main__":
