@@ -59,12 +59,12 @@ robot:
   #   poses_mm_deg:
   #     p01: [x,y,z,rx,ry,rz]
   #   sequence: [p01, p02, ...]
-  positions_file: "positions.yaml"
+  positions_file: "C:/Users/Marlon/Documents/GitHub/Forschsem/meca_d405_capture/position.yaml"
 
   # Wie soll das Pivot-Capture laufen?
   # - manual: du fährst Pose an, Script misst nach ENTER
   # - auto_pose: Script fährt automatisch (nur wenn in robot_meca.py implementiert)
-  pivot_motion_mode: "manual"
+  pivot_motion_mode: "auto_pose_confirm"
 
   # Optional: im manual mode trotzdem loggen, welchen Key du gerade messen sollst
   pivot_prompt_each_pose: true
