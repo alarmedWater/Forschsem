@@ -278,7 +278,7 @@ def set_trf_from_tcp(robot) -> None:
     """
     trf_x = 0
     trf_y = 0
-    trf_z = 36
+    trf_z = 32.3
     trf_rx = 0
     trf_ry = 0
     trf_rz = 45
