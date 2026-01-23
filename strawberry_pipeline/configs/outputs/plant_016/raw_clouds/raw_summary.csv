@@ -1,7 +1,0 @@
-plant_id;view_id;frame;file
-16;1;cam;cloud_1_cam.ply
-16;1;trf;cloud_1_trf.ply
-16;1;world;cloud_1_world.ply
-16;2;cam;cloud_2_cam.ply
-16;2;trf;cloud_2_trf.ply
-16;2;world;cloud_2_world.ply
