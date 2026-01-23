@@ -1,0 +1,83 @@
+
+(env) C:\Users\Marlon\Documents\GitHub\Forschsem\meca_d405_capture>python src/camera_d405.py --self-check --patch 20 --debug-out runs/selfcheck_cam.png
+=== RealSense Meta ===
+timestamp_utc: 2026-01-23T08:02:43.594682+00:00
+device: Intel RealSense D405  serial=218622270259 fw=5.16.0.1 line=D400
+stream: 640x480@30
+depth_scale_m_per_unit: 9.999999747378752e-05
+aligned_depth_uses_color_intrinsics: True
+--- intrinsics(color) ---
+  fx=392.277618 fy=391.363373 cx=323.552460 cy=242.033798 w=640 h=480
+  distortion=inverse_brown_conrady coeffs=[-0.05286535993218422, 0.05753187835216522, -0.0003681946254801005, 0.000499460962601006, -0.01893887110054493]
+--- intrinsics(depth) ---
+  fx=384.897705 fy=384.897705 cx=326.554962 cy=241.885437 w=640 h=480
+  distortion=brown_conrady coeffs=[0.0, 0.0, 0.0, 0.0, 0.0]
+--- extrinsics depth->color ---
+  R(row-major)=[0.9999829530715942, 0.0009599336190149188, -0.005763840861618519, -0.0009559188620187342, 0.9999992847442627, 0.0006992650451138616, 0.005764508154243231, -0.0006937433499842882, 0.9999831318855286]
+  t(m)=[9.210062125930563e-05, 7.057415700728598e-07, 0.00013046100502833724]
+======================
+
+========== D405 SELF CHECK ==========
+depth_scale_m_per_unit = 9.999999747378752e-05
+--- intrinsics (color) ---
+w=640 h=480 fx=392.277618 fy=391.363373 cx=323.552460 cy=242.033798
+distortion=inverse_brown_conrady coeffs=[-0.05286535993218422, 0.05753187835216522, -0.0003681946254801005, 0.000499460962601006, -0.01893887110054493]
+--- intrinsics (depth) ---
+w=640 h=480 fx=384.897705 fy=384.897705 cx=326.554962 cy=241.885437
+distortion=brown_conrady coeffs=[0.0, 0.0, 0.0, 0.0, 0.0]
+--- center depth (aligned depth) ---
+center_px=(u=324, v=242) patch=20x20 valid_n=400 z_center_m=0.612900
+--- global depth stats (aligned) ---
+depth_valid_ratio: 0.8260286458333334
+depth_min_m: 0.23999999393709004
+depth_p05_m: 0.26549999329290586
+depth_median_m: 0.5247999867424369
+depth_p95_m: 5.297499866173894
+depth_max_m: 6.543999834684655
+--- deprojection check ---
+{'xyz_numpy_m': [0.000699243137446669, -5.2930163090346366e-05, 0.6128999845168437], 'xyz_rs_m': [0.0006992419948801398, -5.292980495141819e-05, 0.6128999590873718], 'diff_mm': 2.5457646413676804e-05}
+=====================================
+
+[SELF_CHECK] wrote debug image: runs\selfcheck_cam.png
+                                                                   python src/camera_d405.py --self-check --patch 20 --debug-out runs/selfcheck_cam.pngers\Marlon\Documents\GitHub\Forschsem\meca_d405_capture>
+=== RealSense Meta ===
+timestamp_utc: 2026-01-23T08:05:39.770836+00:00
+device: Intel RealSense D405  serial=218622270259 fw=5.16.0.1 line=D400
+stream: 640x480@30
+depth_scale_m_per_unit: 9.999999747378752e-05
+aligned_depth_uses_color_intrinsics: True
+--- intrinsics(color) ---
+  fx=392.277618 fy=391.363373 cx=323.552460 cy=242.033798 w=640 h=480
+  distortion=inverse_brown_conrady coeffs=[-0.05286535993218422, 0.05753187835216522, -0.0003681946254801005, 0.000499460962601006, -0.01893887110054493]
+--- intrinsics(depth) ---
+  fx=384.897705 fy=384.897705 cx=326.554962 cy=241.885437 w=640 h=480
+  distortion=brown_conrady coeffs=[0.0, 0.0, 0.0, 0.0, 0.0]
+--- extrinsics depth->color ---
+  R(row-major)=[0.9999829530715942, 0.0009599336190149188, -0.005763840861618519, -0.0009559188620187342, 0.9999992847442627, 0.0006992650451138616, 0.005764508154243231, -0.0006937433499842882, 0.9999831318855286]
+  t(m)=[9.210062125930563e-05, 7.057415700728598e-07, 0.00013046100502833724]
+======================
+
+========== D405 SELF CHECK ==========
+depth_scale_m_per_unit = 9.999999747378752e-05
+--- intrinsics (color) ---
+w=640 h=480 fx=392.277618 fy=391.363373 cx=323.552460 cy=242.033798
+distortion=inverse_brown_conrady coeffs=[-0.05286535993218422, 0.05753187835216522, -0.0003681946254801005, 0.000499460962601006, -0.01893887110054493]
+--- intrinsics (depth) ---
+w=640 h=480 fx=384.897705 fy=384.897705 cx=326.554962 cy=241.885437
+distortion=brown_conrady coeffs=[0.0, 0.0, 0.0, 0.0, 0.0]
+--- center depth (aligned depth) ---
+center_px=(u=324, v=242) patch=20x20 valid_n=400 z_center_m=0.269000
+--- global depth stats (aligned) ---
+depth_valid_ratio: 0.8572786458333334
+depth_min_m: 0.2329999941139249
+depth_p05_m: 0.26389999333332526
+depth_median_m: 0.6887999825994484
+depth_p95_m: 5.855199852085207
+depth_max_m: 6.543999834684655
+--- deprojection check ---
+{'xyz_numpy_m': [0.000306895748039083, -2.3230892268401325e-05, 0.2689999932044884], 'xyz_rs_m': [0.0003068952646572143, -2.3230735678225756e-05, 0.26899999380111694], 'diff_mm': 7.836734716499695e-07}
+=====================================
+
+[SELF_CHECK] wrote debug image: runs\selfcheck_cam.png
+
+(env) C:\Users\Marlon\Documents\GitHub\Forschsem\meca_d405_capture>

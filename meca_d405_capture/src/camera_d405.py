@@ -309,6 +309,35 @@ class RealsenseD405:
     def get_aligned_rgb_depth(self, timeout_ms: int = 5000) -> Tuple[np.ndarray, np.ndarray]:
         fr = self.get_frames(timeout_ms=timeout_ms)
         return fr["color_bgr"], fr["depth_aligned_u16"]
+    
+    def deproject_rs_aligned(self, u: float, v: float, depth_u16: int) -> np.ndarray:
+        """
+        Deproject a pixel from *aligned depth to color* into 3D (meters),
+        using COLOR intrinsics (weil depth auf color aligned ist).
+        """
+        m = self.get_meta()
+        if m.depth_scale_m_per_unit is None:
+            raise RuntimeError("depth_scale_m_per_unit is None")
+
+        ic = m.intrinsics_color
+        intr = rs.intrinsics()
+        intr.width = int(ic.width)
+        intr.height = int(ic.height)
+        intr.ppx = float(ic.cx)
+        intr.ppy = float(ic.cy)
+        intr.fx = float(ic.fx)
+        intr.fy = float(ic.fy)
+
+        # Distortion model + coeffs (RealSense expects 5 coeffs for Brown/Inverse Brown)
+        intr.model = getattr(rs.distortion, ic.distortion_model, rs.distortion.none)
+        coeffs = list(ic.distortion_coeffs)[:5]
+        coeffs += [0.0] * (5 - len(coeffs))
+        intr.coeffs = coeffs
+
+        z_m = float(depth_u16) * float(m.depth_scale_m_per_unit)
+        X, Y, Z = rs.rs2_deproject_pixel_to_point(intr, [float(u), float(v)], z_m)
+        return np.array([X, Y, Z], dtype=np.float64)
+
 
     # ---------------- self-check ----------------
 
