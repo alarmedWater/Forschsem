@@ -1,7 +1,7 @@
 # strawberry_py/config.py
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Tuple, cast
 
@@ -12,201 +12,159 @@ from strawberry_py.st_types import CameraIntrinsics, DepthUnit, Pose
 
 
 # ============================================================
-# Typed config model
+# Typed config model (pragmatic: defaults for non-essential fields)
 # ============================================================
 
 @dataclass(frozen=True)
+class DatasetCfg:
+    root: Path
+    plant_glob: str
+    rgb_pattern: str
+    depth_pattern: str
+    expected_views_per_plant: int
+    view_ids: List[int]
+
+
+@dataclass(frozen=True)
 class DepthRangeFilterCfg:
-    enabled: bool = True
-    min_m: float = 0.05
-    max_m: float = 0.60
+    enabled: bool
+    min_m: float
+    max_m: float
 
 
 @dataclass(frozen=True)
 class DepthCfg:
-    unit: DepthUnit = DepthUnit.REALSENSE_UNITS
-    scale_m_per_unit: float = 9.999999747378752e-05
-    treat_65535_as_invalid: bool = True
-    range_filter: DepthRangeFilterCfg = field(default_factory=DepthRangeFilterCfg)
+    unit: DepthUnit
+    scale_m_per_unit: float
+    treat_65535_as_invalid: bool
+    range_filter: DepthRangeFilterCfg
+
+
+@dataclass(frozen=True)
+class MaskPostprocessCfg:
+    enabled: bool
+    keep_largest_cc: bool
+    morph_open: bool
+    morph_close: bool
+    kernel_size: int
+    open_iters: int
+    close_iters: int
+    fill_holes: bool
 
 
 @dataclass(frozen=True)
 class SegmentationCfg:
     model_path: Path
-    device: str = "auto"
-    imgsz: int = 640
-    conf: float = 0.65
-    iou: float = 0.50
-    max_det: int = 100
-    min_mask_area_px: int = 1500
-    classes: List[int] = field(default_factory=list)
+    device: str
+    imgsz: int
+    conf: float
+    iou: float
+    max_det: int
+    min_mask_area_px: int
+    classes: List[int]
+
+    border_relax_factor: float
+    fallback_enabled: bool
+    fallback_conf: float
+    fallback_imgsz: Optional[int]
+    fallback_min_mask_area_px: Optional[int]
+
+    postprocess: MaskPostprocessCfg
 
 
 @dataclass(frozen=True)
 class FeaturesCfg:
-    downsample_step: int = 1
-    min_points: int = 50
-    log_features: bool = True
+    downsample_step: int
+    min_points: int
+    log_features: bool
 
 
 @dataclass(frozen=True)
 class SelectedCfg:
-    enabled: bool = True
-    instance_id: int = 1
-    min_pixels: int = 50
-    darken_factor: float = 0.3
-    draw_bbox: bool = True
+    enabled: bool
+    instance_id: int
+    min_pixels: int
+    darken_factor: float
+    draw_bbox: bool
 
 
 @dataclass(frozen=True)
 class RawCloudCfg:
-    enabled: bool = True
-    export_frame: str = "camera"  # "camera" | "trf" | "world" | "all"
-    save_once_per_view: bool = True
-    overwrite: bool = False
-    ply_ascii: bool = True
+    enabled: bool
+    export_frame: str  # camera|trf|world|all
+    save_once_per_view: bool
+    overwrite: bool
+    ply_ascii: bool
 
 
 @dataclass(frozen=True)
 class ClusterCfg:
-    enabled: bool = True
-    distance_threshold_m: float = 0.05
-    max_clusters: int = 50
-    max_points_per_cluster: int = 200_000
+    enabled: bool
+    distance_threshold_m: float
+    max_clusters: int
+    max_points_per_cluster: int
 
-    export_dirname: str = "clusters"
-    ply_ascii: bool = True
+    export_dirname: str
+    ply_ascii: bool
 
-    export_fused_plant_cloud: bool = True
-    fused_filename: str = "plant_fused.ply"
-    fused_voxel_size: float = 0.0
-    fused_max_points: int = 0  # 0 => unlimited
+    export_fused_plant_cloud: bool
+    fused_filename: str
+    fused_voxel_size: float
+    fused_max_points: int
 
-    # Optional debug knob (your YAML uses it)
-    flip_y: bool = False
+    flip_y: bool
 
 
 @dataclass(frozen=True)
 class OutputsCfg:
-    out_root: Path = Path("outputs")
-    save_overlay: bool = True
-    save_label_vis: bool = True
-    save_depth_mask_preview: bool = True
-
-    raw_cloud: RawCloudCfg = field(default_factory=RawCloudCfg)
-    cluster: ClusterCfg = field(default_factory=ClusterCfg)
-
-
-@dataclass(frozen=True)
-class DatasetCfg:
-    root: Path
-    plant_glob: str = "plant_*"
-    rgb_pattern: str = "color_{view}.png"
-    depth_pattern: str = "depth_{view}.png"
-    expected_views_per_plant: int = 3
-    view_ids: List[int] = field(default_factory=lambda: [0, 1, 2])
+    out_root: Path
+    save_overlay: bool
+    save_label_vis: bool
+    save_depth_mask_preview: bool
+    raw_cloud: RawCloudCfg
+    cluster: ClusterCfg
 
 
 @dataclass(frozen=True)
 class PosesCfg:
-    pose_file: Path = Path("")
-    default_pose: Pose = Pose((0.0, 0.0, 0.0), (0.0, 0.0, 0.0, 1.0))
+    # pose_file is optional now ("" or null -> None)
+    pose_file: Optional[Path]
+    default_pose: Pose
 
-
-# ---- Camera meta (optional, informational) ----
-
-@dataclass(frozen=True)
-class CameraDeviceCfg:
-    name: str = ""
-    serial_number: str = ""
-    firmware_version: str = ""
-    product_line: str = ""
-
-
-@dataclass(frozen=True)
-class StreamModeCfg:
-    width: int = 640
-    height: int = 480
-    fps: int = 30
-
-
-@dataclass(frozen=True)
-class IntrinsicsCfg:
-    width: int
-    height: int
-    fx: float
-    fy: float
-    cx: float
-    cy: float
-    distortion_model: str = ""
-    distortion_coeffs: List[float] = field(default_factory=list)
-
-
-@dataclass(frozen=True)
-class DepthToColorExtrinsicsCfg:
-    rotation_row_major_3x3: Tuple[float, ...] = (
-        1.0, 0.0, 0.0,
-        0.0, 1.0, 0.0,
-        0.0, 0.0, 1.0
-    )
-    translation_m: Tuple[float, float, float] = (0.0, 0.0, 0.0)
-
-
-@dataclass(frozen=True)
-class CameraMetaCfg:
-    timestamp_utc: str = ""
-    device: CameraDeviceCfg = field(default_factory=CameraDeviceCfg)
-    stream_mode: StreamModeCfg = field(default_factory=StreamModeCfg)
-    intrinsics_color: Optional[IntrinsicsCfg] = None
-    intrinsics_depth: Optional[IntrinsicsCfg] = None
-    extrinsics_depth_to_color: Optional[DepthToColorExtrinsicsCfg] = None
-
-
-# ---- Robot meta (Meca500 poses) ----
 
 @dataclass(frozen=True)
 class RobotViewPoseCfg:
     pose_wrf_mm_deg: Tuple[float, float, float, float, float, float]
-    key: str = ""
-    pose_world: Pose = Pose((0.0, 0.0, 0.0), (0.0, 0.0, 0.0, 1.0))  # WORLD <- TRF (GetPose)
+    key: str
+    pose_world: Pose  # WORLD <- TRF (aus GetPose / pose_wrf_mm_deg)
 
 
 @dataclass(frozen=True)
 class RobotCfg:
-    model: str = "Meca500"
-    ip: str = ""
-    wrf_equals_brf: bool = True
+    # minimal, but keeps optional metadata fields without forcing non-empty strings
+    model: str
+    ip: str
+    wrf_equals_brf: bool
 
-    # purely informational: what you set during capture (TRF pose wrt FRF)
-    trf_set_during_capture_mm_deg: Tuple[float, float, float, float, float, float] = (
-        0.0, 0.0, 0.0, 0.0, 0.0, 0.0
-    )
+    # optional: for documentation only; not required by the pipeline
+    trf_set_during_capture_mm_deg: Tuple[float, float, float, float, float, float]
 
-    # IMPORTANT: interpret pose_wrf_mm_deg from GetPose
-    # Mecademic manual: mobile XYZ (RxRyRz) <=> R = Rz @ Ry @ Rx for WORLD<-TRF
-    euler_convention: str = "RzRyRx_deg"
+    euler_convention: str
+    pose_negate_angles: bool
+    pose_negate_translation: bool
 
-    views: Dict[int, RobotViewPoseCfg] = field(default_factory=dict)
+    cam_axes_correction_R_trf_cam_row_major_3x3: Tuple[float, ...]  # len=9
+    camera_in_trf_translation_mm: Tuple[float, float, float]        # len=3
 
-    # Fixed TRF <- CAM mapping used by pipeline
-    # If your TRF is already the camera (because you SetTRF to camera),
-    # then translation MUST be [0,0,0] to avoid double offset.
-    cam_axes_correction_R_trf_cam_row_major_3x3: Tuple[float, ...] = (
-        1.0, 0.0, 0.0,
-        0.0, 1.0, 0.0,
-        0.0, 0.0, 1.0
-    )
-    camera_in_trf_translation_mm: Tuple[float, float, float] = (0.0, 0.0, 0.0)
+    views: Dict[int, RobotViewPoseCfg]
 
 
 @dataclass(frozen=True)
 class AppCfg:
     dataset: DatasetCfg
     camera: CameraIntrinsics
-    camera_meta: CameraMetaCfg
     depth: DepthCfg
     robot: RobotCfg
-
     segmentation: SegmentationCfg
     features: FeaturesCfg
     selected: SelectedCfg
@@ -218,39 +176,183 @@ class AppCfg:
 # Helpers
 # ============================================================
 
-def _get(d: Mapping[str, Any], path: str, default: Any = None) -> Any:
-    cur: Any = d
-    for p in path.split("."):
-        if not isinstance(cur, Mapping) or p not in cur:
-            return default
-        cur = cur[p]
-    return cur
-
-
 def _as_path(p: str | Path, base_dir: Path) -> Path:
     pp = Path(p)
     return pp if pp.is_absolute() else (base_dir / pp).resolve()
 
 
+def _odd_kernel(k: int) -> int:
+    k = int(k)
+    if k < 1:
+        k = 1
+    if (k % 2) == 0:
+        k += 1
+    return k
+
+
+def _check_keys(d: Mapping[str, Any], allowed: set[str], where: str) -> None:
+    unknown = sorted(set(d.keys()) - allowed)
+    if unknown:
+        raise ValueError(f"Unknown config keys in '{where}': {unknown}")
+
+
+def _req_map(d: Mapping[str, Any], key: str, where: str) -> Mapping[str, Any]:
+    if key not in d:
+        raise ValueError(f"Missing required key: {where}.{key}")
+    v = d[key]
+    if not isinstance(v, Mapping):
+        raise ValueError(f"{where}.{key} must be a mapping")
+    return cast(Mapping[str, Any], v)
+
+
+def _req_str(d: Mapping[str, Any], key: str, where: str) -> str:
+    if key not in d:
+        raise ValueError(f"Missing required key: {where}.{key}")
+    v = d[key]
+    if not isinstance(v, str) or not v.strip():
+        raise ValueError(f"{where}.{key} must be a non-empty string")
+    return v.strip()
+
+
+def _opt_str(
+    d: Mapping[str, Any],
+    key: str,
+    where: str,
+    default: str,
+    *,
+    allow_empty: bool = True,
+) -> str:
+    if key not in d:
+        return default
+    v = d[key]
+    if v is None:
+        return default
+    if not isinstance(v, str):
+        raise ValueError(f"{where}.{key} must be a string or null")
+    s = v.strip()
+    if (not s) and (not allow_empty):
+        return default
+    return s
+
+
+def _req_bool(d: Mapping[str, Any], key: str, where: str) -> bool:
+    if key not in d:
+        raise ValueError(f"Missing required key: {where}.{key}")
+    v = d[key]
+    if not isinstance(v, bool):
+        raise ValueError(f"{where}.{key} must be boolean")
+    return bool(v)
+
+
+def _opt_bool(d: Mapping[str, Any], key: str, where: str, default: bool) -> bool:
+    if key not in d:
+        return bool(default)
+    v = d[key]
+    if v is None:
+        return bool(default)
+    if not isinstance(v, bool):
+        raise ValueError(f"{where}.{key} must be boolean or null")
+    return bool(v)
+
+
+def _req_int(d: Mapping[str, Any], key: str, where: str) -> int:
+    if key not in d:
+        raise ValueError(f"Missing required key: {where}.{key}")
+    v = d[key]
+    if isinstance(v, bool) or not isinstance(v, (int, float)):
+        raise ValueError(f"{where}.{key} must be int")
+    return int(v)
+
+
+def _opt_int(d: Mapping[str, Any], key: str, where: str) -> Optional[int]:
+    # keep old behavior: key must exist; use null for None
+    if key not in d:
+        raise ValueError(f"Missing required key: {where}.{key} (use null if you want None)")
+    v = d[key]
+    if v is None:
+        return None
+    if isinstance(v, bool) or not isinstance(v, (int, float)):
+        raise ValueError(f"{where}.{key} must be int or null")
+    return int(v)
+
+
+def _req_float(d: Mapping[str, Any], key: str, where: str) -> float:
+    if key not in d:
+        raise ValueError(f"Missing required key: {where}.{key}")
+    v = d[key]
+    if isinstance(v, bool) or not isinstance(v, (int, float)):
+        raise ValueError(f"{where}.{key} must be float")
+    return float(v)
+
+
+def _req_list_len(d: Mapping[str, Any], key: str, n: int, where: str) -> List[Any]:
+    if key not in d:
+        raise ValueError(f"Missing required key: {where}.{key}")
+    v = d[key]
+    if not isinstance(v, list) or len(v) != n:
+        raise ValueError(f"{where}.{key} must be a list of length {n}")
+    return v
+
+
+def _opt_list_len(
+    d: Mapping[str, Any],
+    key: str,
+    n: int,
+    where: str,
+    default: List[float],
+) -> List[float]:
+    if key not in d or d[key] is None:
+        if len(default) != n:
+            raise ValueError(f"Internal default for {where}.{key} must have length {n}")
+        return [float(x) for x in default]
+    v = d[key]
+    if not isinstance(v, list) or len(v) != n:
+        raise ValueError(f"{where}.{key} must be a list of length {n} or null")
+    return [float(x) for x in v]
+
+
+def _opt_path_allow_empty(
+    d: Mapping[str, Any],
+    key: str,
+    where: str,
+    base_dir: Path,
+) -> Optional[Path]:
+    # accepts: missing -> None, null -> None, "" -> None, "relative/or/abs" -> Path
+    if key not in d:
+        return None
+    v = d[key]
+    if v is None:
+        return None
+    if not isinstance(v, str):
+        raise ValueError(f"{where}.{key} must be string|null")
+    s = v.strip()
+    if not s:
+        return None
+    return _as_path(s, base_dir)
+
+
+def _validate_rotation_matrix(R: np.ndarray, name: str) -> None:
+    R = np.asarray(R, dtype=np.float64).reshape((3, 3))
+    I = np.eye(3, dtype=np.float64)
+    err = float(np.linalg.norm(R.T @ R - I, ord="fro"))
+    det = float(np.linalg.det(R))
+    if err > 1e-6 or abs(det - 1.0) > 1e-6:
+        raise ValueError(f"Invalid rotation matrix {name}: ortho_err={err:.3e}, det={det:.6f}")
+
+
 def _rotx(theta: float) -> np.ndarray:
     c, s = np.cos(theta), np.sin(theta)
-    return np.array([[1, 0, 0],
-                     [0, c, -s],
-                     [0, s,  c]], dtype=np.float64)
+    return np.array([[1, 0, 0], [0, c, -s], [0, s, c]], dtype=np.float64)
 
 
 def _roty(theta: float) -> np.ndarray:
     c, s = np.cos(theta), np.sin(theta)
-    return np.array([[ c, 0, s],
-                     [ 0, 1, 0],
-                     [-s, 0, c]], dtype=np.float64)
+    return np.array([[c, 0, s], [0, 1, 0], [-s, 0, c]], dtype=np.float64)
 
 
 def _rotz(theta: float) -> np.ndarray:
     c, s = np.cos(theta), np.sin(theta)
-    return np.array([[c, -s, 0],
-                     [s,  c, 0],
-                     [0,  0, 1]], dtype=np.float64)
+    return np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]], dtype=np.float64)
 
 
 def _rotmat_to_quat_xyzw(R: np.ndarray) -> Tuple[float, float, float, float]:
@@ -291,33 +393,18 @@ def _rotmat_to_quat_xyzw(R: np.ndarray) -> Tuple[float, float, float, float]:
 
 
 def _rot_from_euler_convention(rx: float, ry: float, rz: float, conv: str) -> np.ndarray:
-    """
-    conv examples:
-      - "RzRyRx_deg"  -> R = Rz(rz) @ Ry(ry) @ Rx(rx)
-      - "RxRyRz_deg"  -> R = Rx(rx) @ Ry(ry) @ Rz(rz)
-
-    NOTE: This function is used for WORLD<-TRF rotation from Mecademic pose.
-    """
     base = conv.strip()
     if base.endswith("_deg"):
         base = base[:-4]
     base = base.replace(" ", "")
     if not base.startswith("R") or len(base) != 6:
-        raise ValueError(f"Unsupported euler_convention '{conv}'. Expected e.g. 'RzRyRx_deg'")
-
+        raise ValueError(f"Unsupported euler_convention '{conv}' (expected e.g. 'RzRyRx_deg')")
     order = [base[1:2], base[3:4], base[5:6]]  # e.g. ["z","y","x"]
-    mats: Dict[str, np.ndarray] = {
-        "x": _rotx(rx),
-        "y": _roty(ry),
-        "z": _rotz(rz),
-    }
-
-    # IMPORTANT: keep the written order (RzRyRx => Rz @ Ry @ Rx)
+    mats: Dict[str, np.ndarray] = {"x": _rotx(rx), "y": _roty(ry), "z": _rotz(rz)}
     try:
-        R = mats[order[0]] @ mats[order[1]] @ mats[order[2]]
+        return mats[order[0]] @ mats[order[1]] @ mats[order[2]]
     except KeyError as exc:
         raise ValueError(f"Invalid axis in euler_convention '{conv}'") from exc
-    return R
 
 
 def _pose_from_meca_pose_mm_deg(
@@ -328,7 +415,14 @@ def _pose_from_meca_pose_mm_deg(
     ry_deg: float,
     rz_deg: float,
     euler_convention: str,
+    negate_angles: bool,
+    negate_translation: bool,
 ) -> Pose:
+    if negate_angles:
+        rx_deg, ry_deg, rz_deg = -rx_deg, -ry_deg, -rz_deg
+    if negate_translation:
+        x_mm, y_mm, z_mm = -x_mm, -y_mm, -z_mm
+
     rx = np.deg2rad(rx_deg)
     ry = np.deg2rad(ry_deg)
     rz = np.deg2rad(rz_deg)
@@ -337,14 +431,6 @@ def _pose_from_meca_pose_mm_deg(
     qx, qy, qz, qw = _rotmat_to_quat_xyzw(R)
     t_xyz = (x_mm / 1000.0, y_mm / 1000.0, z_mm / 1000.0)
     return Pose(t_xyz=t_xyz, q_xyzw=(qx, qy, qz, qw))
-
-
-def _parse_tuple_floats(v: Any, n: int, name: str) -> Optional[Tuple[float, ...]]:
-    if v is None:
-        return None
-    if not (isinstance(v, list) and len(v) == n):
-        raise ValueError(f"{name} must be a list of {n} numbers")
-    return tuple(float(x) for x in v)
 
 
 # ============================================================
@@ -358,107 +444,55 @@ def load_config(path: str | Path) -> AppCfg:
 
     base_dir = cfg_path.parent.resolve()
     raw_any = yaml.safe_load(cfg_path.read_text(encoding="utf-8"))
-    if not isinstance(raw_any, dict):
+    if not isinstance(raw_any, Mapping):
         raise ValueError("Config YAML must be a mapping at the top level.")
-    raw: Mapping[str, Any] = cast(Mapping[str, Any], raw_any)
+    raw = cast(Mapping[str, Any], raw_any)
 
-    # ---------------- Dataset ----------------
-    ds_raw = cast(Mapping[str, Any], _get(raw, "dataset", {}) or {})
-    root_str = str(ds_raw.get("root", ds_raw.get("plants_root_dir", ""))).strip()
-    if not root_str:
-        raise ValueError("dataset.root (or dataset.plants_root_dir) must be set.")
+    _check_keys(
+        raw,
+        allowed={"dataset", "camera", "depth", "segmentation", "features", "selected", "poses", "robot", "outputs"},
+        where="root",
+    )
+
+    # -------- dataset (required) --------
+    ds = _req_map(raw, "dataset", "root")
+    _check_keys(ds, {"root", "plant_glob", "rgb_pattern", "depth_pattern", "expected_views_per_plant", "view_ids"}, "dataset")
+
+    view_ids_raw = ds.get("view_ids", None)
+    if not isinstance(view_ids_raw, list) or len(view_ids_raw) == 0:
+        raise ValueError("dataset.view_ids must be a non-empty list of ints")
 
     dataset = DatasetCfg(
-        root=_as_path(root_str, base_dir),
-        plant_glob=str(ds_raw.get("plant_glob", "plant_*")),
-        rgb_pattern=str(ds_raw.get("rgb_pattern", "color_{view}.png")),
-        depth_pattern=str(ds_raw.get("depth_pattern", "depth_{view}.png")),
-        expected_views_per_plant=int(ds_raw.get("expected_views_per_plant", 3)),
-        view_ids=list(ds_raw.get("view_ids", [0, 1, 2])),
+        root=_as_path(_req_str(ds, "root", "dataset"), base_dir),
+        plant_glob=_req_str(ds, "plant_glob", "dataset"),
+        rgb_pattern=_req_str(ds, "rgb_pattern", "dataset"),
+        depth_pattern=_req_str(ds, "depth_pattern", "dataset"),
+        expected_views_per_plant=_req_int(ds, "expected_views_per_plant", "dataset"),
+        view_ids=[int(x) for x in view_ids_raw],
     )
 
-    # ---------------- Camera meta (optional) ----------------
-    cam_candidate = raw_any.get("camera") if isinstance(raw_any, dict) else None
-    cam_root: Mapping[str, Any] = cast(Mapping[str, Any], cam_candidate) if isinstance(cam_candidate, dict) else raw
-
-    device_raw = cast(Mapping[str, Any], _get(cam_root, "device", {}) or {})
-    stream_raw = cast(Mapping[str, Any], _get(cam_root, "stream_mode", {}) or {})
-    intr_raw = cast(Mapping[str, Any], _get(cam_root, "intrinsics", {}) or {})
-    extr_raw = cast(Mapping[str, Any], _get(cam_root, "extrinsics.depth_to_color", {}) or {})
-
-    def _parse_intr(one: Any) -> Optional[IntrinsicsCfg]:
-        if not isinstance(one, Mapping):
-            return None
-        try:
-            return IntrinsicsCfg(
-                width=int(one["width"]),
-                height=int(one["height"]),
-                fx=float(one["fx"]),
-                fy=float(one["fy"]),
-                cx=float(one["cx"]),
-                cy=float(one["cy"]),
-                distortion_model=str(one.get("distortion_model", "")),
-                distortion_coeffs=list(one.get("distortion_coeffs", [])) or [],
-            )
-        except Exception:
-            return None
-
-    intr_color = _parse_intr(_get(intr_raw, "color", None))
-    intr_depth = _parse_intr(_get(intr_raw, "depth", None))
-    intr_flat = _parse_intr(intr_raw) if (intr_color is None and intr_depth is None) else None
-
-    extr_d2c: Optional[DepthToColorExtrinsicsCfg] = None
-    try:
-        rot = extr_raw.get("rotation_row_major_3x3", None)
-        trans = extr_raw.get("translation_m", None)
-        if isinstance(rot, list) and len(rot) == 9 and isinstance(trans, list) and len(trans) == 3:
-            extr_d2c = DepthToColorExtrinsicsCfg(
-                rotation_row_major_3x3=tuple(float(x) for x in rot),
-                translation_m=(float(trans[0]), float(trans[1]), float(trans[2])),
-            )
-    except Exception:
-        extr_d2c = None
-
-    camera_meta = CameraMetaCfg(
-        timestamp_utc=str(_get(cam_root, "timestamp_utc", "")) or "",
-        device=CameraDeviceCfg(
-            name=str(device_raw.get("name", "")),
-            serial_number=str(device_raw.get("serial_number", "")),
-            firmware_version=str(device_raw.get("firmware_version", "")),
-            product_line=str(device_raw.get("product_line", "")),
-        ),
-        stream_mode=StreamModeCfg(
-            width=int(stream_raw.get("width", 640)),
-            height=int(stream_raw.get("height", 480)),
-            fps=int(stream_raw.get("fps", 30)),
-        ),
-        intrinsics_color=intr_color,
-        intrinsics_depth=intr_depth,
-        extrinsics_depth_to_color=extr_d2c,
-    )
-    active_intr = intr_flat or intr_color or intr_depth
-    if active_intr is None:
-        raise ValueError(
-            "No camera intrinsics found in YAML. "
-            "Expected camera.intrinsics (width/height/fx/fy/cx/cy). "
-            "Strict mode: no fallback intrinsics allowed."
-        )
+    # -------- camera intrinsics (required) --------
+    cam = _req_map(raw, "camera", "root")
+    _check_keys(cam, {"intrinsics"}, "camera")
+    intr = _req_map(cam, "intrinsics", "camera")
+    _check_keys(intr, {"width", "height", "fx", "fy", "cx", "cy"}, "camera.intrinsics")
 
     camera = CameraIntrinsics(
-        fx=float(active_intr.fx),
-        fy=float(active_intr.fy),
-        cx=float(active_intr.cx),
-        cy=float(active_intr.cy),
-        width=int(active_intr.width),
-        height=int(active_intr.height),
+        width=_req_int(intr, "width", "camera.intrinsics"),
+        height=_req_int(intr, "height", "camera.intrinsics"),
+        fx=_req_float(intr, "fx", "camera.intrinsics"),
+        fy=_req_float(intr, "fy", "camera.intrinsics"),
+        cx=_req_float(intr, "cx", "camera.intrinsics"),
+        cy=_req_float(intr, "cy", "camera.intrinsics"),
     )
 
-    # ---------------- Depth ----------------
-    depth_raw = cast(Mapping[str, Any], _get(raw, "depth", {}) or {})
-    depth_scale_default = float(_get(cam_root, "depth_scale_m_per_unit", 9.999999747378752e-05))
-    dr = cast(Mapping[str, Any], _get(depth_raw, "range_filter", {}) or {})
+    # -------- depth (required) --------
+    dep = _req_map(raw, "depth", "root")
+    _check_keys(dep, {"unit", "scale_m_per_unit", "treat_65535_as_invalid", "range_filter"}, "depth")
+    rf = _req_map(dep, "range_filter", "depth")
+    _check_keys(rf, {"enabled", "min_m", "max_m"}, "depth.range_filter")
 
-    unit_str = str(depth_raw.get("unit", "realsense_units")).strip().lower()
+    unit_str = _req_str(dep, "unit", "depth").lower()
     try:
         unit = DepthUnit(unit_str)
     except Exception as exc:
@@ -466,192 +500,284 @@ def load_config(path: str | Path) -> AppCfg:
 
     depth = DepthCfg(
         unit=unit,
-        scale_m_per_unit=float(depth_raw.get("scale_m_per_unit", depth_scale_default)),
-        treat_65535_as_invalid=bool(depth_raw.get("treat_65535_as_invalid", True)),
+        scale_m_per_unit=_req_float(dep, "scale_m_per_unit", "depth"),
+        treat_65535_as_invalid=_req_bool(dep, "treat_65535_as_invalid", "depth"),
         range_filter=DepthRangeFilterCfg(
-            enabled=bool(dr.get("enabled", True)),
-            min_m=float(dr.get("min_m", 0.05)),
-            max_m=float(dr.get("max_m", 0.60)),
+            enabled=_req_bool(rf, "enabled", "depth.range_filter"),
+            min_m=_req_float(rf, "min_m", "depth.range_filter"),
+            max_m=_req_float(rf, "max_m", "depth.range_filter"),
         ),
     )
 
-    # ---------------- Robot ----------------
-    robot_raw = cast(Mapping[str, Any], _get(raw, "robot", {}) or {})
-    views_raw = _get(robot_raw, "views", {}) or {}
-
-    # Mecademic: mobile XYZ => use RzRyRx for WORLD<-TRF
-    euler_convention = str(robot_raw.get("euler_convention", "RzRyRx_deg")).strip()
-
-    # TRF that was set during capture is ONLY informational here
-    trf_list = robot_raw.get("trf_set_during_capture_mm_deg", None)
-    if isinstance(trf_list, list) and len(trf_list) == 6:
-        trf_tuple = tuple(float(x) for x in trf_list)  # type: ignore[assignment]
-    else:
-        trf_tuple = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
-
-    # CAM->TRF correction:
-    # default: identity rotation + zero translation (prevents accidental double offset)
-    R_trf_cam = _parse_tuple_floats(
-        robot_raw.get("cam_axes_correction_R_trf_cam_row_major_3x3", None),
-        9,
-        "robot.cam_axes_correction_R_trf_cam_row_major_3x3",
-    )
-    if R_trf_cam is None:
-        raise ValueError(
-            "robot.cam_axes_correction_R_trf_cam_row_major_3x3 missing. "
-            "Strict mode: no fallback identity rotation allowed."
-        )
-
-    t_trf_cam_mm = _parse_tuple_floats(
-        robot_raw.get("camera_in_trf_translation_mm", None),
-        3,
-        "robot.camera_in_trf_translation_mm",
-    )
-    if t_trf_cam_mm is None:
-        raise ValueError(
-            "robot.camera_in_trf_translation_mm missing. "
-            "Strict mode: no fallback zero translation allowed."
-        )
-
-
-    views: Dict[int, RobotViewPoseCfg] = {}
-    if isinstance(views_raw, Mapping):
-        for vid_str, v in views_raw.items():
-            try:
-                vid = int(vid_str)
-            except Exception:
-                continue
-            if not isinstance(v, Mapping):
-                continue
-
-            pose_list = v.get("pose_wrf_mm_deg", None)
-            if not (isinstance(pose_list, list) and len(pose_list) == 6):
-                continue
-
-            x_mm, y_mm, z_mm, rx_deg, ry_deg, rz_deg = (float(pose_list[i]) for i in range(6))
-            pose_world = _pose_from_meca_pose_mm_deg(
-                x_mm, y_mm, z_mm, rx_deg, ry_deg, rz_deg,
-                euler_convention=euler_convention,
-            )
-            views[vid] = RobotViewPoseCfg(
-                pose_wrf_mm_deg=(x_mm, y_mm, z_mm, rx_deg, ry_deg, rz_deg),
-                key=str(v.get("key", "")),
-                pose_world=pose_world,
-            )
-    # ---- STRICT validation: all dataset views must exist in robot.views ----
-    missing = [int(vid) for vid in dataset.view_ids if int(vid) not in views]
-    if missing:
-        raise ValueError(
-            f"Missing robot.views for view_ids={missing}. "
-            f"Found views={sorted(list(views.keys()))}. "
-            "Strict mode: no fallback poses allowed."
-        )
-
-
-    robot = RobotCfg(
-        model=str(robot_raw.get("model", "Meca500")),
-        ip=str(robot_raw.get("ip", "")),
-        wrf_equals_brf=bool(robot_raw.get("wrf_equals_brf", True)),
-        trf_set_during_capture_mm_deg=cast(Tuple[float, float, float, float, float, float], trf_tuple),
-        euler_convention=euler_convention,
-        views=views,
-        cam_axes_correction_R_trf_cam_row_major_3x3=cast(Tuple[float, ...], R_trf_cam),
-        camera_in_trf_translation_mm=cast(Tuple[float, float, float], t_trf_cam_mm),
+    # -------- segmentation (required) --------
+    seg = _req_map(raw, "segmentation", "root")
+    _check_keys(
+        seg,
+        {
+            "model_path",
+            "device",
+            "imgsz",
+            "conf",
+            "iou",
+            "max_det",
+            "min_mask_area_px",
+            "classes",
+            "border_relax_factor",
+            "fallback_enabled",
+            "fallback_conf",
+            "fallback_imgsz",
+            "fallback_min_mask_area_px",
+            "postprocess",
+        },
+        "segmentation",
     )
 
-    # ---------------- Segmentation ----------------
-    seg_raw = cast(Mapping[str, Any], _get(raw, "segmentation", {}) or {})
-    model_path_str = str(seg_raw.get("model_path", "")).strip()
-    if not model_path_str:
-        raise ValueError("segmentation.model_path must be set (e.g. models/best.pt).")
-    model_path = _as_path(model_path_str, base_dir)
+    model_path = _as_path(_req_str(seg, "model_path", "segmentation"), base_dir)
     if not model_path.exists():
         raise FileNotFoundError(f"YOLO model not found: {model_path}")
 
+    classes_v = seg["classes"]
+    if not isinstance(classes_v, list):
+        raise ValueError("segmentation.classes must be a list (can be empty: [])")
+    classes = [int(x) for x in classes_v]
+
+    pp = _req_map(seg, "postprocess", "segmentation")
+    _check_keys(
+        pp,
+        {"enabled", "keep_largest_cc", "morph_open", "morph_close", "kernel_size", "open_iters", "close_iters", "fill_holes"},
+        "segmentation.postprocess",
+    )
+
+    postprocess = MaskPostprocessCfg(
+        enabled=_req_bool(pp, "enabled", "segmentation.postprocess"),
+        keep_largest_cc=_req_bool(pp, "keep_largest_cc", "segmentation.postprocess"),
+        morph_open=_req_bool(pp, "morph_open", "segmentation.postprocess"),
+        morph_close=_req_bool(pp, "morph_close", "segmentation.postprocess"),
+        kernel_size=_odd_kernel(_req_int(pp, "kernel_size", "segmentation.postprocess")),
+        open_iters=_req_int(pp, "open_iters", "segmentation.postprocess"),
+        close_iters=_req_int(pp, "close_iters", "segmentation.postprocess"),
+        fill_holes=_req_bool(pp, "fill_holes", "segmentation.postprocess"),
+    )
+
     segmentation = SegmentationCfg(
         model_path=model_path,
-        device=str(seg_raw.get("device", "auto")),
-        imgsz=int(seg_raw.get("imgsz", 640)),
-        conf=float(seg_raw.get("conf", 0.65)),
-        iou=float(seg_raw.get("iou", 0.50)),
-        max_det=int(seg_raw.get("max_det", 100)),
-        min_mask_area_px=int(seg_raw.get("min_mask_area_px", 1500)),
-        classes=list(seg_raw.get("classes", [])) or [],
+        device=_req_str(seg, "device", "segmentation"),
+        imgsz=_req_int(seg, "imgsz", "segmentation"),
+        conf=_req_float(seg, "conf", "segmentation"),
+        iou=_req_float(seg, "iou", "segmentation"),
+        max_det=_req_int(seg, "max_det", "segmentation"),
+        min_mask_area_px=_req_int(seg, "min_mask_area_px", "segmentation"),
+        classes=classes,
+        border_relax_factor=_req_float(seg, "border_relax_factor", "segmentation"),
+        fallback_enabled=_req_bool(seg, "fallback_enabled", "segmentation"),
+        fallback_conf=_req_float(seg, "fallback_conf", "segmentation"),
+        fallback_imgsz=_opt_int(seg, "fallback_imgsz", "segmentation"),
+        fallback_min_mask_area_px=_opt_int(seg, "fallback_min_mask_area_px", "segmentation"),
+        postprocess=postprocess,
     )
 
-    # ---------------- Features ----------------
-    feat_raw = cast(Mapping[str, Any], _get(raw, "features", {}) or {})
+    # -------- features (required) --------
+    feat = _req_map(raw, "features", "root")
+    _check_keys(feat, {"downsample_step", "min_points", "log_features"}, "features")
+
     features = FeaturesCfg(
-        downsample_step=int(feat_raw.get("downsample_step", 1)),
-        min_points=int(feat_raw.get("min_points", 50)),
-        log_features=bool(feat_raw.get("log_features", True)),
+        downsample_step=_req_int(feat, "downsample_step", "features"),
+        min_points=_req_int(feat, "min_points", "features"),
+        log_features=_req_bool(feat, "log_features", "features"),
     )
 
-    # ---------------- Selected ----------------
-    sel_raw = cast(Mapping[str, Any], _get(raw, "selected", {}) or {})
+    # -------- selected (required) --------
+    sel = _req_map(raw, "selected", "root")
+    _check_keys(sel, {"enabled", "instance_id", "min_pixels", "darken_factor", "draw_bbox"}, "selected")
+
     selected = SelectedCfg(
-        enabled=bool(sel_raw.get("enabled", True)),
-        instance_id=int(sel_raw.get("instance_id", 1)),
-        min_pixels=int(sel_raw.get("min_pixels", 50)),
-        darken_factor=float(sel_raw.get("darken_factor", 0.3)),
-        draw_bbox=bool(sel_raw.get("draw_bbox", True)),
+        enabled=_req_bool(sel, "enabled", "selected"),
+        instance_id=_req_int(sel, "instance_id", "selected"),
+        min_pixels=_req_int(sel, "min_pixels", "selected"),
+        darken_factor=_req_float(sel, "darken_factor", "selected"),
+        draw_bbox=_req_bool(sel, "draw_bbox", "selected"),
     )
 
-    # ---------------- Outputs ----------------
-    out_raw = cast(Mapping[str, Any], _get(raw, "outputs", {}) or {})
+    # -------- poses (optional) --------
+    if "poses" in raw and raw["poses"] is not None:
+        po = cast(Mapping[str, Any], _req_map(raw, "poses", "root"))
+        _check_keys(po, {"pose_file", "default_pose"}, "poses")
+        dp = _req_map(po, "default_pose", "poses")
+        _check_keys(dp, {"t_xyz", "q_xyzw"}, "poses.default_pose")
 
-    raw_cloud_raw = cast(Mapping[str, Any], _get(out_raw, "raw_cloud", {}) or {})
+        t_xyz_list = _req_list_len(dp, "t_xyz", 3, "poses.default_pose")
+        q_list = _req_list_len(dp, "q_xyzw", 4, "poses.default_pose")
+
+        pose_file = _opt_path_allow_empty(po, "pose_file", "poses", base_dir)
+        poses = PosesCfg(
+            pose_file=pose_file,
+            default_pose=Pose(
+                t_xyz=(float(t_xyz_list[0]), float(t_xyz_list[1]), float(t_xyz_list[2])),
+                q_xyzw=(float(q_list[0]), float(q_list[1]), float(q_list[2]), float(q_list[3])),
+            ),
+        )
+    else:
+        poses = PosesCfg(
+            pose_file=None,
+            default_pose=Pose(t_xyz=(0.0, 0.0, 0.0), q_xyzw=(0.0, 0.0, 0.0, 1.0)),
+        )
+
+    # -------- robot (required, but with defaults for non-essential fields) --------
+    rb = _req_map(raw, "robot", "root")
+    _check_keys(
+        rb,
+        {
+            "model",
+            "ip",
+            "wrf_equals_brf",
+            "trf_set_during_capture_mm_deg",
+            "euler_convention",
+            "pose_negate_angles",
+            "pose_negate_translation",
+            "cam_axes_correction_R_trf_cam_row_major_3x3",
+            "camera_in_trf_translation_mm",
+            "views",
+        },
+        "robot",
+    )
+
+    # optional metadata (allow empty)
+    model = _opt_str(rb, "model", "robot", default="", allow_empty=True)
+    ip = _opt_str(rb, "ip", "robot", default="", allow_empty=True)
+    wrf_equals_brf = _opt_bool(rb, "wrf_equals_brf", "robot", default=True)
+
+    # defaults (if missing): not required by pipeline, but keep recorded if present
+    trf_list = _opt_list_len(rb, "trf_set_during_capture_mm_deg", 6, "robot", default=[0, 0, 0, 0, 0, 0])
+
+    euler_convention = _opt_str(rb, "euler_convention", "robot", default="RzRyRx_deg", allow_empty=False)
+    pose_negate_angles = _opt_bool(rb, "pose_negate_angles", "robot", default=False)
+    pose_negate_translation = _opt_bool(rb, "pose_negate_translation", "robot", default=False)
+
+    # cam in trf: default identity/zero if omitted
+    R_list = _opt_list_len(rb, "cam_axes_correction_R_trf_cam_row_major_3x3", 9, "robot", default=[1, 0, 0, 0, 1, 0, 0, 0, 1])
+    t_list = _opt_list_len(rb, "camera_in_trf_translation_mm", 3, "robot", default=[0, 0, 0])
+
+    R_trf_cam = tuple(float(x) for x in R_list)
+    _validate_rotation_matrix(
+        np.asarray(R_trf_cam, dtype=np.float64).reshape((3, 3)),
+        "robot.cam_axes_correction_R_trf_cam_row_major_3x3",
+    )
+
+    views_raw = _req_map(rb, "views", "robot")
+    views: Dict[int, RobotViewPoseCfg] = {}
+
+    for vid in dataset.view_ids:
+        vid_s = str(int(vid))
+        if vid_s not in views_raw:
+            raise ValueError(f"Missing robot.views['{vid_s}'] for dataset.view_ids={dataset.view_ids}")
+        v_any = views_raw[vid_s]
+        if not isinstance(v_any, Mapping):
+            raise ValueError(f"robot.views['{vid_s}'] must be a mapping")
+        v = cast(Mapping[str, Any], v_any)
+        _check_keys(v, {"key", "pose_wrf_mm_deg"}, f"robot.views['{vid_s}']")
+
+        pose_list = v.get("pose_wrf_mm_deg", None)
+        if not (isinstance(pose_list, list) and len(pose_list) == 6):
+            raise ValueError(f"robot.views['{vid_s}'].pose_wrf_mm_deg must be list length 6")
+
+        x_mm, y_mm, z_mm, rx_deg, ry_deg, rz_deg = (float(pose_list[i]) for i in range(6))
+        pose_world = _pose_from_meca_pose_mm_deg(
+            x_mm,
+            y_mm,
+            z_mm,
+            rx_deg,
+            ry_deg,
+            rz_deg,
+            euler_convention=euler_convention,
+            negate_angles=pose_negate_angles,
+            negate_translation=pose_negate_translation,
+        )
+
+        views[int(vid)] = RobotViewPoseCfg(
+            pose_wrf_mm_deg=(x_mm, y_mm, z_mm, rx_deg, ry_deg, rz_deg),
+            key=_req_str(v, "key", f"robot.views['{vid_s}']"),
+            pose_world=pose_world,
+        )
+
+    robot = RobotCfg(
+        model=model,
+        ip=ip,
+        wrf_equals_brf=wrf_equals_brf,
+        trf_set_during_capture_mm_deg=tuple(float(x) for x in trf_list),  # type: ignore[arg-type]
+        euler_convention=euler_convention,
+        pose_negate_angles=pose_negate_angles,
+        pose_negate_translation=pose_negate_translation,
+        cam_axes_correction_R_trf_cam_row_major_3x3=R_trf_cam,
+        camera_in_trf_translation_mm=(float(t_list[0]), float(t_list[1]), float(t_list[2])),
+        views=views,
+    )
+
+    # -------- outputs (required) --------
+    out = _req_map(raw, "outputs", "root")
+    _check_keys(out, {"out_root", "save_overlay", "save_label_vis", "save_depth_mask_preview", "raw_cloud", "cluster"}, "outputs")
+
+    rc = _req_map(out, "raw_cloud", "outputs")
+    _check_keys(rc, {"enabled", "export_frame", "save_once_per_view", "overwrite", "ply_ascii"}, "outputs.raw_cloud")
+
+    export_frame = _req_str(rc, "export_frame", "outputs.raw_cloud").lower()
+    if export_frame not in ("camera", "trf", "world", "all"):
+        raise ValueError("outputs.raw_cloud.export_frame must be one of: camera|trf|world|all")
+
     raw_cloud = RawCloudCfg(
-        enabled=bool(raw_cloud_raw.get("enabled", True)),
-        export_frame=str(raw_cloud_raw.get("export_frame", "camera")).strip().lower(),
-        save_once_per_view=bool(raw_cloud_raw.get("save_once_per_view", True)),
-        overwrite=bool(raw_cloud_raw.get("overwrite", False)),
-        ply_ascii=bool(raw_cloud_raw.get("ply_ascii", True)),
+        enabled=_req_bool(rc, "enabled", "outputs.raw_cloud"),
+        export_frame=export_frame,
+        save_once_per_view=_req_bool(rc, "save_once_per_view", "outputs.raw_cloud"),
+        overwrite=_req_bool(rc, "overwrite", "outputs.raw_cloud"),
+        ply_ascii=_req_bool(rc, "ply_ascii", "outputs.raw_cloud"),
     )
-    if raw_cloud.export_frame not in ("camera", "trf", "world", "all"):
-        raise ValueError("outputs.raw_cloud.export_frame must be 'camera', 'trf', 'world' or 'all'.")
 
-    cluster_raw = cast(Mapping[str, Any], _get(out_raw, "cluster", {}) or {})
+    cl = _req_map(out, "cluster", "outputs")
+    _check_keys(
+        cl,
+        {
+            "enabled",
+            "distance_threshold_m",
+            "max_clusters",
+            "max_points_per_cluster",
+            "export_dirname",
+            "ply_ascii",
+            "export_fused_plant_cloud",
+            "fused_filename",
+            "fused_voxel_size",
+            "fused_max_points",
+            "flip_y",
+        },
+        "outputs.cluster",
+    )
+
+    export_dirname = _opt_str(cl, "export_dirname", "outputs.cluster", default="clusters", allow_empty=False)
+
     cluster = ClusterCfg(
-        enabled=bool(cluster_raw.get("enabled", True)),
-        distance_threshold_m=float(cluster_raw.get("distance_threshold_m", 0.05)),
-        max_clusters=int(cluster_raw.get("max_clusters", 50)),
-        max_points_per_cluster=int(cluster_raw.get("max_points_per_cluster", 200_000)),
-        export_dirname=str(cluster_raw.get("export_dirname", "clusters")),
-        ply_ascii=bool(cluster_raw.get("ply_ascii", True)),
-        export_fused_plant_cloud=bool(cluster_raw.get("export_fused_plant_cloud", True)),
-        fused_filename=str(cluster_raw.get("fused_filename", "plant_fused.ply")),
-        fused_voxel_size=float(cluster_raw.get("fused_voxel_size", 0.0)),
-        fused_max_points=int(cluster_raw.get("fused_max_points", 0)),
-        flip_y=bool(cluster_raw.get("flip_y", False)),
+        enabled=_req_bool(cl, "enabled", "outputs.cluster"),
+        distance_threshold_m=_req_float(cl, "distance_threshold_m", "outputs.cluster"),
+        max_clusters=_req_int(cl, "max_clusters", "outputs.cluster"),
+        max_points_per_cluster=_req_int(cl, "max_points_per_cluster", "outputs.cluster"),
+        export_dirname=export_dirname,
+        ply_ascii=_req_bool(cl, "ply_ascii", "outputs.cluster"),
+        export_fused_plant_cloud=_req_bool(cl, "export_fused_plant_cloud", "outputs.cluster"),
+        fused_filename=_req_str(cl, "fused_filename", "outputs.cluster"),
+        fused_voxel_size=_req_float(cl, "fused_voxel_size", "outputs.cluster"),
+        fused_max_points=_req_int(cl, "fused_max_points", "outputs.cluster"),
+        flip_y=_req_bool(cl, "flip_y", "outputs.cluster"),
     )
 
-    out_root = _as_path(str(out_raw.get("out_root", "outputs")), base_dir)
     outputs = OutputsCfg(
-        out_root=out_root,
-        save_overlay=bool(out_raw.get("save_overlay", True)),
-        save_label_vis=bool(out_raw.get("save_label_vis", True)),
-        save_depth_mask_preview=bool(out_raw.get("save_depth_mask_preview", True)),
+        out_root=_as_path(_req_str(out, "out_root", "outputs"), base_dir),
+        save_overlay=_req_bool(out, "save_overlay", "outputs"),
+        save_label_vis=_req_bool(out, "save_label_vis", "outputs"),
+        save_depth_mask_preview=_req_bool(out, "save_depth_mask_preview", "outputs"),
         raw_cloud=raw_cloud,
         cluster=cluster,
-    )
-
-    # ---------------- Poses (optional) ----------------
-    poses_raw = cast(Mapping[str, Any], _get(raw, "poses", {}) or {})
-    pose_file_str = str(poses_raw.get("pose_file", "")).strip()
-    dp = poses_raw.get("default_pose", {}) if isinstance(poses_raw.get("default_pose", {}), Mapping) else {}
-    poses = PosesCfg(
-        pose_file=_as_path(pose_file_str, base_dir) if pose_file_str else Path(""),
-        default_pose=Pose(
-            t_xyz=tuple(dp.get("t_xyz", [0.0, 0.0, 0.0])),
-            q_xyzw=tuple(dp.get("q_xyzw", [0.0, 0.0, 0.0, 1.0])),
-        ),
     )
 
     return AppCfg(
         dataset=dataset,
         camera=camera,
-        camera_meta=camera_meta,
         depth=depth,
         robot=robot,
         segmentation=segmentation,

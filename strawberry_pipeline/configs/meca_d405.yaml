@@ -28,11 +28,27 @@ segmentation:
   model_path: ../models/best.pt
   device: cpu
   imgsz: 640
-  conf: 0.35
-  iou: 0.50
+  conf: 0.15
+  iou: 0.40
   max_det: 100
-  min_mask_area_px: 1500
+  min_mask_area_px: 20000
   classes: []
+
+  border_relax_factor: 0.25
+  fallback_enabled: true
+  fallback_conf: 0.25
+  fallback_imgsz: 640
+  fallback_min_mask_area_px: 600
+
+  postprocess:
+    enabled: true
+    keep_largest_cc: true
+    morph_open: true
+    morph_close: true
+    kernel_size: 5
+    open_iters: 1
+    close_iters: 1
+    fill_holes: true
 
 features:
   downsample_step: 1
@@ -47,7 +63,7 @@ selected:
   draw_bbox: true
 
 poses:
-  pose_file: ""
+  pose_file: null
   default_pose:
     t_xyz: [0.0, 0.0, 0.0]
     q_xyzw: [0.0, 0.0, 0.0, 1.0]
@@ -57,29 +73,31 @@ robot:
   ip: ""
   wrf_equals_brf: true
 
-  # Mecademic "mobile XYZ" (Rx then Ry' then Rz'') -> WORLD<-TRF: R = Rz @ Ry @ Rx
-  euler_convention: RxRyRz_deg
-  # INFO: wurde beim Capturen gesetzt (GetPose ist dann WORLD<-TRF der Kamera-TRF)
-  trf_set_during_capture_mm_deg: [0.0, 0.0, 36.0, 0.0, 0.0, 45.0]
+  # passt zu euler_to_rotation_matrix(): R = Rz @ Ry @ Rx
+  euler_convention: RzRyRx_deg
 
-  # CAM(optical) -> TRF Achsenkorrektur (aus deinem Runner-Log)
-  cam_axes_correction_R_trf_cam_row_major_3x3: [0, 0, 1,  -1, 0, 0,  0, -1, 0]
+  # === GENAU wie dein Open3D Script (alles negieren) ===
+  pose_negate_angles: true
+  pose_negate_translation: true
 
-  # WICHTIG: Pipeline darf keinen zusätzlichen Flansch->Kamera Offset addieren (sonst doppelt!)
+  # === Hand-Eye / Achsenmapping aus deinem Open3D Code ===
+  # p_trf = R_trf_cam * p_cam + t
+  # R_trf_cam := R_cam_to_tcp
+  cam_axes_correction_R_trf_cam_row_major_3x3: [0.0, -1.0, 0.0,
+                                               1.0,  0.0, 0.0,
+                                               0.0,  0.0, 1.0]
   camera_in_trf_translation_mm: [0.0, 0.0, 0.0]
-
-
 
   views:
     "0":
       key: "l"
-      pose_wrf_mm_deg: [188.205, 58.384, 249.002, 63.286, 55.563, 127.337]
+      pose_wrf_mm_deg: [185.153, 60.253, 248.061, 63.286, 55.563, 127.337]
     "1":
       key: "m"
-      pose_wrf_mm_deg: [148.567, 0.000, 283.585, 179.999, 90.000, 0.000]
+      pose_wrf_mm_deg: [144.867, 0.000, 283.586, -180.000, 90.000, 0.000]
     "2":
       key: "r"
-      pose_wrf_mm_deg: [195.183, -34.680, 243.936, -71.161, 50.263, -104.430]
+      pose_wrf_mm_deg: [192.338, -36.919, 243.173, -71.161, 50.263, -104.430]
 
 outputs:
   out_root: outputs
@@ -96,6 +114,7 @@ outputs:
 
   cluster:
     enabled: true
+    export_dirname: clusters
     distance_threshold_m: 0.06
     max_clusters: 50
     ply_ascii: true

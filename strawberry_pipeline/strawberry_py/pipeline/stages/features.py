@@ -5,15 +5,30 @@ import numpy as np
 from strawberry_py.config import DepthCfg, FeaturesCfg
 from strawberry_py.st_types import (
     CameraIntrinsics,
-    DepthU16, LabelImage,
-    FeaturesResult, InstanceFeatures,
+    DepthU16,
+    LabelImage,
+    FeaturesResult,
+    InstanceFeatures,
     PointCloud,
-    assert_depth_u16, assert_label_u16,
+    assert_depth_u16,
+    assert_label_u16,
 )
 from strawberry_py.pipeline.stages.transforms import depth_u16_to_meters
 
 
 class FeatureExtractor:
+    """
+    Builds per-instance point clouds + simple geometric features from:
+      - depth_masked (u16)
+      - label image (u16 instance ids)
+
+    Coordinate frame:
+      - Points are computed in CAMERA (RealSense optical) convention:
+          x = right, y = down, z = forward
+      - Optional axis flip can be applied via FeaturesCfg.cam_axis_flip,
+        e.g. (1, -1, 1) to convert y-down to y-up.
+    """
+
     def __init__(self, intr: CameraIntrinsics, depth_cfg: DepthCfg, feats_cfg: FeaturesCfg) -> None:
         self.intr = intr
         self.depth_cfg = depth_cfg
@@ -62,6 +77,12 @@ class FeatureExtractor:
         if fx == 0.0 or fy == 0.0:
             raise ValueError(f"Invalid intrinsics: fx={fx}, fy={fy}")
 
+        # Optional axis flip, e.g. (1, -1, 1) to flip camera Y.
+        # This is intentionally tolerant (works even if FeaturesCfg has no such field yet).
+        cam_axis_flip = np.asarray(getattr(self.cfg, "cam_axis_flip", (1.0, 1.0, 1.0)), dtype=np.float32).reshape(
+            (1, 3)
+        )
+
         clouds_by_instance: dict[int, PointCloud] = {}
         features: dict[int, InstanceFeatures] = {}
         all_pts_list: list[np.ndarray] = []
@@ -78,6 +99,10 @@ class FeatureExtractor:
             x_i = (u_i - cx) * z_i / fx
             y_i = (v_i - cy) * z_i / fy
             pts = np.stack((x_i, y_i, z_i), axis=-1).astype(np.float32, copy=False)
+
+            # Apply optional axis flip in CAM frame (elementwise multiply).
+            if not np.allclose(cam_axis_flip, 1.0):
+                pts = pts * cam_axis_flip
 
             if pts.shape[0] < int(self.cfg.min_points):
                 continue
@@ -101,6 +126,7 @@ class FeatureExtractor:
 
         all_points = (
             np.vstack(all_pts_list).astype(np.float32, copy=False)
-            if all_pts_list else np.zeros((0, 3), dtype=np.float32)
+            if all_pts_list
+            else np.zeros((0, 3), dtype=np.float32)
         )
         return FeaturesResult(clouds_by_instance=clouds_by_instance, all_points=all_points, features=features)

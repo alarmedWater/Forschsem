@@ -1,12 +1,14 @@
+# strawberry_py/pipeline/stages/segmentation.py
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import cv2
 import numpy as np
 
-from strawberry_py.st_types import RGBImage, SegmentationResult, assert_rgb, assert_label_u16
+from strawberry_py.config import SegmentationCfg
+from strawberry_py.st_types import RGBImage, SegmentationResult, assert_label_u16, assert_rgb
 
 
 class YoloV8Segmenter:
@@ -15,7 +17,39 @@ class YoloV8Segmenter:
       - mask area filtering
       - border-relaxation (cropped objects)
       - fallback inference if nothing survives filtering
+      - OPTIONAL postprocessing per mask (close + fill holes + largest CC)
     """
+
+    @classmethod
+    def from_cfg(cls, cfg: SegmentationCfg) -> "YoloV8Segmenter":
+        pp = cfg.postprocess
+        return cls(
+            model_path=str(cfg.model_path),
+            device=str(cfg.device),
+            imgsz=int(cfg.imgsz),
+            conf=float(cfg.conf),
+            iou=float(cfg.iou),
+            max_det=int(cfg.max_det),
+            min_mask_area_px=int(cfg.min_mask_area_px),
+            classes=list(cfg.classes),
+
+            border_relax_factor=float(cfg.border_relax_factor),
+            fallback_enabled=bool(cfg.fallback_enabled),
+            fallback_conf=float(cfg.fallback_conf),
+            fallback_imgsz=(int(cfg.fallback_imgsz) if cfg.fallback_imgsz is not None else None),
+            fallback_min_mask_area_px=(
+                int(cfg.fallback_min_mask_area_px) if cfg.fallback_min_mask_area_px is not None else None
+            ),
+
+            postprocess_enabled=bool(pp.enabled),
+            postprocess_keep_largest_cc=bool(pp.keep_largest_cc),
+            postprocess_morph_open=bool(pp.morph_open),
+            postprocess_morph_close=bool(pp.morph_close),
+            postprocess_kernel_size=int(pp.kernel_size),
+            postprocess_open_iters=int(pp.open_iters),
+            postprocess_close_iters=int(pp.close_iters),
+            postprocess_fill_holes=bool(pp.fill_holes),
+        )
 
     def __init__(
         self,
@@ -27,12 +61,22 @@ class YoloV8Segmenter:
         max_det: int = 100,
         min_mask_area_px: int = 1500,
         classes: Optional[List[int]] = None,
-        # --- New robustness options ---
-        border_relax_factor: float = 0.25,     # if mask touches border, allow min_area * factor
+
+        border_relax_factor: float = 0.25,
         fallback_enabled: bool = True,
-        fallback_conf: float = 0.35,           # used only if first pass yields zero instances
-        fallback_imgsz: Optional[int] = None,  # if None -> keep imgsz
-        fallback_min_mask_area_px: Optional[int] = None,  # if None -> smaller of min_area or 600
+        fallback_conf: float = 0.35,
+        fallback_imgsz: Optional[int] = None,
+        fallback_min_mask_area_px: Optional[int] = None,
+
+        # Postprocess (fix holes / speckles)
+        postprocess_enabled: bool = True,
+        postprocess_keep_largest_cc: bool = True,
+        postprocess_morph_open: bool = True,
+        postprocess_morph_close: bool = True,
+        postprocess_kernel_size: int = 5,
+        postprocess_open_iters: int = 1,
+        postprocess_close_iters: int = 1,
+        postprocess_fill_holes: bool = True,
     ) -> None:
         try:
             from ultralytics import YOLO  # type: ignore
@@ -52,9 +96,7 @@ class YoloV8Segmenter:
             except Exception:
                 dev = "cpu"
 
-        self._YOLO = YOLO
         self._model = YOLO(str(mp))
-
         self.device = dev
         self.imgsz = int(imgsz)
         self.conf = float(conf)
@@ -73,6 +115,22 @@ class YoloV8Segmenter:
         else:
             self.fallback_min_mask_area_px = int(fallback_min_mask_area_px)
 
+        # postprocess params
+        self.postprocess_enabled = bool(postprocess_enabled)
+        self.postprocess_keep_largest_cc = bool(postprocess_keep_largest_cc)
+        self.postprocess_morph_open = bool(postprocess_morph_open)
+        self.postprocess_morph_close = bool(postprocess_morph_close)
+        self.postprocess_fill_holes = bool(postprocess_fill_holes)
+
+        k = int(postprocess_kernel_size)
+        if k < 1:
+            k = 1
+        if (k % 2) == 0:
+            k += 1
+        self.postprocess_kernel_size = k
+        self.postprocess_open_iters = max(0, int(postprocess_open_iters))
+        self.postprocess_close_iters = max(0, int(postprocess_close_iters))
+
     def _predict(self, img_bgr: np.ndarray, *, conf: Optional[float] = None, imgsz: Optional[int] = None) -> Any:
         kwargs: Dict[str, Any] = {
             "source": img_bgr,
@@ -87,13 +145,10 @@ class YoloV8Segmenter:
         if self.classes:
             kwargs["classes"] = self.classes
 
-        # ultralytics versions differ a bit; keep it resilient.
         try:
             return self._model.predict(**kwargs)
         except TypeError:
             kwargs.pop("retina_masks", None)
-            # Some versions also don't like 'classes' in predict(**kwargs)
-            # but that's usually fine. Keep conservative:
             if "classes" in kwargs:
                 kwargs.pop("classes", None)
             return self._model.predict(**kwargs)
@@ -155,13 +210,92 @@ class YoloV8Segmenter:
         """mask01 is uint8 {0,1} shape (H,W)."""
         if mask01.size == 0:
             return False
-        # Any pixel on border?
         return (
             bool(mask01[0, :].any())
             or bool(mask01[-1, :].any())
             or bool(mask01[:, 0].any())
             or bool(mask01[:, -1].any())
         )
+
+    @staticmethod
+    def _largest_cc(mask01: np.ndarray) -> np.ndarray:
+        """Keep only largest connected component in a {0,1} mask."""
+        m = (mask01 > 0).astype(np.uint8)
+        if m.sum() == 0:
+            return m
+        n, labels, stats, _ = cv2.connectedComponentsWithStats(m, connectivity=8)
+        if n <= 2:
+            return m
+        areas = stats[1:, cv2.CC_STAT_AREA]
+        best = 1 + int(np.argmax(areas))
+        return (labels == best).astype(np.uint8)
+
+    @staticmethod
+    def _fill_holes(mask01: np.ndarray) -> np.ndarray:
+        """
+        Fill holes in a binary mask via floodfill on the inverted image.
+        Works robustly even if the object touches the border (we pad first).
+        """
+        m = (mask01 > 0).astype(np.uint8) * 255
+        if m.sum() == 0:
+            return (m > 0).astype(np.uint8)
+
+        # pad with 1px background border
+        mp = cv2.copyMakeBorder(m, 1, 1, 1, 1, borderType=cv2.BORDER_CONSTANT, value=0)
+        inv = cv2.bitwise_not(mp)
+
+        h, w = inv.shape[:2]
+        ff = inv.copy()
+        mask_ff = np.zeros((h + 2, w + 2), dtype=np.uint8)
+
+        # Flood-fill background (in inverted image) starting from (0,0)
+        cv2.floodFill(ff, mask_ff, (0, 0), 0)
+
+        # remaining >0 in ff are holes
+        holes = ff > 0
+        mp[holes] = 255
+
+        # unpad
+        out = mp[1:-1, 1:-1]
+        return (out > 0).astype(np.uint8)
+
+    def _postprocess_one(self, mask01: np.ndarray) -> np.ndarray:
+        if not self.postprocess_enabled:
+            return (mask01 > 0).astype(np.uint8)
+
+        m = (mask01 > 0).astype(np.uint8) * 255
+        if m.sum() == 0:
+            return (m > 0).astype(np.uint8)
+
+        k = self.postprocess_kernel_size
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k))
+
+        if self.postprocess_morph_open and self.postprocess_open_iters > 0:
+            m = cv2.morphologyEx(m, cv2.MORPH_OPEN, kernel, iterations=self.postprocess_open_iters)
+
+        if self.postprocess_morph_close and self.postprocess_close_iters > 0:
+            m = cv2.morphologyEx(m, cv2.MORPH_CLOSE, kernel, iterations=self.postprocess_close_iters)
+
+        m01 = (m > 0).astype(np.uint8)
+
+        if self.postprocess_fill_holes:
+            m01 = self._fill_holes(m01)
+
+        if self.postprocess_keep_largest_cc:
+            m01 = self._largest_cc(m01)
+
+        return m01
+
+    def _postprocess_masks(self, masks01: np.ndarray) -> np.ndarray:
+        if masks01 is None or masks01.size == 0:
+            return masks01
+        if not self.postprocess_enabled:
+            return (masks01 > 0).astype(np.uint8)
+
+        out = np.zeros_like(masks01, dtype=np.uint8)
+        for i in range(int(masks01.shape[0])):
+            out[i] = self._postprocess_one(masks01[i])
+        return out
 
     def _build_label_from_masks(
         self,
@@ -179,7 +313,6 @@ class YoloV8Segmenter:
         if n <= 0:
             return label
 
-        # Sort by confidence descending (if available) so "best" wins in overlaps.
         if confs is not None:
             order = np.argsort(confs)[::-1]
         else:
@@ -194,14 +327,12 @@ class YoloV8Segmenter:
             m = masks01[int(k)]
             area = int(m.sum())
 
-            # area filtering with border relax
             if area < min_area_px:
                 if min_area_border > 0 and area >= min_area_border and self._touches_border(m):
-                    pass  # accept as cropped/border instance
+                    pass
                 else:
                     continue
 
-            # Keep only pixels not assigned yet (so instances don't overwrite each other)
             newpix = (m == 1) & (label == 0)
             if not np.any(newpix):
                 continue
@@ -213,7 +344,6 @@ class YoloV8Segmenter:
     def __call__(self, rgb: RGBImage) -> SegmentationResult:
         assert_rgb(rgb)
         h0, w0 = rgb.shape[:2]
-
         bgr = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
 
         # --- pass 1 ---
@@ -225,6 +355,7 @@ class YoloV8Segmenter:
             res0 = results[0]
             masks01 = self._masks_to_numpy_u8(res0, h0, w0)
             if masks01 is not None and masks01.shape[0] > 0:
+                masks01 = self._postprocess_masks(masks01)
                 confs = self._get_confidences(res0, int(masks01.shape[0]))
                 label = self._build_label_from_masks(
                     masks01,
@@ -256,6 +387,7 @@ class YoloV8Segmenter:
                 res0 = results2[0]
                 masks01 = self._masks_to_numpy_u8(res0, h0, w0)
                 if masks01 is not None and masks01.shape[0] > 0:
+                    masks01 = self._postprocess_masks(masks01)
                     confs = self._get_confidences(res0, int(masks01.shape[0]))
                     label = self._build_label_from_masks(
                         masks01,
@@ -264,7 +396,6 @@ class YoloV8Segmenter:
                         border_relax_factor=self.border_relax_factor,
                     )
 
-                # (optional) overwrite overlay with fallback overlay
                 try:
                     ov_bgr = res0.plot()
                     if isinstance(ov_bgr, np.ndarray):
@@ -276,8 +407,6 @@ class YoloV8Segmenter:
                 except Exception:
                     pass
 
-        # label_vis: mono8 0/255
         label_vis = ((label > 0).astype(np.uint8) * np.uint8(255))
-
         assert_label_u16(label)
         return SegmentationResult(label=label, overlay_rgb=overlay_rgb, label_vis=label_vis)
