@@ -4,7 +4,7 @@ from __future__ import annotations
 import csv
 import inspect
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional, Union
 
 import cv2
 import numpy as np
@@ -32,32 +32,39 @@ class PipelineRunner:
       - optional: accumulate instances into per-plant clustering
       - export clusters after all views processed
 
-    IMPORTANT FOR YOUR DEBUGGING:
-      Biggest error source is often "mask leakage + depth outliers" -> random points in space.
-
-      This runner:
-        - reduces the label strictly to ONE instance (selected)
-        - removes depth outliers robustly (median/MAD band-pass)
-        - keeps only the largest CC again after depth filtering (inside DepthCleaner)
+    Änderung (wichtig):
+      - cfg ist frozen => wir mutieren cfg NICHT.
+      - Stattdessen kann man dataset_root/out_root als Overrides beim Runner übergeben.
     """
 
-    def __init__(self, cfg: AppCfg) -> None:
+    def __init__(
+        self,
+        cfg: AppCfg,
+        *,
+        dataset_root: Optional[Union[str, Path]] = None,
+        out_root: Optional[Union[str, Path]] = None,
+    ) -> None:
         self.cfg = cfg
 
-        # output root
-        self.out_root = Path(cfg.outputs.out_root)
+        # ---------- output root (override möglich) ----------
+        self.out_root = Path(out_root) if out_root is not None else Path(cfg.outputs.out_root)
         self.out_root.mkdir(parents=True, exist_ok=True)
 
-        # dataset
+        # ---------- dataset root (override möglich) ----------
+        self.dataset_root = Path(dataset_root) if dataset_root is not None else Path(cfg.dataset.root)
+        if not self.dataset_root.exists():
+            raise FileNotFoundError(f"Dataset root not found: {self.dataset_root}")
+
+        # ---------- dataset ----------
         self.dataset = PlantViewsDataset(
-            root=cfg.dataset.root,
+            root=self.dataset_root,
             plant_glob=cfg.dataset.plant_glob,
             rgb_pattern=cfg.dataset.rgb_pattern,
             depth_pattern=cfg.dataset.depth_pattern,
             view_ids=cfg.dataset.view_ids,
         )
 
-        # stages
+        # ---------- stages ----------
         self.segmenter = YoloV8Segmenter(
             model_path=str(cfg.segmentation.model_path),
             device=str(cfg.segmentation.device),
@@ -118,8 +125,7 @@ class PipelineRunner:
         rv = self.cfg.robot.views.get(int(vid))
         if rv is None:
             raise KeyError(f"Missing robot.views[{vid}] in config.")
-        # config.py uses RobotViewPoseCfg.pose_world (WORLD <- TRF)
-        return rv.pose_world  # type: ignore[attr-defined]
+        return rv.pose_world  # WORLD <- TRF
 
     @staticmethod
     def _pose_to_Rt(pose_world_trf: Pose) -> Tuple[np.ndarray, np.ndarray]:
@@ -139,7 +145,7 @@ class PipelineRunner:
     # ----------------- main run -----------------
 
     def run(self) -> None:
-        print(f"[Pipeline] dataset_root={self.cfg.dataset.root}")
+        print(f"[Pipeline] dataset_root={self.dataset_root}")
         print(f"[Pipeline] output_root={self.out_root}")
         print(f"[Pipeline] view_ids={self.cfg.dataset.view_ids}")
 
@@ -171,13 +177,12 @@ class PipelineRunner:
                     seg = self.segmenter(view.rgb)
                     label_full = seg.label
 
-                    # save overlay/label vis for debugging
                     if self.cfg.outputs.save_overlay and seg.overlay_rgb is not None:
                         cv2.imwrite(str(view_dir / "overlay.png"), cv2.cvtColor(seg.overlay_rgb, cv2.COLOR_RGB2BGR))
                     if self.cfg.outputs.save_label_vis and seg.label_vis is not None:
                         cv2.imwrite(str(view_dir / "label_vis.png"), seg.label_vis)
 
-                    # ---- reduce to selected-only label (outsourced) ----
+                    # ---- reduce to selected-only label ----
                     selected_id = int(getattr(self.cfg.selected, "instance_id", 1)) if self.cfg.selected.enabled else None
                     label_sel, sel_stats = reduce_to_selected_label(label_full, selected_id=selected_id, do_morph=True)
 
@@ -187,10 +192,8 @@ class PipelineRunner:
                             f"area_px={int(sel_stats['area_px'])} fallback={int(sel_stats['fallback_used'])}"
                         )
 
-                    # save selected mask debug
                     cv2.imwrite(str(view_dir / "selected_mask.png"), (label_sel > 0).astype(np.uint8) * 255)
 
-                    # (optional) keep your selected overlay visual on RGB (uses original label ids)
                     if self.cfg.selected.enabled:
                         sel_img = selected_overlay(
                             view.rgb,
@@ -206,7 +209,7 @@ class PipelineRunner:
                     dm = self.depth_masker(view.depth, label_sel)
                     depth_masked = dm.depth_masked
 
-                    # ---- depth cleanup stage (outsourced) ----
+                    # ---- depth cleanup ----
                     depth_masked, dstat = self.depth_cleaner(depth_masked)
                     if self._debug_raw:
                         print(
@@ -218,7 +221,7 @@ class PipelineRunner:
                     if self.cfg.outputs.save_depth_mask_preview:
                         save_depth_preview(depth_masked, view_dir / "depth_masked_preview.png")
 
-                    # ---- features (clouds + per-instance features) ----
+                    # ---- features ----
                     fr = self.extractor(depth_masked, label_sel)
                     if self.cfg.features.log_features:
                         print(f"[plant {pid:03d} view {vid}] instances={sorted(fr.features.keys())}")
@@ -240,7 +243,7 @@ class PipelineRunner:
                             ]
                         )
 
-                    # ---- raw cloud save (per view) ----
+                    # ---- raw cloud save ----
                     if self.cfg.outputs.raw_cloud.enabled:
                         self.raw_cloud_writer.maybe_write(
                             pid=pid,
@@ -250,7 +253,7 @@ class PipelineRunner:
                             pose_world_trf=pose_world_trf,
                         )
 
-                    # ---- clustering accumulation (per view) ----
+                    # ---- clustering accumulation ----
                     if self.cfg.outputs.cluster.enabled:
                         self._clusterer_add_view_compat(
                             plant_id=pid,
