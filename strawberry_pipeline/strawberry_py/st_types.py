@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, NewType, Optional, Tuple
+from typing import Dict, NewType, Optional, Tuple, Literal
 
 import numpy as np
 from numpy.typing import NDArray
@@ -12,19 +12,22 @@ from numpy.typing import NDArray
 # ============================================================
 
 PlantId = NewType("PlantId", int)
-ViewId = NewType("ViewId", int)       # typically 0,1,2 (but can be more)
+ViewId = NewType("ViewId", int)         # typically 0,1,2 (but can be more)
 FrameIndex = NewType("FrameIndex", int)
+CaptureId = NewType("CaptureId", int)   # capture index inside one sample folder
+
+SampleVariant = Literal["base", "hok", "lok"]
 
 # ============================================================
 # Core array types
 # ============================================================
 
-RGBImage = NDArray[np.uint8]          # (H,W,3) RGB
-DepthU16 = NDArray[np.uint16]         # (H,W) uint16 (RealSense z16 raw units OR mm)
-DepthF32 = NDArray[np.float32]        # (H,W) meters
-LabelImage = NDArray[np.uint16]       # (H,W) instance ids (0=background)
-Mask = NDArray[np.bool_]              # (H,W)
-PointCloud = NDArray[np.float32]      # (N,3) meters
+RGBImage = NDArray[np.uint8]            # (H,W,3) RGB
+DepthU16 = NDArray[np.uint16]           # (H,W) uint16 (RealSense z16 raw units OR mm)
+DepthF32 = NDArray[np.float32]          # (H,W) meters
+LabelImage = NDArray[np.uint16]         # (H,W) instance ids (0=background)
+Mask = NDArray[np.bool_]                # (H,W)
+PointCloud = NDArray[np.float32]        # (N,3) meters
 
 
 class DepthUnit(str, Enum):
@@ -65,6 +68,9 @@ class Pose:
 @dataclass(frozen=True)
 class FrameInfo:
     plant_id: PlantId
+    sample_name: str                    # e.g. "1", "1_hok", "1_lok"
+    variant: SampleVariant              # "base" | "hok" | "lok"
+    capture_id: CaptureId               # e.g. 1, 2, 3, ...
     view_id: ViewId
     frame_index: FrameIndex
     rgb_path: str
@@ -88,10 +94,18 @@ class ViewFrame:
 @dataclass(frozen=True)
 class PlantSample:
     """
-    One plant with N views (usually N=3 for l/m/r).
-    Using a variadic tuple keeps this compatible with cfg.dataset.view_ids.
+    One capture of one plant sample with N views (usually N=3 for left/mid/right).
+
+    Example:
+      sample_name="1_hok", capture_id=2
+      -> corresponds to:
+         color_2_0, color_2_1, color_2_2
+         depth_2_0, depth_2_1, depth_2_2
     """
     plant_id: PlantId
+    sample_name: str
+    variant: SampleVariant
+    capture_id: CaptureId
     views: Tuple[ViewFrame, ...]
 
 

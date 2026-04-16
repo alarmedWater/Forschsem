@@ -1,19 +1,19 @@
 dataset:
-  root: ../data/plant_views_new
-  plant_glob: "plant_*"
-  rgb_pattern: "color_{view}.png"
-  depth_pattern: "depth_{view}.png"
-  expected_views_per_plant: 3
+  root: ../data/new_data
+  plant_glob: "*"
+  rgb_pattern: "color_{image}_{view}.png"
+  depth_pattern: "depth_{image}_{view}.png"
+  expected_views_per_image: 3
   view_ids: [0, 1, 2]
 
 camera:
   intrinsics:
-    width: 640
-    height: 480
-    fx: 392.2776184082031
-    fy: 391.3633728027344
-    cx: 323.5524597167969
-    cy: 242.03379821777344
+    width: 1280
+    height: 720
+    fx: 652.0978393554688
+    fy: 650.5780639648438
+    cx: 645.9053955078125
+    cy: 363.380859375
 
 depth:
   unit: realsense_units
@@ -73,31 +73,29 @@ robot:
   ip: ""
   wrf_equals_brf: true
 
-  # passt zu euler_to_rotation_matrix(): R = Rz @ Ry @ Rx
+  trf_set_during_capture_mm_deg: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
   euler_convention: RzRyRx_deg
+  pose_negate_angles: false
+  pose_negate_translation: false
 
-  # === GENAU wie dein Open3D Script (alles negieren) ===
-  pose_negate_angles: true
-  pose_negate_translation: true
-
-  # === Hand-Eye / Achsenmapping aus deinem Open3D Code ===
-  # p_trf = R_trf_cam * p_cam + t
-  # R_trf_cam := R_cam_to_tcp
-  cam_axes_correction_R_trf_cam_row_major_3x3: [0.0, -1.0, 0.0,
-                                               1.0,  0.0, 0.0,
-                                               0.0,  0.0, 1.0]
+  cam_axes_correction_R_trf_cam_row_major_3x3: [
+    0.0, -1.0, 0.0,
+    1.0,  0.0, 0.0,
+    0.0,  0.0, 1.0
+  ]
   camera_in_trf_translation_mm: [0.0, 0.0, 0.0]
 
   views:
     "0":
       key: "l"
-      pose_wrf_mm_deg: [185.153, 60.253, 248.061, 63.286, 55.563, 127.337]
+      pose_wrf_mm_deg: [-185.153, -60.253, -248.061, -63.286, -55.563, -127.337]
     "1":
       key: "m"
-      pose_wrf_mm_deg: [144.867, 0.000, 283.586, -180.000, 90.000, 0.000]
+      pose_wrf_mm_deg: [-144.867, 0.000, -283.586, 180.000, -90.000, 0.000]
     "2":
       key: "r"
-      pose_wrf_mm_deg: [192.338, -36.919, 243.173, -71.161, 50.263, -104.430]
+      pose_wrf_mm_deg: [-192.338, 36.919, -243.173, 71.161, -50.263, 104.430]
 
 outputs:
   out_root: outputs
@@ -111,6 +109,7 @@ outputs:
     save_once_per_view: true
     overwrite: true
     ply_ascii: true
+    debug: true
 
   cluster:
     enabled: true
@@ -124,3 +123,4 @@ outputs:
     fused_max_points: 0
     max_points_per_cluster: 200000
     flip_y: false
+

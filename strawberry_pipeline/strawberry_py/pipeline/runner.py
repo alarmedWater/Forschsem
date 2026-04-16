@@ -1,10 +1,9 @@
-# strawberry_py/pipeline/runner.py
 from __future__ import annotations
 
 import csv
 import inspect
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional, Union
+from typing import Dict, Tuple, Optional, Union
 
 import cv2
 import numpy as np
@@ -27,14 +26,15 @@ from strawberry_py.utils.vis import save_depth_preview
 class PipelineRunner:
     """
     Offline pipeline:
-      - per view: YOLO seg -> (selected-only label) -> depth mask -> depth cleanup -> 3D clouds + features
+      - per image sample: 3 views (usually left/mid/right)
+      - per view: YOLO seg -> selected-only label -> depth mask -> depth cleanup -> 3D clouds + features
       - optional: save per-view raw clouds in CAM / TRF / WORLD (or all)
-      - optional: accumulate instances into per-plant clustering
-      - export clusters after all views processed
+      - optional: accumulate instances into clustering
+      - export clustering results after all views of one image were processed
 
-    Änderung (wichtig):
-      - cfg ist frozen => wir mutieren cfg NICHT.
-      - Stattdessen kann man dataset_root/out_root als Overrides beim Runner übergeben.
+    Struktur:
+      - sample_name: "1", "1_hok", "1_lok"
+      - image_id: 1, 2, 3, ...
     """
 
     def __init__(
@@ -46,16 +46,13 @@ class PipelineRunner:
     ) -> None:
         self.cfg = cfg
 
-        # ---------- output root (override möglich) ----------
         self.out_root = Path(out_root) if out_root is not None else Path(cfg.outputs.out_root)
         self.out_root.mkdir(parents=True, exist_ok=True)
 
-        # ---------- dataset root (override möglich) ----------
         self.dataset_root = Path(dataset_root) if dataset_root is not None else Path(cfg.dataset.root)
         if not self.dataset_root.exists():
             raise FileNotFoundError(f"Dataset root not found: {self.dataset_root}")
 
-        # ---------- dataset ----------
         self.dataset = PlantViewsDataset(
             root=self.dataset_root,
             plant_glob=cfg.dataset.plant_glob,
@@ -64,7 +61,6 @@ class PipelineRunner:
             view_ids=cfg.dataset.view_ids,
         )
 
-        # ---------- stages ----------
         self.segmenter = YoloV8Segmenter(
             model_path=str(cfg.segmentation.model_path),
             device=str(cfg.segmentation.device),
@@ -79,16 +75,12 @@ class PipelineRunner:
         self.depth_cleaner = DepthCleaner(cfg.depth, keep_largest_cc=True)
         self.extractor = FeatureExtractor(cfg.camera, cfg.depth, cfg.features)
 
-        # clustering (per plant)
         self.clusterer = StrawberryClusterer(cfg.outputs.cluster)
 
-        # optional debug knob (safe read)
         self._debug_raw = bool(getattr(cfg.outputs.raw_cloud, "debug", True))
 
-        # fixed CAM->TRF correction from config (may be identity or real mapping)
         self.R_trf_cam, self.t_trf_cam_m = self._load_cam_in_trf_correction()
 
-        # raw cloud writer (IO service)
         self.raw_cloud_writer = RawCloudWriter(
             raw_cloud_cfg=cfg.outputs.raw_cloud,
             R_trf_cam=self.R_trf_cam,
@@ -112,7 +104,7 @@ class PipelineRunner:
             )
 
         R = np.asarray(R_list, dtype=np.float32).reshape((3, 3))
-        t = (np.asarray(t_mm, dtype=np.float32).reshape((3,)) / 1000.0)
+        t = np.asarray(t_mm, dtype=np.float32).reshape((3,)) / 1000.0
 
         ortho_err, det = self._rotation_sanity(R)
         if self._debug_raw:
@@ -125,7 +117,7 @@ class PipelineRunner:
         rv = self.cfg.robot.views.get(int(vid))
         if rv is None:
             raise KeyError(f"Missing robot.views[{vid}] in config.")
-        return rv.pose_world  # WORLD <- TRF
+        return rv.pose_world
 
     @staticmethod
     def _pose_to_Rt(pose_world_trf: Pose) -> Tuple[np.ndarray, np.ndarray]:
@@ -142,6 +134,23 @@ class PipelineRunner:
         det = float(np.linalg.det(R))
         return err, det
 
+    @staticmethod
+    def _image_dir_name(image_id: int) -> str:
+        return f"image_{int(image_id):03d}"
+
+    @staticmethod
+    def _resolve_image_id(plant: object) -> int:
+        """
+        Backward-compatible:
+        - preferred: plant.image_id
+        - fallback: plant.capture_id
+        """
+        if hasattr(plant, "image_id"):
+            return int(getattr(plant, "image_id"))
+        if hasattr(plant, "capture_id"):
+            return int(getattr(plant, "capture_id"))
+        raise AttributeError("PlantSample has neither 'image_id' nor 'capture_id'.")
+
     # ----------------- main run -----------------
 
     def run(self) -> None:
@@ -151,48 +160,95 @@ class PipelineRunner:
 
         for plant in self.dataset.iter_plants():
             pid = int(plant.plant_id)
-            plant_dir = self.out_root / f"plant_{pid:03d}"
-            plant_dir.mkdir(parents=True, exist_ok=True)
+            sample_name = str(plant.sample_name)
+            variant = str(plant.variant)
+            image_id = self._resolve_image_id(plant)
+
+            sample_root_dir = self.out_root / sample_name
+            image_dir = sample_root_dir / self._image_dir_name(image_id)
+            image_dir.mkdir(parents=True, exist_ok=True)
+
+            if self._debug_raw:
+                print(
+                    f"[Pipeline] sample={sample_name} variant={variant} "
+                    f"plant_id={pid} image_id={image_id}"
+                )
 
             self.clusterer.reset()
 
-            features_csv = plant_dir / "features.csv"
+            features_csv = image_dir / "features.csv"
             with features_csv.open("w", newline="", encoding="utf-8") as fcsv:
-                w = csv.writer(fcsv, delimiter=";")
-                w.writerow(
-                    ["plant_id", "view_id", "instance_id", "num_points", "cx", "cy", "cz", "ex", "ey", "ez", "box_vol_m3"]
+                writer = csv.writer(fcsv, delimiter=";")
+                writer.writerow(
+                    [
+                        "plant_id",
+                        "sample_name",
+                        "variant",
+                        "image_id",
+                        "view_id",
+                        "instance_id",
+                        "num_points",
+                        "cx",
+                        "cy",
+                        "cz",
+                        "ex",
+                        "ey",
+                        "ez",
+                        "box_vol_m3",
+                    ]
                 )
 
                 for view in plant.views:
                     vid = int(view.info.view_id)
-                    view_dir = plant_dir / f"view_{vid}"
+                    view_dir = image_dir / f"view_{vid}"
                     view_dir.mkdir(parents=True, exist_ok=True)
 
                     pose_world_trf = self._pose_for_view_world_trf(vid)
                     _, tw = self._pose_to_Rt(pose_world_trf)
+
                     if self._debug_raw:
-                        print(f"[view {vid}] t_world_trf = {tw.tolist()}")
+                        print(
+                            f"[sample {sample_name} image {image_id} view {vid}] "
+                            f"t_world_trf = {tw.tolist()}"
+                        )
 
                     # ---- segmentation ----
                     seg = self.segmenter(view.rgb)
                     label_full = seg.label
 
                     if self.cfg.outputs.save_overlay and seg.overlay_rgb is not None:
-                        cv2.imwrite(str(view_dir / "overlay.png"), cv2.cvtColor(seg.overlay_rgb, cv2.COLOR_RGB2BGR))
+                        cv2.imwrite(
+                            str(view_dir / "overlay.png"),
+                            cv2.cvtColor(seg.overlay_rgb, cv2.COLOR_RGB2BGR),
+                        )
+
                     if self.cfg.outputs.save_label_vis and seg.label_vis is not None:
                         cv2.imwrite(str(view_dir / "label_vis.png"), seg.label_vis)
 
                     # ---- reduce to selected-only label ----
-                    selected_id = int(getattr(self.cfg.selected, "instance_id", 1)) if self.cfg.selected.enabled else None
-                    label_sel, sel_stats = reduce_to_selected_label(label_full, selected_id=selected_id, do_morph=True)
+                    selected_id = (
+                        int(getattr(self.cfg.selected, "instance_id", 1))
+                        if self.cfg.selected.enabled
+                        else None
+                    )
+                    label_sel, sel_stats = reduce_to_selected_label(
+                        label_full,
+                        selected_id=selected_id,
+                        do_morph=True,
+                    )
 
                     if self._debug_raw:
                         print(
-                            f"[plant {pid:03d} view {vid}] selected_id={int(sel_stats['picked_id'])} "
-                            f"area_px={int(sel_stats['area_px'])} fallback={int(sel_stats['fallback_used'])}"
+                            f"[sample {sample_name} image {image_id} view {vid}] "
+                            f"selected_id={int(sel_stats['picked_id'])} "
+                            f"area_px={int(sel_stats['area_px'])} "
+                            f"fallback={int(sel_stats['fallback_used'])}"
                         )
 
-                    cv2.imwrite(str(view_dir / "selected_mask.png"), (label_sel > 0).astype(np.uint8) * 255)
+                    cv2.imwrite(
+                        str(view_dir / "selected_mask.png"),
+                        (label_sel > 0).astype(np.uint8) * 255,
+                    )
 
                     if self.cfg.selected.enabled:
                         sel_img = selected_overlay(
@@ -203,9 +259,12 @@ class PipelineRunner:
                             darken_factor=self.cfg.selected.darken_factor,
                             draw_bbox=self.cfg.selected.draw_bbox,
                         )
-                        cv2.imwrite(str(view_dir / "selected_overlay.png"), cv2.cvtColor(sel_img, cv2.COLOR_RGB2BGR))
+                        cv2.imwrite(
+                            str(view_dir / "selected_overlay.png"),
+                            cv2.cvtColor(sel_img, cv2.COLOR_RGB2BGR),
+                        )
 
-                    # ---- depth mask (ONLY selected label) ----
+                    # ---- depth mask ----
                     dm = self.depth_masker(view.depth, label_sel)
                     depth_masked = dm.depth_masked
 
@@ -213,23 +272,36 @@ class PipelineRunner:
                     depth_masked, dstat = self.depth_cleaner(depth_masked)
                     if self._debug_raw:
                         print(
-                            f"[plant {pid:03d} view {vid}] depth_valid={int(dstat.get('n_valid', 0))} "
-                            f"removed={int(dstat.get('removed', 0))} band={dstat.get('band_m', 0.0):.4f}m"
+                            f"[sample {sample_name} image {image_id} view {vid}] "
+                            f"depth_valid={int(dstat.get('n_valid', 0))} "
+                            f"removed={int(dstat.get('removed', 0))} "
+                            f"band={dstat.get('band_m', 0.0):.4f}m"
                         )
 
                     cv2.imwrite(str(view_dir / "depth_masked.png"), depth_masked)
+
                     if self.cfg.outputs.save_depth_mask_preview:
-                        save_depth_preview(depth_masked, view_dir / "depth_masked_preview.png")
+                        save_depth_preview(
+                            depth_masked,
+                            view_dir / "depth_masked_preview.png",
+                        )
 
                     # ---- features ----
                     fr = self.extractor(depth_masked, label_sel)
+
                     if self.cfg.features.log_features:
-                        print(f"[plant {pid:03d} view {vid}] instances={sorted(fr.features.keys())}")
+                        print(
+                            f"[sample {sample_name} image {image_id} view {vid}] "
+                            f"instances={sorted(fr.features.keys())}"
+                        )
 
                     for inst_id, feat in fr.features.items():
-                        w.writerow(
+                        writer.writerow(
                             [
                                 pid,
+                                sample_name,
+                                variant,
+                                image_id,
                                 vid,
                                 inst_id,
                                 feat.num_points,
@@ -245,10 +317,13 @@ class PipelineRunner:
 
                     # ---- raw cloud save ----
                     if self.cfg.outputs.raw_cloud.enabled:
-                        self.raw_cloud_writer.maybe_write(
-                            pid=pid,
-                            vid=vid,
-                            plant_dir=plant_dir,
+                        self._raw_cloud_write_compat(
+                            plant_id=pid,
+                            sample_name=sample_name,
+                            variant=variant,
+                            image_id=image_id,
+                            view_id=vid,
+                            image_dir=image_dir,
                             points_cam_m=fr.all_points,
                             pose_world_trf=pose_world_trf,
                         )
@@ -257,6 +332,9 @@ class PipelineRunner:
                     if self.cfg.outputs.cluster.enabled:
                         self._clusterer_add_view_compat(
                             plant_id=pid,
+                            sample_name=sample_name,
+                            variant=variant,
+                            image_id=image_id,
                             view_id=vid,
                             clouds_by_instance=fr.clouds_by_instance,
                             features=fr.features,
@@ -264,28 +342,66 @@ class PipelineRunner:
                         )
 
             if self.cfg.outputs.cluster.enabled:
-                self.clusterer.export(plant_dir)
+                self.clusterer.export(image_dir)
 
-    # ----------------- clusterer call compat -----------------
+    # ----------------- raw cloud compat -----------------
+
+    def _raw_cloud_write_compat(
+        self,
+        plant_id: int,
+        sample_name: str,
+        variant: str,
+        image_id: int,
+        view_id: int,
+        image_dir: Path,
+        points_cam_m: np.ndarray | None,
+        pose_world_trf: Pose,
+    ) -> None:
+        fn = self.raw_cloud_writer.maybe_write
+        sig = inspect.signature(fn)
+        params = set(sig.parameters.keys())
+
+        payload = {
+            "pid": plant_id,
+            "plant_id": plant_id,
+            "sample_name": sample_name,
+            "variant": variant,
+            "image_id": image_id,
+            "capture_id": image_id,   # backward compat alias
+            "vid": view_id,
+            "view_id": view_id,
+            "plant_dir": image_dir,
+            "image_dir": image_dir,
+            "capture_dir": image_dir,  # backward compat alias
+            "points_cam_m": points_cam_m,
+            "pose_world_trf": pose_world_trf,
+        }
+        kwargs = {k: v for k, v in payload.items() if k in params}
+        fn(**kwargs)
+
+    # ----------------- clusterer compat -----------------
 
     def _clusterer_add_view_compat(
         self,
         plant_id: int,
+        sample_name: str,
+        variant: str,
+        image_id: int,
         view_id: int,
         clouds_by_instance: Dict[int, np.ndarray],
         features: Dict[int, object],
         pose_world_trf: Pose,
     ) -> None:
-        """
-        Avoid breaking if StrawberryClusterer.add_view() signature differs.
-        We pass only kwargs that exist in the current implementation.
-        """
         fn = self.clusterer.add_view
         sig = inspect.signature(fn)
         params = set(sig.parameters.keys())
 
         payload = {
             "plant_id": plant_id,
+            "sample_name": sample_name,
+            "variant": variant,
+            "image_id": image_id,
+            "capture_id": image_id,   # backward compat alias
             "view_id": view_id,
             "clouds_by_instance": clouds_by_instance,
             "features": features,

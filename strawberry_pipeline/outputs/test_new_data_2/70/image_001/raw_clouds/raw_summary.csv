@@ -1,0 +1,10 @@
+plant_id;sample_name;variant;image_id;view_id;frame;file
+70;70;base;1;0;cam;cloud_0_cam.ply
+70;70;base;1;0;trf;cloud_0_trf.ply
+70;70;base;1;0;world;cloud_0_world.ply
+70;70;base;1;1;cam;cloud_1_cam.ply
+70;70;base;1;1;trf;cloud_1_trf.ply
+70;70;base;1;1;world;cloud_1_world.ply
+70;70;base;1;2;cam;cloud_2_cam.ply
+70;70;base;1;2;trf;cloud_2_trf.ply
+70;70;base;1;2;world;cloud_2_world.ply

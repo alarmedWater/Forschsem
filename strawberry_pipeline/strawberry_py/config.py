@@ -1,4 +1,3 @@
-# strawberry_py/config.py
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -12,7 +11,7 @@ from strawberry_py.st_types import CameraIntrinsics, DepthUnit, Pose
 
 
 # ============================================================
-# Typed config model (pragmatic: defaults for non-essential fields)
+# Typed config model
 # ============================================================
 
 @dataclass(frozen=True)
@@ -21,7 +20,7 @@ class DatasetCfg:
     plant_glob: str
     rgb_pattern: str
     depth_pattern: str
-    expected_views_per_plant: int
+    expected_views_per_image: int
     view_ids: List[int]
 
 
@@ -95,6 +94,7 @@ class RawCloudCfg:
     save_once_per_view: bool
     overwrite: bool
     ply_ascii: bool
+    debug: bool
 
 
 @dataclass(frozen=True)
@@ -127,7 +127,6 @@ class OutputsCfg:
 
 @dataclass(frozen=True)
 class PosesCfg:
-    # pose_file is optional now ("" or null -> None)
     pose_file: Optional[Path]
     default_pose: Pose
 
@@ -136,25 +135,23 @@ class PosesCfg:
 class RobotViewPoseCfg:
     pose_wrf_mm_deg: Tuple[float, float, float, float, float, float]
     key: str
-    pose_world: Pose  # WORLD <- TRF (aus GetPose / pose_wrf_mm_deg)
+    pose_world: Pose  # WORLD <- TRF
 
 
 @dataclass(frozen=True)
 class RobotCfg:
-    # minimal, but keeps optional metadata fields without forcing non-empty strings
     model: str
     ip: str
     wrf_equals_brf: bool
 
-    # optional: for documentation only; not required by the pipeline
     trf_set_during_capture_mm_deg: Tuple[float, float, float, float, float, float]
 
     euler_convention: str
     pose_negate_angles: bool
     pose_negate_translation: bool
 
-    cam_axes_correction_R_trf_cam_row_major_3x3: Tuple[float, ...]  # len=9
-    camera_in_trf_translation_mm: Tuple[float, float, float]        # len=3
+    cam_axes_correction_R_trf_cam_row_major_3x3: Tuple[float, ...]
+    camera_in_trf_translation_mm: Tuple[float, float, float]
 
     views: Dict[int, RobotViewPoseCfg]
 
@@ -265,7 +262,6 @@ def _req_int(d: Mapping[str, Any], key: str, where: str) -> int:
 
 
 def _opt_int(d: Mapping[str, Any], key: str, where: str) -> Optional[int]:
-    # keep old behavior: key must exist; use null for None
     if key not in d:
         raise ValueError(f"Missing required key: {where}.{key} (use null if you want None)")
     v = d[key]
@@ -317,7 +313,6 @@ def _opt_path_allow_empty(
     where: str,
     base_dir: Path,
 ) -> Optional[Path]:
-    # accepts: missing -> None, null -> None, "" -> None, "relative/or/abs" -> Path
     if key not in d:
         return None
     v = d[key]
@@ -399,7 +394,7 @@ def _rot_from_euler_convention(rx: float, ry: float, rz: float, conv: str) -> np
     base = base.replace(" ", "")
     if not base.startswith("R") or len(base) != 6:
         raise ValueError(f"Unsupported euler_convention '{conv}' (expected e.g. 'RzRyRx_deg')")
-    order = [base[1:2], base[3:4], base[5:6]]  # e.g. ["z","y","x"]
+    order = [base[1:2], base[3:4], base[5:6]]
     mats: Dict[str, np.ndarray] = {"x": _rotx(rx), "y": _roty(ry), "z": _rotz(rz)}
     try:
         return mats[order[0]] @ mats[order[1]] @ mats[order[2]]
@@ -433,6 +428,28 @@ def _pose_from_meca_pose_mm_deg(
     return Pose(t_xyz=t_xyz, q_xyzw=(qx, qy, qz, qw))
 
 
+def _resolve_expected_views(ds: Mapping[str, Any]) -> int:
+    has_new = "expected_views_per_image" in ds
+    has_old = "expected_views_per_plant" in ds
+
+    if has_new and has_old:
+        raise ValueError(
+            "dataset must not define both 'expected_views_per_image' and "
+            "'expected_views_per_plant'. Use only 'expected_views_per_image'."
+        )
+
+    if has_new:
+        return _req_int(ds, "expected_views_per_image", "dataset")
+
+    if has_old:
+        return _req_int(ds, "expected_views_per_plant", "dataset")
+
+    raise ValueError(
+        "Missing required key: dataset.expected_views_per_image "
+        "(old fallback: dataset.expected_views_per_plant)"
+    )
+
+
 # ============================================================
 # Loader
 # ============================================================
@@ -454,9 +471,21 @@ def load_config(path: str | Path) -> AppCfg:
         where="root",
     )
 
-    # -------- dataset (required) --------
+    # -------- dataset --------
     ds = _req_map(raw, "dataset", "root")
-    _check_keys(ds, {"root", "plant_glob", "rgb_pattern", "depth_pattern", "expected_views_per_plant", "view_ids"}, "dataset")
+    _check_keys(
+        ds,
+        {
+            "root",
+            "plant_glob",
+            "rgb_pattern",
+            "depth_pattern",
+            "expected_views_per_image",
+            "expected_views_per_plant",
+            "view_ids",
+        },
+        "dataset",
+    )
 
     view_ids_raw = ds.get("view_ids", None)
     if not isinstance(view_ids_raw, list) or len(view_ids_raw) == 0:
@@ -467,11 +496,11 @@ def load_config(path: str | Path) -> AppCfg:
         plant_glob=_req_str(ds, "plant_glob", "dataset"),
         rgb_pattern=_req_str(ds, "rgb_pattern", "dataset"),
         depth_pattern=_req_str(ds, "depth_pattern", "dataset"),
-        expected_views_per_plant=_req_int(ds, "expected_views_per_plant", "dataset"),
+        expected_views_per_image=_resolve_expected_views(ds),
         view_ids=[int(x) for x in view_ids_raw],
     )
 
-    # -------- camera intrinsics (required) --------
+    # -------- camera --------
     cam = _req_map(raw, "camera", "root")
     _check_keys(cam, {"intrinsics"}, "camera")
     intr = _req_map(cam, "intrinsics", "camera")
@@ -486,7 +515,7 @@ def load_config(path: str | Path) -> AppCfg:
         cy=_req_float(intr, "cy", "camera.intrinsics"),
     )
 
-    # -------- depth (required) --------
+    # -------- depth --------
     dep = _req_map(raw, "depth", "root")
     _check_keys(dep, {"unit", "scale_m_per_unit", "treat_65535_as_invalid", "range_filter"}, "depth")
     rf = _req_map(dep, "range_filter", "depth")
@@ -509,7 +538,7 @@ def load_config(path: str | Path) -> AppCfg:
         ),
     )
 
-    # -------- segmentation (required) --------
+    # -------- segmentation --------
     seg = _req_map(raw, "segmentation", "root")
     _check_keys(
         seg,
@@ -576,7 +605,7 @@ def load_config(path: str | Path) -> AppCfg:
         postprocess=postprocess,
     )
 
-    # -------- features (required) --------
+    # -------- features --------
     feat = _req_map(raw, "features", "root")
     _check_keys(feat, {"downsample_step", "min_points", "log_features"}, "features")
 
@@ -586,7 +615,7 @@ def load_config(path: str | Path) -> AppCfg:
         log_features=_req_bool(feat, "log_features", "features"),
     )
 
-    # -------- selected (required) --------
+    # -------- selected --------
     sel = _req_map(raw, "selected", "root")
     _check_keys(sel, {"enabled", "instance_id", "min_pixels", "darken_factor", "draw_bbox"}, "selected")
 
@@ -598,7 +627,7 @@ def load_config(path: str | Path) -> AppCfg:
         draw_bbox=_req_bool(sel, "draw_bbox", "selected"),
     )
 
-    # -------- poses (optional) --------
+    # -------- poses --------
     if "poses" in raw and raw["poses"] is not None:
         po = cast(Mapping[str, Any], _req_map(raw, "poses", "root"))
         _check_keys(po, {"pose_file", "default_pose"}, "poses")
@@ -622,7 +651,7 @@ def load_config(path: str | Path) -> AppCfg:
             default_pose=Pose(t_xyz=(0.0, 0.0, 0.0), q_xyzw=(0.0, 0.0, 0.0, 1.0)),
         )
 
-    # -------- robot (required, but with defaults for non-essential fields) --------
+    # -------- robot --------
     rb = _req_map(raw, "robot", "root")
     _check_keys(
         rb,
@@ -641,20 +670,23 @@ def load_config(path: str | Path) -> AppCfg:
         "robot",
     )
 
-    # optional metadata (allow empty)
     model = _opt_str(rb, "model", "robot", default="", allow_empty=True)
     ip = _opt_str(rb, "ip", "robot", default="", allow_empty=True)
     wrf_equals_brf = _opt_bool(rb, "wrf_equals_brf", "robot", default=True)
 
-    # defaults (if missing): not required by pipeline, but keep recorded if present
     trf_list = _opt_list_len(rb, "trf_set_during_capture_mm_deg", 6, "robot", default=[0, 0, 0, 0, 0, 0])
 
     euler_convention = _opt_str(rb, "euler_convention", "robot", default="RzRyRx_deg", allow_empty=False)
     pose_negate_angles = _opt_bool(rb, "pose_negate_angles", "robot", default=False)
     pose_negate_translation = _opt_bool(rb, "pose_negate_translation", "robot", default=False)
 
-    # cam in trf: default identity/zero if omitted
-    R_list = _opt_list_len(rb, "cam_axes_correction_R_trf_cam_row_major_3x3", 9, "robot", default=[1, 0, 0, 0, 1, 0, 0, 0, 1])
+    R_list = _opt_list_len(
+        rb,
+        "cam_axes_correction_R_trf_cam_row_major_3x3",
+        9,
+        "robot",
+        default=[1, 0, 0, 0, 1, 0, 0, 0, 1],
+    )
     t_list = _opt_list_len(rb, "camera_in_trf_translation_mm", 3, "robot", default=[0, 0, 0])
 
     R_trf_cam = tuple(float(x) for x in R_list)
@@ -703,7 +735,7 @@ def load_config(path: str | Path) -> AppCfg:
         model=model,
         ip=ip,
         wrf_equals_brf=wrf_equals_brf,
-        trf_set_during_capture_mm_deg=tuple(float(x) for x in trf_list),  # type: ignore[arg-type]
+        trf_set_during_capture_mm_deg=tuple(float(x) for x in trf_list),
         euler_convention=euler_convention,
         pose_negate_angles=pose_negate_angles,
         pose_negate_translation=pose_negate_translation,
@@ -712,12 +744,12 @@ def load_config(path: str | Path) -> AppCfg:
         views=views,
     )
 
-    # -------- outputs (required) --------
+    # -------- outputs --------
     out = _req_map(raw, "outputs", "root")
     _check_keys(out, {"out_root", "save_overlay", "save_label_vis", "save_depth_mask_preview", "raw_cloud", "cluster"}, "outputs")
 
     rc = _req_map(out, "raw_cloud", "outputs")
-    _check_keys(rc, {"enabled", "export_frame", "save_once_per_view", "overwrite", "ply_ascii"}, "outputs.raw_cloud")
+    _check_keys(rc, {"enabled", "export_frame", "save_once_per_view", "overwrite", "ply_ascii", "debug"}, "outputs.raw_cloud")
 
     export_frame = _req_str(rc, "export_frame", "outputs.raw_cloud").lower()
     if export_frame not in ("camera", "trf", "world", "all"):
@@ -729,6 +761,7 @@ def load_config(path: str | Path) -> AppCfg:
         save_once_per_view=_req_bool(rc, "save_once_per_view", "outputs.raw_cloud"),
         overwrite=_req_bool(rc, "overwrite", "outputs.raw_cloud"),
         ply_ascii=_req_bool(rc, "ply_ascii", "outputs.raw_cloud"),
+        debug=_opt_bool(rc, "debug", "outputs.raw_cloud", default=True),
     )
 
     cl = _req_map(out, "cluster", "outputs")
