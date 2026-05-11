@@ -6,6 +6,7 @@ data/**
 !data/**/.gitkeep
 !data/README.md
 !data/**/README.md
+strawberry_pipeline/data/**
 
 SegemtationTrainig_v1/data/**
 !SegemtationTrainig_v1/data/.gitkeep
