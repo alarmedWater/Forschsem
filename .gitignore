@@ -44,6 +44,12 @@ outputs/**
 !outputs/README.md
 !outputs/**/README.md
 
+strawberry_pipeline/outputs/**
+!strawberry_pipeline/outputs/.gitkeep
+!strawberry_pipeline/outputs/**/.gitkeep
+!strawberry_pipeline/outputs/README.md
+!strawberry_pipeline/outputs/**/README.md
+
 # optional, falls dort Ergebnisse landen
 strawberry_ws/outputs/**
 !strawberry_ws/outputs/.gitkeep
