@@ -148,6 +148,13 @@ class PipelineRunner:
         print(f"[Pipeline] dataset_root={self.dataset_root}")
         print(f"[Pipeline] output_root={self.out_root}")
         print(f"[Pipeline] view_ids={self.cfg.dataset.view_ids}")
+        if self.cfg.selected.enabled:
+            selected_id_cfg: Optional[int] = int(getattr(self.cfg.selected, "instance_id", 1))
+            print(f"[Pipeline] selected_mode=configured_id:{selected_id_cfg}")
+        else:
+            # This pipeline remains single-mask: disabled selection means auto-pick largest instance.
+            selected_id_cfg = None
+            print("[Pipeline] selected_mode=auto_largest_instance_per_view")
 
         for plant in self.dataset.iter_plants():
             pid = int(plant.plant_id)
@@ -217,14 +224,9 @@ class PipelineRunner:
                         cv2.imwrite(str(view_dir / "label_vis.png"), seg.label_vis)
 
                     # ---- reduce to selected-only label ----
-                    selected_id = (
-                        int(getattr(self.cfg.selected, "instance_id", 1))
-                        if self.cfg.selected.enabled
-                        else None
-                    )
                     label_sel, sel_stats = reduce_to_selected_label(
                         label_full,
-                        selected_id=selected_id,
+                        selected_id=selected_id_cfg,
                         do_morph=True,
                     )
 

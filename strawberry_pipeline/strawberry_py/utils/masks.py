@@ -69,13 +69,13 @@ def reduce_to_selected_label(
     Args:
       label_full: 2D label image, background=0, instances>0 (any int dtype)
       selected_id:
-        - None -> pick the largest instance (by pixel count)
+        - None -> auto-pick the largest instance (by pixel count)
         - int  -> try that id; if absent, fallback to largest
       do_morph: apply morph cleanup + keep largest 2D CC
       connectivity: CC connectivity
 
     Returns:
-      label_sel (uint16): binary label encoded as 1 (else 0), shape like input
+      label_sel (uint16): single binary label encoded as 1 (else 0), shape like input
       stats: debug numbers
     """
     lbl = np.asarray(label_full)
