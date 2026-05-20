@@ -148,13 +148,14 @@ class PipelineRunner:
         print(f"[Pipeline] dataset_root={self.dataset_root}")
         print(f"[Pipeline] output_root={self.out_root}")
         print(f"[Pipeline] view_ids={self.cfg.dataset.view_ids}")
-        if self.cfg.selected.enabled:
-            selected_id_cfg: Optional[int] = int(getattr(self.cfg.selected, "instance_id", 1))
-            print(f"[Pipeline] selected_mode=configured_id:{selected_id_cfg}")
-        else:
-            # This pipeline remains single-mask: disabled selection means auto-pick largest instance.
-            selected_id_cfg = None
-            print("[Pipeline] selected_mode=auto_largest_instance_per_view")
+        if not self.cfg.selected.enabled:
+            raise ValueError(
+                "selected.enabled=false is unsupported: this pipeline currently requires "
+                "one configured selected instance. Set selected.enabled=true and "
+                "selected.instance_id, or add an explicit multi-instance pipeline path."
+            )
+        selected_id_cfg = int(self.cfg.selected.instance_id)
+        print(f"[Pipeline] selected_mode=configured_id:{selected_id_cfg}")
 
         for plant in self.dataset.iter_plants():
             pid = int(plant.plant_id)

@@ -69,7 +69,7 @@ def reduce_to_selected_label(
     Args:
       label_full: 2D label image, background=0, instances>0 (any int dtype)
       selected_id:
-        - None -> auto-pick the largest instance (by pixel count)
+        - None -> explicitly auto-pick the largest instance (by pixel count)
         - int  -> try that id; if absent, fallback to largest
       do_morph: apply morph cleanup + keep largest 2D CC
       connectivity: CC connectivity
