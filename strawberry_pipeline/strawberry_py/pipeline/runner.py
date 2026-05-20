@@ -61,16 +61,7 @@ class PipelineRunner:
             view_ids=cfg.dataset.view_ids,
         )
 
-        self.segmenter = YoloV8Segmenter(
-            model_path=str(cfg.segmentation.model_path),
-            device=str(cfg.segmentation.device),
-            imgsz=int(cfg.segmentation.imgsz),
-            conf=float(cfg.segmentation.conf),
-            iou=float(cfg.segmentation.iou),
-            max_det=int(cfg.segmentation.max_det),
-            min_mask_area_px=int(cfg.segmentation.min_mask_area_px),
-            classes=list(cfg.segmentation.classes),
-        )
+        self.segmenter = YoloV8Segmenter.from_cfg(cfg.segmentation)
         self.depth_masker = DepthMasker(cfg.depth, zero_background=True)
         self.depth_cleaner = DepthCleaner(cfg.depth, keep_largest_cc=True)
         self.extractor = FeatureExtractor(cfg.camera, cfg.depth, cfg.features)
