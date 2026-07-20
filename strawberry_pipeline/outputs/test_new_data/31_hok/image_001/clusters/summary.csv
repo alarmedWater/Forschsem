@@ -1,3 +1,0 @@
-plant_id;sample_name;variant;image_id;cluster_id;centroid_x;centroid_y;centroid_z;num_points;views_seen;ply_file
-31;31_hok;hok;1;1;0.03640621900558472;-0.025453926995396614;-0.29022929072380066;6521;1;cluster_001.ply
-31;31_hok;hok;1;2;-0.040576279163360596;0.010284118354320526;-0.20528827607631683;16299;2;cluster_002.ply

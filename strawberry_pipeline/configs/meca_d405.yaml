@@ -28,7 +28,7 @@ segmentation:
   model_path: ../models/best.pt
   device: cpu
   imgsz: 1280
-  conf: 0.15
+  conf: 0.25
   iou: 0.40
   max_det: 100
   min_mask_area_px: 20000
@@ -44,7 +44,7 @@ segmentation:
     enabled: true
     keep_largest_cc: true
     morph_open: true
-    morph_close: true
+    morph_close: false
     kernel_size: 5
     open_iters: 1
     close_iters: 1
