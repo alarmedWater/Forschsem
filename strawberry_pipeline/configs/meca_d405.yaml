@@ -27,8 +27,8 @@ depth:
 segmentation:
   model_path: ../models/best.pt
   device: cpu
-  imgsz: 640
-  conf: 0.15
+  imgsz: 1280
+  conf: 0.25
   iou: 0.40
   max_det: 100
   min_mask_area_px: 20000
@@ -37,14 +37,14 @@ segmentation:
   border_relax_factor: 0.25
   fallback_enabled: true
   fallback_conf: 0.25
-  fallback_imgsz: 640
+  fallback_imgsz: 1280
   fallback_min_mask_area_px: 600
 
   postprocess:
     enabled: true
     keep_largest_cc: true
     morph_open: true
-    morph_close: true
+    morph_close: false
     kernel_size: 5
     open_iters: 1
     close_iters: 1
@@ -123,4 +123,3 @@ outputs:
     fused_max_points: 0
     max_points_per_cluster: 200000
     flip_y: false
-

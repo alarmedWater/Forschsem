@@ -196,11 +196,23 @@ class PlantViewsDataset:
     @staticmethod
     def _load_depth(path: Path) -> DepthU16:
         d = cv2.imread(str(path), cv2.IMREAD_UNCHANGED)
+
         if d is None:
             raise IOError(f"Failed to read depth image: {path}")
+
+        # Falls OpenCV ein Einkanalbild als (H, W, 1) lädt
+        if d.ndim == 3 and d.shape[2] == 1:
+            d = d[:, :, 0]
+
+        # Falls versehentlich 3 Kanäle drin sind
+        if d.ndim == 3:
+            raise ValueError(f"Depth image must be single-channel, got shape={d.shape} at {path}")
+
         if d.dtype != np.uint16:
             raise TypeError(f"Depth must be uint16 PNG, got dtype={d.dtype} at {path}")
+
         d = d.astype(np.uint16, copy=False)
+
         assert_depth_u16(d)
         return d
 

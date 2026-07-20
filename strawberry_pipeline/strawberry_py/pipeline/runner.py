@@ -61,16 +61,7 @@ class PipelineRunner:
             view_ids=cfg.dataset.view_ids,
         )
 
-        self.segmenter = YoloV8Segmenter(
-            model_path=str(cfg.segmentation.model_path),
-            device=str(cfg.segmentation.device),
-            imgsz=int(cfg.segmentation.imgsz),
-            conf=float(cfg.segmentation.conf),
-            iou=float(cfg.segmentation.iou),
-            max_det=int(cfg.segmentation.max_det),
-            min_mask_area_px=int(cfg.segmentation.min_mask_area_px),
-            classes=list(cfg.segmentation.classes),
-        )
+        self.segmenter = YoloV8Segmenter.from_cfg(cfg.segmentation)
         self.depth_masker = DepthMasker(cfg.depth, zero_background=True)
         self.depth_cleaner = DepthCleaner(cfg.depth, keep_largest_cc=True)
         self.extractor = FeatureExtractor(cfg.camera, cfg.depth, cfg.features)
@@ -157,6 +148,14 @@ class PipelineRunner:
         print(f"[Pipeline] dataset_root={self.dataset_root}")
         print(f"[Pipeline] output_root={self.out_root}")
         print(f"[Pipeline] view_ids={self.cfg.dataset.view_ids}")
+        if not self.cfg.selected.enabled:
+            raise ValueError(
+                "selected.enabled=false is unsupported: this pipeline currently requires "
+                "one configured selected instance. Set selected.enabled=true and "
+                "selected.instance_id, or add an explicit multi-instance pipeline path."
+            )
+        selected_id_cfg = int(self.cfg.selected.instance_id)
+        print(f"[Pipeline] selected_mode=configured_id:{selected_id_cfg}")
 
         for plant in self.dataset.iter_plants():
             pid = int(plant.plant_id)
@@ -226,14 +225,9 @@ class PipelineRunner:
                         cv2.imwrite(str(view_dir / "label_vis.png"), seg.label_vis)
 
                     # ---- reduce to selected-only label ----
-                    selected_id = (
-                        int(getattr(self.cfg.selected, "instance_id", 1))
-                        if self.cfg.selected.enabled
-                        else None
-                    )
                     label_sel, sel_stats = reduce_to_selected_label(
                         label_full,
-                        selected_id=selected_id,
+                        selected_id=selected_id_cfg,
                         do_morph=True,
                     )
 

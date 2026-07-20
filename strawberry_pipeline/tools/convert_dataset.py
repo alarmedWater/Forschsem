@@ -6,9 +6,9 @@ import argparse
 from pathlib import Path
 
 
-SAMPLE_DIR_RE = re.compile(r"^\d+(?:_(?:hok|lok))?$")
-COLOR_RE = re.compile(r"^color_(\d+)_(\d+)\.png$")
-DEPTH_ALIGNED_RE = re.compile(r"^depth_aligned_(\d+)_(\d+)\.png$")
+SAMPLE_DIR_RE = re.compile(r"^(?:plant_)?(\d+)(?:_(hok|lok))?$")
+COLOR_RE = re.compile(r"^color_(\d+)(?:_(?:hok|lok))?_(\d+)\.png$")
+DEPTH_ALIGNED_RE = re.compile(r"^depth_aligned_(\d+)(?:_(?:hok|lok))?_(\d+)\.png$")
 
 
 def parse_args() -> argparse.Namespace:
@@ -50,6 +50,14 @@ def copy_or_move(src: Path, dst: Path, move: bool, overwrite: bool) -> None:
 def validate_view_id(view_id: int, folder: Path, file_name: str) -> None:
     if view_id not in (0, 1, 2):
         raise ValueError(f"Ungültige view_id {view_id} in {folder / file_name} (erwartet: 0,1,2)")
+
+
+def output_sample_name(src_name: str) -> str:
+    m = SAMPLE_DIR_RE.fullmatch(src_name)
+    if not m:
+        raise ValueError(f"Ungültiger Sample-Ordner: {src_name}")
+    plant_id, variant = m.groups()
+    return f"{plant_id}_{variant}" if variant else plant_id
 
 
 def process_sample_dir(src_dir: Path, dst_dir: Path, move: bool, overwrite: bool) -> None:
@@ -127,7 +135,7 @@ def main() -> None:
         )
 
     for src_dir in sample_dirs:
-        dst_dir = dst_root / src_dir.name
+        dst_dir = dst_root / output_sample_name(src_dir.name)
         print(f"\n[INFO] Verarbeite {src_dir.name}")
         process_sample_dir(src_dir, dst_dir, move=args.move, overwrite=args.overwrite)
 

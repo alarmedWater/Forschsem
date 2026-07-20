@@ -54,23 +54,12 @@ def main() -> None:
 
     cfg = load_config(cfg_path)
 
-    # Override config paths
-    try:
-        cfg.dataset.root = str(dataset_root)
-    except Exception:
-        cfg.dataset.root = dataset_root
-
-    try:
-        cfg.outputs.out_root = str(out_root)
-    except Exception:
-        cfg.outputs.out_root = out_root
-
     print(f"[RUN] repo_root   : {REPO_ROOT}")
     print(f"[RUN] config      : {cfg_path}")
     print(f"[RUN] dataset_root: {dataset_root}")
     print(f"[RUN] out_root    : {out_root}")
 
-    runner = PipelineRunner(cfg)
+    runner = PipelineRunner(cfg, dataset_root=dataset_root, out_root=out_root)
     runner.run()
 
 
